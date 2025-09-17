@@ -21,7 +21,7 @@ struct HomeView: View {
     @State private var selectedTab: HomeTab = .overview
     @State private var username: String = "Derek Doyle" // Placeholder until auth/profile exists
     @State private var isDarkMode: Bool = true // For preview feel only; actual theme via Settings later
-    @State private var viewModel: HomeViewModel = HomeViewModel()
+    @StateObject private var viewModel: HomeViewModel = HomeViewModel()
 
     var body: some View {
         ZStack {
@@ -43,7 +43,7 @@ struct HomeView: View {
         .onAppear {
             // Debug log: track lifecycle
             print("[HomeView] onAppear – loading dashboard data")
-            viewModel.loadDashboard()
+            Task { await viewModel.loadDashboard() }
         }
     }
 
@@ -106,12 +106,30 @@ private struct OverviewTabView: View {
 
     var body: some View {
         VStack(spacing: 16) {
+            // Current streak with animations
+            CurrentStreakView(currentStreak: viewModel.currentStreakDays)
+            
+            // Longest streak with animations
+            LongestStreakView(longestStreak: viewModel.longestStreakDays)
+
+            // Daily progress card
             DailyStreakCard(
                 completed: viewModel.completedRemindersToday,
                 total: viewModel.dailyReminderTarget
             )
 
-            // Three metric cards in a vertical stack like mockup
+            // Next exercise to do - shows random exercise with start button
+            NextExerciseView(
+                exercise: viewModel.nextExercise,
+                onStartExercise: {
+                    viewModel.startNextExercise()
+                },
+                onCompleteExercise: {
+                    viewModel.completeNextExercise()
+                }
+            )
+
+            // Two metric cards in a vertical stack like mockup
             VStack(spacing: 12) {
                 MetricRowCard(
                     title: "Posture Check-Ins",
@@ -124,12 +142,6 @@ private struct OverviewTabView: View {
                     systemImage: "dumbbell",
                     color: Color.green,
                     value: viewModel.weeklyExercisesDone
-                )
-                MetricRowCard(
-                    title: "Longest Streak",
-                    systemImage: "flame.fill",
-                    color: Color.pink,
-                    value: viewModel.longestStreakDays
                 )
             }
         }
@@ -183,6 +195,3 @@ private struct ExercisesTabView: View {
 #Preview {
     HomeView()
 }
-
-
-

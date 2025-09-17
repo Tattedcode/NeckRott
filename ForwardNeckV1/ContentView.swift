@@ -8,10 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var showOnboarding = false
+    
     var body: some View {
-        // Entry point shows the Home dashboard screen
-        // Debug: confirm ContentView rendered
-        HomeView()
+        if showOnboarding {
+            OnboardingContainer {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    showOnboarding = false
+                }
+            }
+        } else {
+            RootTabView()
+        }
     }
 }
 
