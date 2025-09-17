@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-/// Model for an exercise item in the list lol
+/// Model for an exercise item in the list lols
 struct ExerciseItem: Identifiable {
     let id: UUID = UUID()
     let title: String
@@ -24,9 +24,7 @@ final class HomeViewModel: ObservableObject {
     // Daily reminders summary for the progress card
     @Published var completedRemindersToday: Int = 0
     @Published var dailyReminderTarget: Int = 5
-    @State var testingstuff = "TestGit"
-    @State var testingstuff = "TestGit2sda"
-     @State var testingstuff = "TestGit2"
+
     
     /// Capped completed count to prevent UI stretching beyond daily target
     var cappedCompletedToday: Int {
