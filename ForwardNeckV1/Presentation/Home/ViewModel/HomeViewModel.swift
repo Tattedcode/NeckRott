@@ -3,7 +3,7 @@
 //  ForwardNeckV1
 //
 //  ViewModel for the Dashboard screen. Holds observable state for Overview & Exercises tabs.
-//
+// Just a test
 
 import Foundation
 import SwiftUI
@@ -24,6 +24,9 @@ final class HomeViewModel: ObservableObject {
     // Daily reminders summary for the progress card
     @Published var completedRemindersToday: Int = 0
     @Published var dailyReminderTarget: Int = 5
+    @State var testingstuff = "TestGit"
+    @State var testingstuff = "TestGit2sda"
+     @State var testingstuff = "TestGit2"
     
     /// Capped completed count to prevent UI stretching beyond daily target
     var cappedCompletedToday: Int {
@@ -247,4 +250,3 @@ final class HomeViewModel: ObservableObject {
 }
 
 
-// Another test
