@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-/// Model for an exercise item in the list
+/// Model for an exercise item in the list lol
 struct ExerciseItem: Identifiable {
     let id: UUID = UUID()
     let title: String
