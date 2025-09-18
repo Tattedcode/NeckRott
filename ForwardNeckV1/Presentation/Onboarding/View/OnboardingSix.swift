@@ -24,7 +24,8 @@ struct OnboardingSix: View {
     ]
     
     var body: some View {
-        VStack(spacing: 24) {
+        // Group the content into a single stack
+        let content = VStack(spacing: 24) {
             // Mascot image
             Image("mascot1")
                 .resizable()
@@ -47,6 +48,15 @@ struct OnboardingSix: View {
                 }
             }
         }
+        
+        // Parent container that centers the grouped content vertically
+        VStack(spacing: 0) {
+            Spacer(minLength: 60) // Add space at the top
+            content
+                .padding(.horizontal, 24)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
             // Trigger staggered animations for notification cards (4 cards * 0.08s = 0.32s + 0.4s duration = 0.72s total)
             for i in 0..<showCards.count {

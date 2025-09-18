@@ -10,17 +10,16 @@ import SwiftUI
 struct OnboardingSeven: View {
     @Binding var triggerValidation: Bool
     @State private var selectedAge: String? = nil
-    @State private var name = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
-    @State private var shakeNameField = false
     @State private var shakeAgeField = false
-    let onNameAndAgeSelected: (String, String) -> Void
+    let onAgeSelected: (String) -> Void
     
     private let ageOptions = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
     
     var body: some View {
-        VStack(spacing: 20) {
+        // Group the content into a single stack
+        let content = VStack(spacing: 20) {
             // Mascot image
             Image("mascot1")
                 .resizable()
@@ -29,45 +28,32 @@ struct OnboardingSeven: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
-            // Name input field
-            VStack(alignment: .leading, spacing: 8) {
-                Text("what's your name?")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                TextField("enter your name", text: $name)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white.opacity(0.1))
-                    )
-                    .foregroundColor(.white)
-                    .offset(x: shakeNameField ? -10 : 0)
-                    .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeNameField)
-            }
+            // Title underneath image
+            Text("what's your age?")
+                .font(.headline)
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
             
-            // Age selection
-            VStack(alignment: .leading, spacing: 8) {
-                Text("what's your age?")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                VStack(spacing: 8) {
-                    ForEach(ageOptions, id: \.self) { age in
-                        AgeOption(
-                            text: age,
-                            isSelected: selectedAge == age,
-                            onTap: {
-                                selectedAge = age
-                            }
-                        )
-                    }
+            // Subtitle explaining why we need age
+            Text("This will help us tailor our recommendations")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+            
+            // Age options with animation
+            VStack(spacing: 8) {
+                ForEach(ageOptions, id: \.self) { age in
+                    AgeOption(
+                        text: age,
+                        isSelected: selectedAge == age,
+                        onTap: {
+                            selectedAge = age
+                        }
+                    )
                 }
-                .offset(x: shakeAgeField ? -10 : 0)
-                .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeAgeField)
             }
+            .offset(x: shakeAgeField ? -10 : 0)
+            .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeAgeField)
         }
         .onChange(of: triggerValidation) { shouldValidate in
             if shouldValidate {
@@ -79,6 +65,15 @@ struct OnboardingSeven: View {
             // Just update the UI state, don't automatically proceed
             // The continue button will handle the navigation
         }
+        
+        // Parent container that centers the grouped content vertically
+        VStack(spacing: 0) {
+            Spacer(minLength: 60) // Add space at the top
+            content
+                .padding(.horizontal, 24)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .alert("Missing Information", isPresented: $showingAlert) {
             Button("OK") { }
         } message: {
@@ -87,26 +82,13 @@ struct OnboardingSeven: View {
     }
     
     private func validateInput() {
-        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            alertMessage = "Please enter your name to continue."
-            triggerNameFieldShake()
-            showingAlert = true
-        } else if selectedAge == nil {
+        if selectedAge == nil {
             alertMessage = "Please select your age to continue."
             triggerAgeFieldShake()
             showingAlert = true
         } else {
             // Validation successful - save the data and let navigation continue
-            onNameAndAgeSelected(name.trimmingCharacters(in: .whitespacesAndNewlines), selectedAge ?? "")
-        }
-    }
-    
-    private func triggerNameFieldShake() {
-        withAnimation {
-            shakeNameField = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            shakeNameField = false
+            onAgeSelected(selectedAge ?? "")
         }
     }
     
@@ -137,19 +119,18 @@ struct AgeOption: View {
                 
                 Spacer()
                 
-                Circle()
-                    .stroke(Color.blue, lineWidth: 2)
-                    .frame(width: 20, height: 20)
-                    .overlay(
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 12, height: 12)
-                            .opacity(isSelected ? 1 : 0)
-                    )
+                // Tick mark instead of circle
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .green : .blue)
             }
             .padding(12)
-            .background(isSelected ? Color.blue.opacity(0.3) : Color.white.opacity(0.1))
+            .background(isSelected ? Color.green.opacity(0.2) : Color.white.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 2)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -158,8 +139,8 @@ struct AgeOption: View {
 #Preview {
     OnboardingSeven(
         triggerValidation: .constant(false),
-        onNameAndAgeSelected: { name, age in
-            print("Name: \(name), Age: \(age)")
+        onAgeSelected: { age in
+            print("Age: \(age)")
         }
     )
 }

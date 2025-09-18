@@ -147,8 +147,9 @@ struct OnboardingContainer: View {
                             } else if !onboardingScreens[currentScreen].title.isEmpty {
                                 // Regular text for other screens (only show if title is not empty)
                                 Text(onboardingScreens[currentScreen].title)
-                                    .font(.largeTitle.bold())
+                                    .font(currentScreen == 4 ? .title.bold() : .largeTitle.bold()) // Smaller font for screen time selection
                                     .foregroundColor(.white)
+                                    .multilineTextAlignment(.center) // Center align the text
                                 
                                 if (currentScreen != 4 || !hasScreenTimeAlertBeenDismissed) && (currentScreen != 5 || !hasNotificationsAlertBeenDismissed) {
                                     Text(onboardingScreens[currentScreen].subtitle)
@@ -226,8 +227,7 @@ struct OnboardingContainer: View {
             case .ageSelection:
                 OnboardingSeven(
                     triggerValidation: $triggerAgeValidation,
-                    onNameAndAgeSelected: { name, age in
-                        userStore.saveUserName(name)
+                    onAgeSelected: { age in
                         // Trigger navigation to next screen after validation
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             if currentScreen < onboardingScreens.count - 1 {

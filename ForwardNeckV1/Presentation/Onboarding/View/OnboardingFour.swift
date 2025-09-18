@@ -14,7 +14,7 @@ struct OnboardingFour: View {
     
     private let reasons = [
         "fix forward neck",
-        "reduce mindless scrolling", 
+        "reduce mindless scrolling",
         "sleep better",
         "be more confident",
         "be more productive",
@@ -22,7 +22,8 @@ struct OnboardingFour: View {
     ]
     
     var body: some View {
-        VStack(spacing: 20) {
+        // Group the image, title, and options into a single content stack
+        let content = VStack(spacing: 20) {
             // Mascot image
             Image("mascot1")
                 .resizable()
@@ -49,7 +50,6 @@ struct OnboardingFour: View {
                             } else {
                                 selectedReasons.insert(reason)
                             }
-                            // Update the binding to enable/disable continue button
                             hasReasonSelected = !selectedReasons.isEmpty
                         }
                     )
@@ -59,8 +59,16 @@ struct OnboardingFour: View {
                 }
             }
         }
+        
+        // Parent container that centers the grouped content vertically
+        VStack(spacing: 0) {
+            Spacer(minLength: 60) // Increased from 0 to 60 to push content down
+            content
+                .padding(.horizontal, 24) // keep consistent side padding with container
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
-            // Trigger staggered animations for cards over 0.5 seconds faster (6 cards * 0.08s = 0.48s + 0.4s duration = 0.88s total)
             for i in 0..<showCards.count {
                 DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
                     withAnimation {
@@ -90,19 +98,18 @@ struct ReasonOption: View {
                 
                 Spacer()
                 
-                Circle()
-                    .stroke(Color.blue, lineWidth: 2)
-                    .frame(width: 20, height: 20)
-                    .overlay(
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 12, height: 12)
-                            .opacity(isSelected ? 1 : 0)
-                    )
+                // Tick mark instead of circle
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .green : .blue)
             }
             .padding(12)
-            .background(Color.white.opacity(0.1))
+            .background(isSelected ? Color.green.opacity(0.2) : Color.white.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 2)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -110,5 +117,8 @@ struct ReasonOption: View {
 
 #Preview {
     OnboardingFour(hasReasonSelected: .constant(false))
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .ignoresSafeArea()
 }
-

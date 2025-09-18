@@ -62,7 +62,8 @@ struct OnboardingScreenTimeMath: View {
     }
     
     var body: some View {
-        VStack(spacing: 20) {
+        // Group the content into a single stack
+        let content = VStack(spacing: 20) {
             // Brain mascot image
             Image("mascot1") // Using brain mascot
                 .resizable()
@@ -142,6 +143,15 @@ struct OnboardingScreenTimeMath: View {
             Spacer()
                 .frame(height: 20)
         }
+        
+        // Parent container that centers the grouped content vertically
+        VStack(spacing: 0) {
+            Spacer(minLength: 60) // Add space at the top
+            content
+                .padding(.horizontal, 24)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
             // Trigger animations after a short delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

@@ -44,7 +44,8 @@ struct OnboardingTwo: View {
     }
     
     var body: some View {
-        VStack(spacing: 20) {
+        // Group the content into a single stack
+        let content = VStack(spacing: 20) {
             // Mascot image
             Image(mascotImage)
                 .resizable()
@@ -56,7 +57,8 @@ struct OnboardingTwo: View {
             
             // Screen time display
             Text(screenTimeText)
-                .font(.largeTitle.bold())
+                .font(.largeTitle)
+                .fontWeight(.bold)
                 .foregroundColor(.white)
             
             // Slider with 3 discrete options
@@ -107,10 +109,20 @@ struct OnboardingTwo: View {
             if let warning = warningMessage {
                 Text(warning.text)
                     .font(.caption)
+                    .fontWeight(.bold)
                     .foregroundColor(warning.color)
                     .multilineTextAlignment(.center)
             }
         }
+        
+        // Parent container that centers the grouped content vertically
+        VStack(spacing: 0) {
+            Spacer(minLength: 60) // Add space at the top
+            content
+                .padding(.horizontal, 24)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
             // Initialize local state from binding
             selectedOption = selectedScreenTime
