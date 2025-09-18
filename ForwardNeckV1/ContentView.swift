@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var showOnboarding = false
+    @State private var showOnboarding = true
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     
     var body: some View {
-        if showOnboarding {
+        if showOnboarding && !hasCompletedOnboarding {
             OnboardingContainer {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     showOnboarding = false
+                    hasCompletedOnboarding = true
                 }
             }
         } else {

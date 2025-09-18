@@ -106,11 +106,13 @@ private struct OverviewTabView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Current streak with animations
-            CurrentStreakView(currentStreak: viewModel.currentStreakDays)
-            
-            // Longest streak with animations
-            LongestStreakView(longestStreak: viewModel.longestStreakDays)
+            // Place Current and Longest streaks side-by-side
+            HStack(spacing: 12) {
+                CurrentStreakView(currentStreak: viewModel.currentStreakDays)
+                    .frame(maxWidth: .infinity)
+                LongestStreakView(longestStreak: viewModel.longestStreakDays)
+                    .frame(maxWidth: .infinity)
+            }
 
             // Daily progress card
             DailyStreakCard(
