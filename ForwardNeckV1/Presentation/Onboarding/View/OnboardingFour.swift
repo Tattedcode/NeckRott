@@ -34,7 +34,7 @@ struct OnboardingFour: View {
             
             // Title underneath image
             Text("you're here for a reason")
-                .font(.headline)
+                .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             

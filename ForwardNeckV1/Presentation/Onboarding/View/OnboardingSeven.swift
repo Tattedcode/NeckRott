@@ -30,7 +30,7 @@ struct OnboardingSeven: View {
             
             // Title underneath image
             Text("what's your age?")
-                .font(.headline)
+                .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             

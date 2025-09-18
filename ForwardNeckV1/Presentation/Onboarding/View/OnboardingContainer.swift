@@ -88,8 +88,11 @@ struct OnboardingContainer: View {
                 // Progress bar and back button at the top - always visible
                 HStack {
                     // Back button (only show if not first screen)
-                    if currentScreen > 0 {
+                    if shouldShowBackButton {
                         Button(action: {
+                            // Safety check to prevent going below 0
+                            guard currentScreen > 0 else { return }
+                            
                             // Simple, clean transition
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 currentScreen -= 1
@@ -101,6 +104,7 @@ struct OnboardingContainer: View {
                                 .frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain)
+                        .disabled(currentScreen <= 0) // Additional safety check
                     } else {
                         // Invisible spacer to maintain layout
                         Spacer()
@@ -192,6 +196,10 @@ struct OnboardingContainer: View {
     }
     
     // MARK: - Computed Properties
+    
+    private var shouldShowBackButton: Bool {
+        return currentScreen > 0
+    }
     
     private var buttonText: String {
         if currentScreen == 4 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {

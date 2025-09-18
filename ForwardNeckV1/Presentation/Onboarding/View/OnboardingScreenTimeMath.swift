@@ -173,13 +173,13 @@ struct CalculationCard: View {
     var body: some View {
         HStack {
             Text(label)
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(isHighlighted ? .red : .white.opacity(0.7))
             
             Spacer()
             
             Text(value)
-                .font(.subheadline.bold())
+                .font(.body.bold())
                 .foregroundColor(isHighlighted ? .red : .white)
         }
         .padding(12)
