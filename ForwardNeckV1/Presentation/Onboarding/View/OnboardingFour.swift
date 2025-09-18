@@ -10,6 +10,7 @@ import SwiftUI
 struct OnboardingFour: View {
     @State private var selectedReasons: Set<String> = []
     @State private var showCards = Array(repeating: false, count: 6)
+    @Binding var hasReasonSelected: Bool
     
     private let reasons = [
         "fix forward neck",
@@ -48,6 +49,8 @@ struct OnboardingFour: View {
                             } else {
                                 selectedReasons.insert(reason)
                             }
+                            // Update the binding to enable/disable continue button
+                            hasReasonSelected = !selectedReasons.isEmpty
                         }
                     )
                     .opacity(showCards[index] ? 1 : 0)
@@ -106,6 +109,6 @@ struct ReasonOption: View {
 }
 
 #Preview {
-    OnboardingFour()
+    OnboardingFour(hasReasonSelected: .constant(false))
 }
 

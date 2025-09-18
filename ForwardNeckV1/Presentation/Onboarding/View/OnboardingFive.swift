@@ -11,6 +11,7 @@ struct OnboardingFive: View {
     @Binding var triggerPermissionRequest: Bool
     @Binding var isScreenTimePermissionGranted: Bool
     @Binding var hasAlertBeenDismissed: Bool
+    @Binding var hasScreenTimePermissionResponded: Bool
     let subtitle: String
     
     @State private var showCards = Array(repeating: false, count: 4)
@@ -85,10 +86,12 @@ struct OnboardingFive: View {
             Button("Don't Allow") {
                 isScreenTimePermissionGranted = false
                 hasAlertBeenDismissed = true
+                hasScreenTimePermissionResponded = true
             }
             Button("Allow") {
                 isScreenTimePermissionGranted = true
                 hasAlertBeenDismissed = true
+                hasScreenTimePermissionResponded = true
             }
         } message: {
             Text(alertMessage)
@@ -140,6 +143,7 @@ struct PermissionFeatureCard: View {
         triggerPermissionRequest: .constant(false),
         isScreenTimePermissionGranted: .constant(false),
         hasAlertBeenDismissed: .constant(false),
+        hasScreenTimePermissionResponded: .constant(false),
         subtitle: "We need permission to track your screen time"
     )
 }

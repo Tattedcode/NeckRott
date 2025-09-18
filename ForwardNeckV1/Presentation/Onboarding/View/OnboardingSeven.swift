@@ -76,10 +76,8 @@ struct OnboardingSeven: View {
             }
         }
         .onChange(of: selectedAge) { _ in
-            // When age is selected, check if we can proceed
-            if !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedAge != nil {
-                onNameAndAgeSelected(name.trimmingCharacters(in: .whitespacesAndNewlines), selectedAge ?? "")
-            }
+            // Just update the UI state, don't automatically proceed
+            // The continue button will handle the navigation
         }
         .alert("Missing Information", isPresented: $showingAlert) {
             Button("OK") { }
@@ -97,6 +95,9 @@ struct OnboardingSeven: View {
             alertMessage = "Please select your age to continue."
             triggerAgeFieldShake()
             showingAlert = true
+        } else {
+            // Validation successful - save the data and let navigation continue
+            onNameAndAgeSelected(name.trimmingCharacters(in: .whitespacesAndNewlines), selectedAge ?? "")
         }
     }
     
