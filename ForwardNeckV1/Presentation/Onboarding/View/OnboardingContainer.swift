@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingContainer: View {
-    @State private var currentScreen = 0
+    @State private var currentScreen = 9 // Temporarily start at app selection screen for testing
     @StateObject private var userStore = UserStore()
     @State private var triggerScreenTimePermission = false
     @State private var isScreenTimePermissionGranted = false

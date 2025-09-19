@@ -6,24 +6,28 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct OnboardingAppSelection: View {
     @State private var selectedApps: Set<String> = []
     @State private var showAppSelection = false
+    @State private var appMonitoringStore = AppMonitoringStore()
+    @State private var familyActivitySelection = FamilyActivitySelection()
+    @State private var recentApps: [String] = []
     
-    // Default social media apps - these would be replaced with actual detected apps
-    private let defaultApps = [
-        AppInfo(name: "TikTok", icon: "tiktok", color: Color.black),
-        AppInfo(name: "Instagram", icon: "instagram", color: Color.purple),
-        AppInfo(name: "YouTube", icon: "youtube", color: Color.red),
-        AppInfo(name: "Facebook", icon: "facebook", color: Color.blue)
-    ]
+    // Get the most recently used social apps for preview
+    private var previewApps: [String] {
+        if recentApps.isEmpty {
+            return ["Instagram", "TikTok", "YouTube", "Facebook"] // Fallback apps
+        }
+        return Array(recentApps.prefix(4))
+    }
     
     var body: some View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Mascot image
-            Image("mascot1")
+            Image("mascot4")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
@@ -31,69 +35,108 @@ struct OnboardingAppSelection: View {
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
             // Title
-            Text("select brainrot apps")
+            Text("Select Apps to Limit")
                 .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             
-            // Subtitle
-            Text("choose the apps you want to track and reduce usage of")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            
-            // Additional note
-            Text("(you can update this later)")
-                .font(.caption)
-                .foregroundColor(.gray.opacity(0.8))
-                .multilineTextAlignment(.center)
+            // Subtitle and additional note
+            VStack(spacing: 0) {
+                Text("Choose which apps you want to reduce time on")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                
+                Text("(you can update this later)")
+                    .font(.caption)
+                    .foregroundColor(.gray.opacity(0.8))
+                    .multilineTextAlignment(.center)
+            }
             
             // App selection card
-            VStack(spacing: 16) {
-                // App selection header
-                HStack {
-                    Text("select apps to limit")
+            Button(action: {
+                showAppSelection = true
+            }) {
+                VStack(spacing: 16) {
+                    // App selection header - centered
+                    Text("Select apps to limit")
                         .font(.headline.bold())
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
                     
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                
-                // App icons row
-                HStack(spacing: 20) {
-                    ForEach(defaultApps, id: \.name) { app in
-                        VStack(spacing: 8) {
-                            // App icon
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(app.color)
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Image(systemName: "app.fill")
-                                        .font(.title2)
+                    if familyActivitySelection.applicationTokens.isEmpty {
+                        // No apps selected - show recent apps preview
+                        HStack(spacing: 20) {
+                            ForEach(Array(previewApps.enumerated()), id: \.offset) { index, appName in
+                                VStack(spacing: 8) {
+                                    // App icon
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(getAppColor(for: appName))
+                                        .frame(width: 50, height: 50)
+                                        .overlay(
+                                            Image(systemName: getAppIcon(for: appName))
+                                                .font(.title2)
+                                                .foregroundColor(.white)
+                                        )
+                                    
+                                    // App name
+                                    Text(appName)
+                                        .font(.caption)
                                         .foregroundColor(.white)
-                                )
+                                        .lineLimit(1)
+                                        .frame(maxWidth: 50)
+                                }
+                            }
                             
-                            // App name
-                            Text(app.name)
-                                .font(.caption)
-                                .foregroundColor(.black)
-                                .lineLimit(1)
+                            // Arrow at the end
+                            Image(systemName: "chevron.right")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                                .padding(.leading, 8)
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+                    } else {
+                        // Show selected apps
+                        HStack(spacing: 20) {
+                            ForEach(Array(familyActivitySelection.applicationTokens.prefix(4)), id: \.self) { token in
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.blue)
+                                    .frame(width: 50, height: 50)
+                                    .overlay(
+                                        Image(systemName: "app.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                    )
+                            }
+                            
+                            if familyActivitySelection.applicationTokens.count > 4 {
+                                Text("+\(familyActivitySelection.applicationTokens.count - 4)")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.8))
+                                    .cornerRadius(8)
+                            }
+                            
+                            // Arrow at the end
+                            Image(systemName: "chevron.right")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                                .padding(.leading, 8)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
+                .background(Color.white.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            .buttonStyle(PlainButtonStyle())
             
             // Confirmation text
             HStack(spacing: 8) {
@@ -101,7 +144,7 @@ struct OnboardingAppSelection: View {
                     .foregroundColor(.green)
                     .font(.title3)
                 
-                Text("we'll help you limit time spent on these apps")
+                Text("We'll help you limit time spent on these apps")
                     .font(.subheadline)
                     .foregroundColor(.green)
             }
@@ -115,58 +158,71 @@ struct OnboardingAppSelection: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .onTapGesture {
-            // Handle app selection card tap
-            showAppSelection = true
+        .onAppear {
+            // Load existing selected apps from the store
+            selectedApps = appMonitoringStore.selectedApps
+            // Load recent apps for preview
+            loadRecentApps()
         }
-        .sheet(isPresented: $showAppSelection) {
-            // This would open a detailed app selection view
-            AppSelectionDetailView(selectedApps: $selectedApps)
+        .onChange(of: familyActivitySelection) { newSelection in
+            // Convert FamilyActivitySelection to app names for storage
+            let appNames = newSelection.applicationTokens.map { token in
+                // Store the token hash as a unique identifier
+                // In a real app, you'd use the token for monitoring
+                "App_\(token.hashValue)"
+            }
+            selectedApps = Set(appNames)
+            appMonitoringStore.updateSelectedApps(selectedApps)
+        }
+        .familyActivityPicker(isPresented: $showAppSelection, selection: $familyActivitySelection)
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Load recently used social apps for preview
+    private func loadRecentApps() {
+        // For now, we'll use a predefined list of popular social apps
+        // In a real implementation, you'd query the system for recently used apps
+        recentApps = ["Instagram", "TikTok", "YouTube", "Facebook", "Snapchat", "Twitter"]
+    }
+    
+    /// Get app color based on app name
+    private func getAppColor(for appName: String) -> Color {
+        switch appName.lowercased() {
+        case "instagram":
+            return .purple
+        case "tiktok":
+            return .black
+        case "youtube":
+            return .red
+        case "facebook":
+            return .blue
+        case "snapchat":
+            return .yellow
+        case "twitter":
+            return .blue.opacity(0.8)
+        default:
+            return .blue
         }
     }
-}
-
-// MARK: - App Info Model
-
-struct AppInfo {
-    let name: String
-    let icon: String
-    let color: Color
-}
-
-// MARK: - App Selection Detail View (Placeholder)
-
-struct AppSelectionDetailView: View {
-    @Binding var selectedApps: Set<String>
-    @Environment(\.dismiss) private var dismiss
     
-    var body: some View {
-        NavigationView {
-            VStack {
-                Text("App Selection Detail")
-                    .font(.title)
-                    .padding()
-                
-                Text("This would show a detailed list of all apps")
-                    .foregroundColor(.gray)
-                
-                Spacer()
-            }
-            .navigationTitle("Select Apps")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+    /// Get app icon based on app name
+    private func getAppIcon(for appName: String) -> String {
+        switch appName.lowercased() {
+        case "instagram":
+            return "camera.fill"
+        case "tiktok":
+            return "music.note"
+        case "youtube":
+            return "play.rectangle.fill"
+        case "facebook":
+            return "person.2.fill"
+        case "snapchat":
+            return "camera.circle.fill"
+        case "twitter":
+            return "bird.fill"
+        default:
+            return "app.fill"
         }
     }
 }
