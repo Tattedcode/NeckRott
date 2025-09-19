@@ -13,6 +13,7 @@ struct OnboardingContainer: View {
     @State private var triggerScreenTimePermission = false
     @State private var isScreenTimePermissionGranted = false
     @State private var triggerAgeValidation = false
+    @State private var triggerNotificationPermission = false
     @State private var hasScreenTimeAlertBeenDismissed = false
     @State private var hasNotificationsAlertBeenDismissed = false
     @State private var hasReasonSelected = false // Track if user selected a reason
@@ -83,6 +84,13 @@ struct OnboardingContainer: View {
             title: "",
             subtitle: "",
             content: .notificationsPermission,
+            buttonText: "continue"
+        ),
+        OnboardingScreen(
+            id: 9,
+            title: "",
+            subtitle: "",
+            content: .appSelection,
             buttonText: "continue"
         )
     ]
@@ -280,8 +288,11 @@ struct OnboardingContainer: View {
             case .notificationsPermission:
                 OnboardingSix(
                     hasAlertBeenDismissed: $hasNotificationsAlertBeenDismissed,
+                    triggerPermissionRequest: $triggerNotificationPermission,
                     subtitle: onboardingScreens[8].subtitle
                 )
+            case .appSelection:
+                OnboardingAppSelection()
             case .progressChart:
                 progressChartMockup
             case .rewards:
@@ -316,6 +327,16 @@ struct OnboardingContainer: View {
                         return
                     }
                     // If permission is granted, continue to next screen
+                }
+                
+                // Handle notification permission request
+                if currentScreen == 8 { // Notification permission screen
+                    if !hasNotificationsAlertBeenDismissed {
+                        // Trigger the permission request in the view
+                        triggerNotificationPermission = true
+                        return
+                    }
+                    // If permission is granted or denied, continue to next screen
                 }
                 
                 if currentScreen < onboardingScreens.count - 1 {
@@ -450,6 +471,7 @@ enum OnboardingContent {
     case goalSetting
     case screenTimePermission
     case notificationsPermission
+    case appSelection
     case progressChart
     case rewards
 }

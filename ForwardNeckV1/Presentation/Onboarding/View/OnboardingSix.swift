@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingSix: View {
     @Binding var hasAlertBeenDismissed: Bool
+    @Binding var triggerPermissionRequest: Bool
     let subtitle: String
     
     @State private var showCards = Array(repeating: false, count: 4)
@@ -25,7 +26,7 @@ struct OnboardingSix: View {
     
     var body: some View {
         // Group the content into a single stack
-        let content = VStack(spacing: 24) {
+        let content = VStack(spacing: 20) { // Reduced spacing
             // Mascot image
             Image("mascot1")
                 .resizable()
@@ -34,8 +35,21 @@ struct OnboardingSix: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
-            // Notification feature cards with staggered animation
-            VStack(spacing: 12) {
+            // Title
+            Text("Notifications")
+                .font(.title.bold())
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            
+            // Subtitle
+            Text("Allow us to remind you of your neck")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+            
+            // Notification feature cards in one container with rounded corners
+            VStack(spacing: 0) { // Changed spacing to 0
                 ForEach(Array(notificationFeatures.enumerated()), id: \.offset) { index, feature in
                     NotificationFeatureCard(
                         icon: feature.icon,
@@ -47,6 +61,8 @@ struct OnboardingSix: View {
                     .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08), value: showCards[index])
                 }
             }
+            .background(Color.white.opacity(0.1)) // Background for the single container
+            .clipShape(RoundedRectangle(cornerRadius: 12)) // Rounded corners for the single container
         }
         
         // Parent container that centers the grouped content vertically
@@ -67,19 +83,21 @@ struct OnboardingSix: View {
                 }
             }
             
-            // Show alert after all cards have finished animating (0.72s + small buffer)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-                if !isPermissionGranted {
-                    requestNotificationPermission()
-                }
+            // Don't automatically show alert - wait for user to press continue
+        }
+        .onChange(of: triggerPermissionRequest) { shouldTrigger in
+            if shouldTrigger {
+                requestNotificationPermission()
+                triggerPermissionRequest = false
             }
         }
         .alert("Notifications Required", isPresented: $showingAlert) {
             Button("Don't Allow") {
+                isPermissionGranted = false
                 hasAlertBeenDismissed = true
             }
             Button("Allow") {
-                requestNotificationPermission()
+                isPermissionGranted = true
                 hasAlertBeenDismissed = true
             }
         } message: {
@@ -121,15 +139,15 @@ struct NotificationFeatureCard: View {
             
             Spacer()
         }
-        .padding(12)
-        .background(Color.white.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .frame(maxWidth: .infinity) // Make all cards the same width
+        .padding(12) // Padding for individual card content
     }
 }
 
 #Preview {
     OnboardingSix(
         hasAlertBeenDismissed: .constant(false),
+        triggerPermissionRequest: .constant(false),
         subtitle: "We need permission to send you notifications"
     )
 }
