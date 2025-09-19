@@ -18,6 +18,7 @@ struct OnboardingContainer: View {
     @State private var hasReasonSelected = false // Track if user selected a reason
     @State private var hasScreenTimePermissionResponded = false // Track if user responded to permission
     @State private var selectedScreenTime = 0 // Track selected screen time (0-8 for 1-9+ hours)
+    @State private var selectedGoal = 3 // Track selected daily goal (0-8 hours)
     let onComplete: () -> Void
     
     private let onboardingScreens = [
@@ -67,11 +68,18 @@ struct OnboardingContainer: View {
             id: 6,
             title: "",
             subtitle: "",
-            content: .screenTimePermission,
+            content: .goalSetting,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 7,
+            title: "",
+            subtitle: "",
+            content: .screenTimePermission,
+            buttonText: "continue"
+        ),
+        OnboardingScreen(
+            id: 8,
             title: "",
             subtitle: "",
             content: .notificationsPermission,
@@ -254,18 +262,20 @@ struct OnboardingContainer: View {
                 OnboardingTwo(selectedScreenTime: $selectedScreenTime)
             case .screenTimeMath:
                 OnboardingScreenTimeMath(selectedScreenTime: selectedScreenTime)
+            case .goalSetting:
+                OnboardingGoalSetting(selectedGoal: $selectedGoal, currentScreenTime: selectedScreenTime)
             case .screenTimePermission:
                 OnboardingFive(
                     triggerPermissionRequest: $triggerScreenTimePermission,
                     isScreenTimePermissionGranted: $isScreenTimePermissionGranted,
                     hasAlertBeenDismissed: $hasScreenTimeAlertBeenDismissed,
                     hasScreenTimePermissionResponded: $hasScreenTimePermissionResponded,
-                    subtitle: onboardingScreens[6].subtitle
+                    subtitle: onboardingScreens[7].subtitle
                 )
             case .notificationsPermission:
                 OnboardingSix(
                     hasAlertBeenDismissed: $hasNotificationsAlertBeenDismissed,
-                    subtitle: onboardingScreens[7].subtitle
+                    subtitle: onboardingScreens[8].subtitle
                 )
             case .progressChart:
                 progressChartMockup
@@ -309,6 +319,8 @@ struct OnboardingContainer: View {
                         currentScreen += 1
                     }
                 } else {
+                    // Save user's goal data before completing onboarding
+                    userStore.saveDailyGoal(selectedGoal)
                     onComplete()
                 }
             }) {
@@ -430,6 +442,7 @@ enum OnboardingContent {
     case ageSelection
     case screenTimeSelection
     case screenTimeMath
+    case goalSetting
     case screenTimePermission
     case notificationsPermission
     case progressChart

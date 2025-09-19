@@ -10,6 +10,7 @@ import SwiftUI
 struct OnboardingScreenTimeMath: View {
     let selectedScreenTime: Int
     @State private var showCards = false
+    @State private var bounceText = false
     
     // Calculate values based on selected screen time (0-8 for 1-9+ hours)
     private var dailyHours: Int {
@@ -131,14 +132,17 @@ struct OnboardingScreenTimeMath: View {
                 .animation(.easeOut(duration: 0.6).delay(0.8), value: showCards)
             }
             
-            // Warning message
-            Text("that's \(String(format: "%.1f", lifePercentage))% of your waking life each year...")
-                .font(.caption)
-                .foregroundColor(.red)
-                .multilineTextAlignment(.center)
-                .opacity(showCards ? 1 : 0)
-                .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(1.0), value: showCards)
+                // Warning message
+                Text("that's \(String(format: "%.1f", lifePercentage))% of your waking life each year...")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .opacity(showCards ? 1 : 0)
+                    .offset(y: showCards ? 0 : 20)
+                    .scaleEffect(bounceText ? 1.05 : 1.0)
+                    .animation(.easeOut(duration: 0.6).delay(1.0), value: showCards)
+                    .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: bounceText)
             
             Spacer()
                 .frame(height: 20)
@@ -153,7 +157,7 @@ struct OnboardingScreenTimeMath: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
-            // Trigger animations with 0.5 second delay between each card
+            // Trigger animations with 0.5 second delay between each card (same as Did you know screen)
             let delays = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5] // 0.5 second intervals for each card
             
             for (index, delay) in delays.enumerated() {
@@ -166,6 +170,13 @@ struct OnboardingScreenTimeMath: View {
                     }
                     // Add haptic feedback for each card appearance
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+            }
+            
+            // Trigger bounce animation for the warning text after it appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                withAnimation {
+                    bounceText = true
                 }
             }
         }
