@@ -163,10 +163,6 @@ struct OnboardingContainer: View {
                             }
                         }
                         
-                        // Legal text (only on first screen)
-                        if currentScreen == 0 {
-                            legalText
-                        }
                         
                         // Add bottom spacing for first and second screens to center content
                         if currentScreen == 0 || currentScreen == 1 {
@@ -180,6 +176,11 @@ struct OnboardingContainer: View {
                 // Navigation buttons - always visible at bottom
                 VStack(spacing: 8) {
                     navigationButtons
+                    
+                    // Legal text (only on first screen)
+                    if currentScreen == 0 {
+                        legalText
+                    }
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
