@@ -88,7 +88,7 @@ struct OnboardingScreenTimeMath: View {
                 )
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.0), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(0.0), value: showCards)
                 
                 // Weekly card
                 CalculationCard(
@@ -98,7 +98,7 @@ struct OnboardingScreenTimeMath: View {
                 )
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.1), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(0.2), value: showCards)
                 
                 // Monthly card
                 CalculationCard(
@@ -108,7 +108,7 @@ struct OnboardingScreenTimeMath: View {
                 )
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.2), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(0.4), value: showCards)
                 
                 // Yearly card
                 CalculationCard(
@@ -118,7 +118,7 @@ struct OnboardingScreenTimeMath: View {
                 )
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.3), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(0.6), value: showCards)
                 
                 // Life impact card (highlighted in red)
                 CalculationCard(
@@ -128,7 +128,7 @@ struct OnboardingScreenTimeMath: View {
                 )
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.4), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(0.8), value: showCards)
             }
             
             // Warning message
@@ -138,7 +138,7 @@ struct OnboardingScreenTimeMath: View {
                 .multilineTextAlignment(.center)
                 .opacity(showCards ? 1 : 0)
                 .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.4).delay(0.5), value: showCards)
+                .animation(.easeOut(duration: 0.6).delay(1.0), value: showCards)
             
             Spacer()
                 .frame(height: 20)
@@ -153,10 +153,19 @@ struct OnboardingScreenTimeMath: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
-            // Trigger animations after a short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation {
-                    showCards = true
+            // Trigger animations with 0.5 second delay between each card
+            let delays = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5] // 0.5 second intervals for each card
+            
+            for (index, delay) in delays.enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    if index == 0 {
+                        // Only trigger the main animation once
+                        withAnimation {
+                            showCards = true
+                        }
+                    }
+                    // Add haptic feedback for each card appearance
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
         }

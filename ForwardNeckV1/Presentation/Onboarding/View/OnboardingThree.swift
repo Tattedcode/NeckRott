@@ -36,7 +36,7 @@ struct OnboardingThree: View {
                 )
                 .opacity(showCards[0] ? 1 : 0)
                 .offset(y: showCards[0] ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(0.2), value: showCards[0])
+                .animation(.easeOut(duration: 0.4), value: showCards[0])
                 
                 InfoCard(
                     icon: "iphone",
@@ -44,7 +44,7 @@ struct OnboardingThree: View {
                 )
                 .opacity(showCards[1] ? 1 : 0)
                 .offset(y: showCards[1] ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(0.4), value: showCards[1])
+                .animation(.easeOut(duration: 0.4), value: showCards[1])
                 
                 InfoCard(
                     icon: "mascot1",
@@ -52,7 +52,7 @@ struct OnboardingThree: View {
                 )
                 .opacity(showCards[2] ? 1 : 0)
                 .offset(y: showCards[2] ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(0.6), value: showCards[2])
+                .animation(.easeOut(duration: 0.4), value: showCards[2])
                 
                 InfoCard(
                     icon: "eye",
@@ -60,7 +60,7 @@ struct OnboardingThree: View {
                 )
                 .opacity(showCards[3] ? 1 : 0)
                 .offset(y: showCards[3] ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(0.8), value: showCards[3])
+                .animation(.easeOut(duration: 0.4), value: showCards[3])
             }
             
             // Motivational message
@@ -71,7 +71,7 @@ struct OnboardingThree: View {
                 .padding(.top, 8)
                 .opacity(showMotivationalMessage ? 1 : 0)
                 .offset(y: showMotivationalMessage ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(1.0), value: showMotivationalMessage)
+                .animation(.easeOut(duration: 0.4), value: showMotivationalMessage)
         }
         
         // Parent container that centers the grouped content vertically
@@ -83,18 +83,20 @@ struct OnboardingThree: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
-            // Trigger staggered animations for cards
+            // Show cards with 0.5 second delay between each
             for i in 0..<showCards.count {
-                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.2) {
-                    withAnimation {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.5) {
+                    withAnimation(.easeOut(duration: 0.4)) {
                         showCards[i] = true
                     }
+                    // Add haptic feedback for each card appearance
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
             
-            // Trigger motivational message animation after all cards
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                withAnimation {
+            // Show motivational message after all cards
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(showCards.count) * 0.5 + 0.5) {
+                withAnimation(.easeOut(duration: 0.4)) {
                     showMotivationalMessage = true
                 }
             }

@@ -38,24 +38,30 @@ struct OnboardingFour: View {
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
             
+            // Subtitle explaining the purpose
+            Text("How can we help you?")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+            
             // Reason options with animation
             VStack(spacing: 8) {
                 ForEach(Array(reasons.enumerated()), id: \.element) { index, reason in
                     ReasonOption(
                         text: reason,
                         isSelected: selectedReasons.contains(reason),
-                        onTap: {
-                            if selectedReasons.contains(reason) {
-                                selectedReasons.remove(reason)
-                            } else {
-                                selectedReasons.insert(reason)
-                            }
-                            hasReasonSelected = !selectedReasons.isEmpty
-                        }
+                                onTap: {
+                                    // Add haptic feedback for reason selection
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    
+                                    if selectedReasons.contains(reason) {
+                                        selectedReasons.remove(reason)
+                                    } else {
+                                        selectedReasons.insert(reason)
+                                    }
+                                    hasReasonSelected = !selectedReasons.isEmpty
+                                }
                     )
-                    .opacity(showCards[index] ? 1 : 0)
-                    .offset(y: showCards[index] ? 0 : 20)
-                    .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08), value: showCards[index])
                 }
             }
         }
@@ -69,12 +75,9 @@ struct OnboardingFour: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
+            // Show all cards instantly without animation or haptic feedback
             for i in 0..<showCards.count {
-                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
-                    withAnimation {
-                        showCards[i] = true
-                    }
-                }
+                showCards[i] = true
             }
         }
     }

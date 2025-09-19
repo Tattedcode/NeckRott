@@ -93,6 +93,9 @@ struct OnboardingContainer: View {
                             // Safety check to prevent going below 0
                             guard currentScreen > 0 else { return }
                             
+                            // Add haptic feedback for back button
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            
                             // Simple, clean transition
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 currentScreen -= 1
@@ -277,6 +280,9 @@ struct OnboardingContainer: View {
         HStack(spacing: 16) {
             // Next/Complete button
             Button(action: {
+                // Add haptic feedback for continue button
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                
                 // Check if we're on the age selection screen and validate input
                 if currentScreen == 2 { // Age selection screen
                     // Trigger validation in the AgeSelectionView

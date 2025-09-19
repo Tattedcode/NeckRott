@@ -10,9 +10,8 @@ import SwiftUI
 struct OnboardingSeven: View {
     @Binding var triggerValidation: Bool
     @State private var selectedAge: String? = nil
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
     @State private var shakeAgeField = false
+    @State private var showCards = Array(repeating: false, count: 6)
     let onAgeSelected: (String) -> Void
     
     private let ageOptions = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
@@ -42,14 +41,16 @@ struct OnboardingSeven: View {
             
             // Age options with animation
             VStack(spacing: 8) {
-                ForEach(ageOptions, id: \.self) { age in
-                    AgeOption(
-                        text: age,
-                        isSelected: selectedAge == age,
-                        onTap: {
-                            selectedAge = age
-                        }
-                    )
+                ForEach(Array(ageOptions.enumerated()), id: \.element) { index, age in
+                            AgeOption(
+                                text: age,
+                                isSelected: selectedAge == age,
+                                onTap: {
+                                    // Add haptic feedback for age selection
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    selectedAge = age
+                                }
+                            )
                 }
             }
             .offset(x: shakeAgeField ? -10 : 0)
@@ -74,18 +75,18 @@ struct OnboardingSeven: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .alert("Missing Information", isPresented: $showingAlert) {
-            Button("OK") { }
-        } message: {
-            Text(alertMessage)
+        .onAppear {
+            // Show all cards instantly without animation or haptic feedback
+            for i in 0..<showCards.count {
+                showCards[i] = true
+            }
         }
     }
     
     private func validateInput() {
         if selectedAge == nil {
-            alertMessage = "Please select your age to continue."
+            // Just trigger shake animation, no alert
             triggerAgeFieldShake()
-            showingAlert = true
         } else {
             // Validation successful - save the data and let navigation continue
             onAgeSelected(selectedAge ?? "")
