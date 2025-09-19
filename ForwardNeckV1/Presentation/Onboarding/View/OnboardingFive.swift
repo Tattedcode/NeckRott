@@ -16,6 +16,7 @@ struct OnboardingFive: View {
     
     @State private var showCards = Array(repeating: false, count: 4)
     @State private var showingAlert = false
+    @State private var showingRetryAlert = false
     @State private var alertMessage = ""
     
     private let permissionFeatures = [
@@ -27,7 +28,7 @@ struct OnboardingFive: View {
     
     var body: some View {
         // Group the content into a single stack
-        let content = VStack(spacing: 24) {
+        let content = VStack(spacing: 20) {
             // Mascot image
             Image("mascot1")
                 .resizable()
@@ -36,8 +37,21 @@ struct OnboardingFive: View {
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
-            // Permission feature cards with staggered animation
-            VStack(spacing: 12) {
+            // Title
+            Text("Screen Time Access")
+                .font(.title.bold())
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+            
+            // Subtitle
+            Text("Neckrott needs access to your screen time data to function")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+            
+            // Permission feature cards with staggered animation - stacked with no space
+            VStack(spacing: 0) {
                 ForEach(Array(permissionFeatures.enumerated()), id: \.offset) { index, feature in
                     PermissionFeatureCard(
                         icon: feature.icon,
@@ -50,15 +64,6 @@ struct OnboardingFive: View {
                 }
             }
             
-            // Permission status text
-            if hasAlertBeenDismissed {
-                Text(isScreenTimePermissionGranted ? "✅ Permission granted! You can now track your screen time." : "❌ Permission required. The app needs screen time access to function properly.")
-                    .font(.subheadline)
-                    .foregroundColor(isScreenTimePermissionGranted ? .green : .red)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-            }
         }
         
         // Parent container that centers the grouped content vertically
@@ -78,13 +83,6 @@ struct OnboardingFive: View {
                     }
                 }
             }
-            
-            // Show alert after all cards have finished animating (0.72s + small buffer)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-                if !isScreenTimePermissionGranted {
-                    requestScreenTimePermission()
-                }
-            }
         }
         .onChange(of: triggerPermissionRequest) { shouldTrigger in
             if shouldTrigger {
@@ -97,6 +95,8 @@ struct OnboardingFive: View {
                 isScreenTimePermissionGranted = false
                 hasAlertBeenDismissed = true
                 hasScreenTimePermissionResponded = true
+                // Show retry alert
+                showingRetryAlert = true
             }
             Button("Allow") {
                 isScreenTimePermissionGranted = true
@@ -105,6 +105,15 @@ struct OnboardingFive: View {
             }
         } message: {
             Text(alertMessage)
+        }
+        .alert("Permission Required", isPresented: $showingRetryAlert) {
+            Button("Try Again") {
+                showingRetryAlert = false
+                // Show the permission alert again
+                requestScreenTimePermission()
+            }
+        } message: {
+            Text("We need access for the app to work. Please grant screen time permission to continue.")
         }
     }
     
@@ -142,9 +151,10 @@ struct PermissionFeatureCard: View {
             
             Spacer()
         }
-        .padding(12)
+        .frame(maxWidth: .infinity) // Make all cards the same width
+        .padding(8) // Reduced padding to make cards shorter
         .background(Color.white.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(Rectangle()) // Remove rounded corners
     }
 }
 

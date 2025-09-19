@@ -222,12 +222,11 @@ struct OnboardingContainer: View {
     
     private var buttonColors: [Color] {
         // Check if button should be disabled
-        if (currentScreen == 1 && !hasReasonSelected) || 
-           (currentScreen == 6 && !hasScreenTimePermissionResponded) {
+        if (currentScreen == 1 && !hasReasonSelected) {
             return [Color.gray, Color.gray.opacity(0.8)]
         }
         
-        if currentScreen == 6 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
+        if currentScreen == 7 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
             return [Color.red, Color.red.opacity(0.8)]
         }
         return [Color.blue, Color.blue.opacity(0.8)]
@@ -301,7 +300,7 @@ struct OnboardingContainer: View {
                 }
                 
                 // Handle screen time permission request
-                if currentScreen == 6 { // Screen time permission screen
+                if currentScreen == 7 { // Screen time permission screen
                     if !hasScreenTimeAlertBeenDismissed {
                         // Trigger the permission request in the view
                         triggerScreenTimePermission = true
