@@ -226,9 +226,7 @@ struct OnboardingContainer: View {
             return [Color.gray, Color.gray.opacity(0.8)]
         }
         
-        if currentScreen == 7 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
-            return [Color.red, Color.red.opacity(0.8)]
-        }
+        // Always return blue colors - no red button for denied permissions
         return [Color.blue, Color.blue.opacity(0.8)]
     }
     
@@ -269,7 +267,15 @@ struct OnboardingContainer: View {
                     isScreenTimePermissionGranted: $isScreenTimePermissionGranted,
                     hasAlertBeenDismissed: $hasScreenTimeAlertBeenDismissed,
                     hasScreenTimePermissionResponded: $hasScreenTimePermissionResponded,
-                    subtitle: onboardingScreens[7].subtitle
+                    subtitle: onboardingScreens[7].subtitle,
+                    onPermissionGranted: {
+                        // Automatically proceed to next screen when permission is granted
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                currentScreen += 1
+                            }
+                        }
+                    }
                 )
             case .notificationsPermission:
                 OnboardingSix(

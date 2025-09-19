@@ -13,6 +13,7 @@ struct OnboardingFive: View {
     @Binding var hasAlertBeenDismissed: Bool
     @Binding var hasScreenTimePermissionResponded: Bool
     let subtitle: String
+    let onPermissionGranted: (() -> Void)? // Callback for when permission is granted
     
     @State private var showCards = Array(repeating: false, count: 4)
     @State private var showingAlert = false
@@ -50,7 +51,7 @@ struct OnboardingFive: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
             
-            // Permission feature cards with staggered animation - stacked with no space
+            // Permission feature cards in one container with rounded corners
             VStack(spacing: 0) {
                 ForEach(Array(permissionFeatures.enumerated()), id: \.offset) { index, feature in
                     PermissionFeatureCard(
@@ -63,6 +64,8 @@ struct OnboardingFive: View {
                     .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08), value: showCards[index])
                 }
             }
+            .background(Color.white.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             
         }
         
@@ -102,6 +105,8 @@ struct OnboardingFive: View {
                 isScreenTimePermissionGranted = true
                 hasAlertBeenDismissed = true
                 hasScreenTimePermissionResponded = true
+                // Automatically proceed to next screen when permission is granted
+                onPermissionGranted?()
             }
         } message: {
             Text(alertMessage)
@@ -152,9 +157,7 @@ struct PermissionFeatureCard: View {
             Spacer()
         }
         .frame(maxWidth: .infinity) // Make all cards the same width
-        .padding(8) // Reduced padding to make cards shorter
-        .background(Color.white.opacity(0.1))
-        .clipShape(Rectangle()) // Remove rounded corners
+        .padding(12) // Padding for individual card content
     }
 }
 
@@ -164,7 +167,8 @@ struct PermissionFeatureCard: View {
         isScreenTimePermissionGranted: .constant(false),
         hasAlertBeenDismissed: .constant(false),
         hasScreenTimePermissionResponded: .constant(false),
-        subtitle: "We need permission to track your screen time"
+        subtitle: "We need permission to track your screen time",
+        onPermissionGranted: nil
     )
 }
 
