@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingContainer: View {
-    @State private var currentScreen = 9 // Temporarily start at app selection screen for testing
+    @State private var currentScreen = 0 // Start at first screen
     @StateObject private var userStore = UserStore()
     @State private var triggerScreenTimePermission = false
     @State private var isScreenTimePermissionGranted = false
@@ -86,13 +86,6 @@ struct OnboardingContainer: View {
             content: .notificationsPermission,
             buttonText: "continue"
         ),
-        OnboardingScreen(
-            id: 9,
-            title: "",
-            subtitle: "",
-            content: .appSelection,
-            buttonText: "continue"
-        )
     ]
     
     var body: some View {
@@ -291,8 +284,6 @@ struct OnboardingContainer: View {
                     triggerPermissionRequest: $triggerNotificationPermission,
                     subtitle: onboardingScreens[8].subtitle
                 )
-            case .appSelection:
-                OnboardingAppSelection()
             case .progressChart:
                 progressChartMockup
             case .rewards:
@@ -471,7 +462,6 @@ enum OnboardingContent {
     case goalSetting
     case screenTimePermission
     case notificationsPermission
-    case appSelection
     case progressChart
     case rewards
 }

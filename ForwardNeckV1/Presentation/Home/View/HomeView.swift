@@ -2,199 +2,267 @@
 //  HomeView.swift
 //  ForwardNeckV1
 //
-//  Creates the Dashboard screen UI with two tabs: Overview (default) and Exercises.
-//  Follows MVVM. This file contains only SwiftUI view code.
+//  Fresh home page design based on brainrot app screenshot
+//  Clean, minimal design with mascot, health score, and statistics
 //
 
 import SwiftUI
 
-/// Simple enum for Dashboard tabs
-private enum HomeTab: String, CaseIterable, Identifiable {
-    case overview = "Overview"
-    case exercises = "Exercises"
-
-    var id: String { rawValue }
-}
-
 struct HomeView: View {
-    // ViewModel is reference type shared across child views
-    @State private var selectedTab: HomeTab = .overview
-    @State private var username: String = "Derek Doyle" // Placeholder until auth/profile exists
-    @State private var isDarkMode: Bool = true // For preview feel only; actual theme via Settings later
-    @StateObject private var viewModel: HomeViewModel = HomeViewModel()
-
+    @State private var selectedDate = "today"
+    @State private var healthScore = 100
+    @State private var screenTime = "0m"
+    @State private var dailyStreak = 7
+    @State private var selectedTab = 0
+    @StateObject private var screenTimeService = ScreenTimeService()
+    
     var body: some View {
         ZStack {
-            // Background gradient centralized in Theme
+            // Background gradient matching onboarding
             Theme.backgroundGradient
                 .ignoresSafeArea()
-
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 16) {
-                    header
-                    tabSelector
-                    content
+            
+            VStack(spacing: 0) {
+                // Top section with date and help buttons
+                topSection
+                
+                // Main content
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // App title
+                        Text("ForwardNeck")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.top, 20)
+                        
+                        // Mascot and health score
+                        mascotSection
+                        
+                        // Statistics section
+                        statisticsSection
+                        
+                        Spacer(minLength: 100) // Space for bottom nav
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 24)
-                .padding(.bottom, 32)
+                
+                // Bottom navigation
+                bottomNavigation
             }
         }
         .onAppear {
-            // Debug log: track lifecycle
-            print("[HomeView] onAppear – loading dashboard data")
-            Task { await viewModel.loadDashboard() }
-        }
-    }
-
-    // MARK: - Subviews
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Dashboard")
-                .font(.headline)
-                .foregroundColor(Color.white.opacity(0.7))
-
-            // Greeting line like mockup: "Hello, Derek Doyle 👋"
-            HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text("Hello, \(username)")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(.white)
-                Text("👋")
-                    .font(.system(size: 28))
+            Task {
+                await loadScreenTime()
             }
         }
     }
-
-    private var tabSelector: some View {
-        // Segmented style pill buttons matching mockup
-        HStack(spacing: 8) {
-            ForEach(HomeTab.allCases) { tab in
-                Button(action: {
-                    selectedTab = tab
-                    Log.info("Switched Home tab to: \(tab.rawValue)")
-                }) {
-                    Text(tab.rawValue)
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 14)
-                        .background(selectedTab == tab ? Theme.pillSelected : Theme.pillUnselected)
-                        .foregroundColor(selectedTab == tab ? Theme.primaryText : Theme.secondaryText)
-                        .clipShape(Capsule())
+    
+    // MARK: - Screen Time Loading
+    
+    private func loadScreenTime() async {
+        await screenTimeService.fetchScreenTime()
+        screenTime = screenTimeService.formatScreenTime(screenTimeService.totalScreenTime)
+    }
+    
+    // MARK: - Top Section
+    
+    private var topSection: some View {
+        HStack {
+            // Date selector
+            Button(action: {
+                // Handle date selection
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 14))
+                    Text(selectedDate)
+                        .font(.system(size: 14, weight: .medium))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12))
                 }
-                .buttonStyle(.plain)
+                .foregroundColor(.gray)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            Spacer(minLength: 0)
+            
+            Spacer()
+            
+            // Help button
+            Button(action: {
+                // Handle help action
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "questionmark")
+                        .font(.system(size: 14))
+                    Text("help")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                .foregroundColor(.gray)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
         }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
     }
-
-    @ViewBuilder
-    private var content: some View {
-        switch selectedTab {
-        case .overview:
-            OverviewTabView(viewModel: viewModel)
-        case .exercises:
-            ExercisesTabView(viewModel: viewModel)
-        }
-    }
-}
-
-// MARK: - Overview Tab
-
-private struct OverviewTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
-
-    var body: some View {
+    
+    // MARK: - Mascot Section
+    
+    private var mascotSection: some View {
         VStack(spacing: 16) {
-            // Place Current and Longest streaks side-by-side
-            HStack(spacing: 12) {
-                CurrentStreakView(currentStreak: viewModel.currentStreakDays)
-                    .frame(maxWidth: .infinity)
-                LongestStreakView(longestStreak: viewModel.longestStreakDays)
-                    .frame(maxWidth: .infinity)
-            }
-
-            // Daily progress card
-            DailyStreakCard(
-                completed: viewModel.completedRemindersToday,
-                total: viewModel.dailyReminderTarget
-            )
-
-            // Next exercise to do - shows random exercise with start button
-            NextExerciseView(
-                exercise: viewModel.nextExercise,
-                onStartExercise: {
-                    viewModel.startNextExercise()
-                },
-                onCompleteExercise: {
-                    viewModel.completeNextExercise()
-                }
-            )
-
-            // Two metric cards in a vertical stack like mockup
-            VStack(spacing: 12) {
-                MetricRowCard(
-                    title: "Posture Check-Ins",
-                    systemImage: "figure.walk",
-                    color: Color.orange,
-                    value: viewModel.weeklyPostureCheckins
-                )
-                MetricRowCard(
-                    title: "Exercises Done",
-                    systemImage: "dumbbell",
-                    color: Color.green,
-                    value: viewModel.weeklyExercisesDone
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Exercises Tab (list-only for now)
-
-private struct ExercisesTabView: View {
-    @ObservedObject var viewModel: HomeViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(viewModel.exercises) { exercise in
-                HStack(spacing: 12) {
-                    Image(systemName: exercise.iconSystemName)
-                        .foregroundColor(.white)
-                        .frame(width: 36, height: 36)
-                        .background(Color.blue.opacity(0.3))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(exercise.title)
-                            .foregroundColor(.white)
-                            .font(.headline)
-                        Text(exercise.durationLabel)
-                            .foregroundColor(.white.opacity(0.7))
-                            .font(.subheadline)
+            // Mascot image - made bigger
+            Image("mascot3")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 160, height: 160)
+            
+            // Health score
+            Text("\(healthScore)")
+                .font(.system(size: 48, weight: .bold))
+                .foregroundColor(.white)
+            
+            // Health bar
+            VStack(spacing: 4) {
+                // Progress bar - made smaller
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 6)
+                        
+                        // Progress fill
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.green)
+                            .frame(width: geometry.size.width, height: 6)
                     }
-                    Spacer()
-
-                    // Placeholder action; actual navigation will be added in Exercise Detail feature
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.white.opacity(0.6))
                 }
-                .padding(14)
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .onTapGesture {
-                    Log.info("Tapped exercise: \(exercise.title)")
+                .frame(height: 6)
+                
+                // Health label
+                HStack(spacing: 4) {
+                    Text("health")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.7))
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.7))
                 }
             }
         }
     }
+    
+    // MARK: - Statistics Section
+    
+    private var statisticsSection: some View {
+        VStack(spacing: 16) {
+            // Divider line
+            Rectangle()
+                .fill(Color.white.opacity(0.3))
+                .frame(height: 1)
+            
+            // Two column stats
+            HStack(spacing: 40) {
+                // Left column - Screen time
+                VStack(alignment: .center, spacing: 4) {
+                    Text("screen time")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    if screenTimeService.isLoading {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Loading...")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    } else {
+                        Text(screenTime)
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                Spacer()
+                
+                // Right column - Daily Streak
+                VStack(alignment: .center, spacing: 4) {
+                    Text("daily streak")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.7))
+                    Text("\(dailyStreak)")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+    }
+    
+    
+    // MARK: - Bottom Navigation
+    
+    private var bottomNavigation: some View {
+        VStack(spacing: 0) {
+            // Divider line
+            Rectangle()
+                .fill(Color.white.opacity(0.3))
+                .frame(height: 1)
+            
+            HStack(spacing: 0) {
+                ForEach(0..<4) { index in
+                    Button(action: {
+                        selectedTab = index
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: tabIcon(for: index))
+                                .font(.system(size: 20))
+                                .foregroundColor(selectedTab == index ? .white : .white.opacity(0.6))
+                            
+                            Text(tabTitle(for: index))
+                                .font(.system(size: 10))
+                                .foregroundColor(selectedTab == index ? .white : .white.opacity(0.6))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+        }
+        .background(Color.clear)
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func tabIcon(for index: Int) -> String {
+        switch index {
+        case 0: return "house.fill"
+        case 1: return "calendar"
+        case 2: return "nosign"
+        case 3: return "gearshape.fill"
+        default: return "house.fill"
+        }
+    }
+    
+    private func tabTitle(for index: Int) -> String {
+        switch index {
+        case 0: return "home"
+        case 1: return "stats"
+        case 2: return "blocking"
+        case 3: return "settings"
+        default: return "home"
+        }
+    }
 }
-
-// Components moved to `Components/` folder for reuse
 
 // MARK: - Preview
 
 #Preview {
     HomeView()
 }
-// Test comment

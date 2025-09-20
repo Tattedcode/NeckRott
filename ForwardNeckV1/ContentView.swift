@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showOnboarding = true
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true // TEMPORARILY SKIP ONBOARDING FOR TESTING
     
     var body: some View {
         if showOnboarding && !hasCompletedOnboarding {
