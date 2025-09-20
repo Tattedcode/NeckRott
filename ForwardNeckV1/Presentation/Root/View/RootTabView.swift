@@ -9,8 +9,7 @@ import SwiftUI
 
 enum RootTab: String, CaseIterable, Hashable {
     case home = "Home"
-    case exercises = "Exercises"
-    case progress = "Progress"
+    case stats = "Stats"
     case rewards = "Rewards"
     case settings = "Settings"
     
@@ -32,27 +31,15 @@ struct RootTabView: View {
             }
             .tag(RootTab.home)
 
-            // Exercises Tab - Exercise list and guides
-            NavigationStack { 
-                ExerciseListView()
-                    .navigationTitle("Exercises")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tabItem { 
-                Label("Exercises", systemImage: "figure.strengthtraining.functional") 
-            }
-            .tag(RootTab.exercises)
-
-            // Progress Tab - Charts, analytics, and streak tracking
+            // Stats Tab - Calendar-based progress tracking
             NavigationStack { 
                 ProgressTrackingView()
-                    .navigationTitle("Progress")
-                    .navigationBarTitleDisplayMode(.large)
+                    .navigationBarHidden(true)
             }
             .tabItem { 
-                Label("Progress", systemImage: "chart.bar.xaxis") 
+                Label("Stats", systemImage: "calendar") 
             }
-            .tag(RootTab.progress)
+            .tag(RootTab.stats)
 
             // Rewards Tab - Gamification, levels, and achievements
             NavigationStack { 
@@ -119,5 +106,4 @@ struct RootTabView: View {
 #Preview {
     RootTabView()
 }
-
 

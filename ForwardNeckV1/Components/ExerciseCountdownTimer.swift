@@ -217,6 +217,9 @@ struct ExerciseCountdownTimer: View {
         timeRemaining = totalDuration
         
         Log.info("Exercise timer reset")
+
+        // Immediately restart to avoid leaving the timer idle on the reset screen
+        startTimer()
     }
     
     private func cancelTimer() {

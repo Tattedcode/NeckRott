@@ -54,7 +54,7 @@ struct HomeView: View {
                 await viewModel.onAppear()
             }
         }
-        .sheet(isPresented: $isShowingExerciseTimer) {
+        .fullScreenCover(isPresented: $isShowingExerciseTimer) {
             if let exercise = viewModel.nextExercise {
                 ExerciseTimerSheet(
                     exercise: exercise,
@@ -68,8 +68,6 @@ struct HomeView: View {
                         isShowingExerciseTimer = false
                     }
                 )
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
             } else {
                 ZStack {
                     Theme.backgroundGradient
@@ -133,13 +131,13 @@ struct HomeView: View {
     private var mascotSection: some View {
         VStack(spacing: 16) {
             // Mascot image - made bigger
-            Image("mascot3")
+            Image(mascotAssetName)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 160, height: 160)
             
             // Health score
-            Text("\(viewModel.healthScore)")
+            Text("\(viewModel.healthPercentage)%")
                 .font(.system(size: 48, weight: .bold))
                 .foregroundColor(.white)
             
@@ -148,15 +146,17 @@ struct HomeView: View {
                 // Progress bar - made smaller
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        // Background
                         RoundedRectangle(cornerRadius: 3)
                             .fill(Color.gray.opacity(0.3))
                             .frame(height: 6)
-                        
-                        // Progress fill
+
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.green)
-                            .frame(width: geometry.size.width, height: 6)
+                            .fill(LinearGradient(
+                                colors: [.red, .yellow, .green],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .frame(width: max(0, geometry.size.width * barFillRatio), height: 6)
                     }
                 }
                 .frame(height: 6)
@@ -183,8 +183,8 @@ struct HomeView: View {
                 .fill(Color.white.opacity(0.3))
                 .frame(height: 1)
             
-            // Three column stats
-            HStack(spacing: 40) {
+            // Four column stats
+            HStack(spacing: 30) {
                 // Left column - Screen time
                 VStack(alignment: .center, spacing: 4) {
                     Text("screen time")
@@ -204,6 +204,17 @@ struct HomeView: View {
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(.white)
                     }
+                }
+                .frame(maxWidth: .infinity)
+
+                // Middle left column - Neck fixes progress
+                VStack(alignment: .center, spacing: 4) {
+                    Text("neck fixes")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.7))
+                    Text("\(viewModel.neckFixesCompleted)/\(viewModel.neckFixesTarget)")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity)
 
@@ -293,7 +304,7 @@ struct HomeView: View {
                                     Circle()
                                         .fill(
                                             LinearGradient(
-                                                colors: [color(for: exercise.difficulty), color(for: exercise.difficulty).opacity(0.8)],
+                                                colors: [Color.green, Color.green.opacity(0.8)],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                             )
@@ -343,6 +354,25 @@ struct HomeView: View {
             return .orange
         case .hard:
             return .red
+        }
+    }
+
+    private var barFillRatio: CGFloat {
+        let ratio = Double(viewModel.healthPercentage) / 100.0
+        return CGFloat(min(max(ratio, 0.0), 1.0))
+    }
+
+    private var mascotAssetName: String {
+        let percentage = viewModel.healthPercentage
+        switch percentage {
+        case ..<25:
+            return "mascot1"
+        case 25..<50:
+            return "mascot2"
+        case 50..<75:
+            return "mascot3"
+        default:
+            return "mascot4"
         }
     }
 

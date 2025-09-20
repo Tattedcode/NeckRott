@@ -58,9 +58,15 @@ final class ExerciseStore: ObservableObject {
         do {
             let data = try Data(contentsOf: fileURL)
             let container = try JSONDecoder().decode(ExerciseDataContainer.self, from: data)
-            exercises = container.exercises
+
+            let normalizedExercises = normalizeExercises(container.exercises)
+            exercises = normalizedExercises
             completions = container.completions
             Log.info("Loaded \(exercises.count) exercises and \(completions.count) completions")
+
+            if normalizedExercises != container.exercises {
+                await save()
+            }
         } catch {
             // First run - seed with default exercises
             await seedDefaultExercises()
@@ -90,7 +96,7 @@ final class ExerciseStore: ObservableObject {
                     "Hold for 15 seconds",
                     "Return to center and repeat on left side"
                 ],
-                durationSeconds: 60,
+                durationSeconds: 10,
                 iconSystemName: "person.fill.viewfinder",
                 difficulty: .easy
             ),
@@ -103,7 +109,7 @@ final class ExerciseStore: ObservableObject {
                     "Hold for 5 seconds",
                     "Release and repeat 10 times"
                 ],
-                durationSeconds: 90,
+                durationSeconds: 10,
                 iconSystemName: "face.smiling",
                 difficulty: .easy
             ),
@@ -116,7 +122,7 @@ final class ExerciseStore: ObservableObject {
                     "Complete 10 full circles",
                     "Reverse direction for 10 more"
                 ],
-                durationSeconds: 120,
+                durationSeconds: 10,
                 iconSystemName: "figure.strengthtraining.traditional",
                 difficulty: .easy
             ),
@@ -129,13 +135,28 @@ final class ExerciseStore: ObservableObject {
                     "Slowly slide arms up to 'Y' position",
                     "Return to 'W' and repeat 10 times"
                 ],
-                durationSeconds: 180,
+                durationSeconds: 10,
                 iconSystemName: "figure.walk",
                 difficulty: .medium
             )
         ]
         completions = []
         await save()
+    }
+
+    private func normalizeExercises(_ exercises: [Exercise]) -> [Exercise] {
+        exercises.map { exercise in
+            guard exercise.durationSeconds != 10 else { return exercise }
+            return Exercise(
+                id: exercise.id,
+                title: exercise.title,
+                description: exercise.description,
+                instructions: exercise.instructions,
+                durationSeconds: 10,
+                iconSystemName: exercise.iconSystemName,
+                difficulty: exercise.difficulty
+            )
+        }
     }
     
     /// Reset all exercise data (completions only, keeps exercise definitions)

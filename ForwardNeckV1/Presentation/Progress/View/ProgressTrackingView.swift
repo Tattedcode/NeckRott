@@ -2,187 +2,211 @@
 //  ProgressTrackingView.swift
 //  ForwardNeckV1
 //
-//  Screen showing daily goal ring and 7-day bar chart with mock data.
+//  Calendar-first stats screen inspired by the brainrot calendar design.
 //
 
 import SwiftUI
 
 struct ProgressTrackingView: View {
-    // Use StateObject so SwiftUI observes @Published changes (like selectedRange)
-    @StateObject private var viewModel: ProgressTrackingViewModel = ProgressTrackingViewModel()
-
+    @StateObject private var viewModel = ProgressTrackingViewModel()
+    
+    private let backgroundGradient = Theme.backgroundGradient
+    private let cardColor = Theme.cardBackground
+    private let inactiveDayColor = Color.white.opacity(0.08)
+    private let textPrimary = Color.white
+    private let secondaryText = Color.white.opacity(0.7)
+    
+    private let calendarColumns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 7)
+    private let summaryColumns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 2)
+    
     var body: some View {
         ZStack {
-            Theme.backgroundGradient.ignoresSafeArea()
+            backgroundGradient.ignoresSafeArea()
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Progress")
-                        .font(.largeTitle.bold())
-                        .foregroundColor(.white)
-
-                    // Range selector and goals button
-                    HStack {
-                        // Range selector
-                        HStack(spacing: 8) {
-                            ForEach(ProgressRange.allCases) { range in
-                                Button(action: { withAnimation { viewModel.selectedRange = range } }) {
-                                    Text(range.rawValue)
-                                        .font(.subheadline.bold())
-                                        .padding(.vertical, 8)
-                                        .padding(.horizontal, 12)
-                                        .background(viewModel.selectedRange == range ? Theme.pillSelected : Theme.pillUnselected)
-                                        .foregroundColor(.white)
-                                        .clipShape(Capsule())
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        // Goals button
-                        NavigationLink {
-                            GoalsView()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "target")
-                                Text("Goals")
-                            }
-                            .font(.subheadline.bold())
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(Theme.pillSelected)
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    // Daily goal ring section
-                    VStack(spacing: 12) {
-                        Text("Daily Goal")
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.85))
-                        ProgressRingView(progress: viewModel.progress, size: 160, lineWidth: 16)
-                        Text("\(viewModel.completedToday)/\(viewModel.dailyGoal) completed today")
-                            .foregroundColor(.white.opacity(0.85))
-                            .font(.subheadline)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(16)
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    
-                    // Streak statistics section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Streak & Stats")
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.85))
-                        
-                        // Current streak
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Current Streak")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(viewModel.currentStreak) days")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                            }
-                            Spacer()
-                            Image(systemName: "flame.fill")
-                                .font(.title)
-                                .foregroundColor(.orange)
-                        }
-                        
-                        // Stats grid
-                        HStack(spacing: 20) {
-                            // Longest streak
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Longest")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(viewModel.longestStreak)")
-                                    .font(.title3.bold())
-                                    .foregroundColor(.white)
-                            }
-                            
-                            Spacer()
-                            
-                            // Total check-ins
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Check-ins")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(viewModel.totalPostureChecks)")
-                                    .font(.title3.bold())
-                                    .foregroundColor(.white)
-                            }
-                            
-                            Spacer()
-                            
-                            // Total exercises
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Exercises")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(viewModel.totalExercises)")
-                                    .font(.title3.bold())
-                                    .foregroundColor(.white)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(16)
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-
-                    // 7-day chart section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(titleForSelectedRange)
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.85))
-                        BarChartView(data: currentBarData)
-                    }
-                    
-                    // Charts & Analytics section
-                    VStack(spacing: 16) {
-                        // Weekly bar chart
-                        WeeklyBarChartView(
-                            data: viewModel.weeklyAnalytics,
-                            isEmpty: viewModel.weeklyAnalytics.isEmpty
-                        )
-                        
-                        // Streak line chart
-                        StreakLineChartView(
-                            streakData: viewModel.streakOverTime,
-                            isEmpty: viewModel.streakOverTime.streakData.isEmpty
-                        )
-                    }
+                VStack(alignment: .leading, spacing: 28) {
+                    header
+                    calendarCard
+                    summarySection
                 }
-                .padding(16)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 24)
             }
         }
-        .onAppear { Log.info("ProgressTrackingView appeared") }
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
-
-    private var titleForSelectedRange: String {
-        switch viewModel.selectedRange {
-        case .last7: return "Last 7 Days"
-        case .last14: return "Last 2 Weeks"
-        case .last30: return "Last Month"
+    
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("neck fix calendar")
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(textPrimary)
+            Text(viewModel.monthTitle.capitalized)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(secondaryText)
+        }
+    }
+    
+    private var calendarCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            monthSelector
+            weekdayHeader
+            LazyVGrid(columns: calendarColumns, spacing: 12) {
+                ForEach(viewModel.calendarDays) { day in
+                    calendarCell(for: day)
+                }
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(cardColor)
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .shadow(color: Color.black.opacity(0.35), radius: 12, x: 0, y: 6)
+    }
+    
+    private var monthSelector: some View {
+        HStack {
+            Button(action: { viewModel.moveMonth(by: -1) }) {
+                selectorButton(icon: "chevron.left")
+            }
+            Spacer(minLength: 12)
+            Text(viewModel.monthTitle)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(textPrimary)
+            Spacer(minLength: 12)
+            Button(action: { viewModel.moveMonth(by: 1) }) {
+                selectorButton(icon: "chevron.right")
+            }
+        }
+    }
+    
+    private func selectorButton(icon: String) -> some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(inactiveDayColor)
+            .frame(width: 44, height: 44)
+            .overlay(
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(textPrimary)
+            )
+    }
+    
+    private var weekdayHeader: some View {
+        HStack(spacing: 12) {
+            ForEach(viewModel.weekdaySymbols, id: \.self) { symbol in
+                Text(symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(secondaryText)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+    
+    private func calendarCell(for day: CalendarDay) -> some View {
+        Group {
+            if let dayNumber = day.day, let date = day.date {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(dayBackgroundColor(for: day))
+                    .frame(height: 64)
+                    .overlay(
+                        VStack(spacing: 6) {
+                            Text("\(dayNumber)")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(textPrimary)
+                            Image(day.mascotAssetName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 22, height: 22)
+                        }
+                        .padding(.vertical, 8)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(day.isToday ? 0.9 : 0), lineWidth: 2)
+                    )
+                    .accessibilityLabel(calendarCellAccessibility(for: date, hasActivity: day.hasActivity))
+            } else {
+                Color.clear.frame(height: 64)
+            }
+        }
+    }
+    
+    private func calendarCellAccessibility(for date: Date, hasActivity: Bool) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        let base = formatter.string(from: date)
+        return hasActivity ? "\(base), activity completed" : base
+    }
+    
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("monthly neck summary")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(textPrimary)
+            
+            LazyVGrid(columns: summaryColumns, spacing: 12) {
+                SummaryCard(
+                    title: "total fixes",
+                    value: viewModel.summary.totalLabel,
+                    systemIcon: "chart.bar.fill",
+                    accentColor: Color.blue.opacity(0.8)
+                )
+                SummaryCard(
+                    title: "average daily",
+                    value: viewModel.summary.averageLabel,
+                    systemIcon: "clock.fill",
+                    accentColor: Color.orange.opacity(0.8)
+                )
+            }
         }
     }
 
-    private var currentBarData: [BarDatum] {
-        switch viewModel.selectedRange {
-        case .last7:
-            return viewModel.last7Days.map { BarDatum(label: $0.label, value: Double($0.value)) }
-        case .last14:
-            return viewModel.last14Days.map { BarDatum(label: $0.label, value: Double($0.value)) }
-        case .last30:
-            return viewModel.last30Days.map { BarDatum(label: $0.label, value: Double($0.value)) }
+    private struct SummaryCard: View {
+        let title: String
+        let value: String
+        let systemIcon: String
+        let accentColor: Color
+
+        private var textPrimary: Color { Color.white }
+        private var secondaryText: Color { Color.white.opacity(0.7) }
+
+        var body: some View {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.08))
+                .frame(height: 110)
+                .overlay(
+                    VStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(accentColor.opacity(0.35))
+                            .frame(width: 32, height: 32)
+                            .overlay(
+                                Image(systemName: systemIcon)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(Color.white)
+                            )
+                        Text(title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(secondaryText)
+                        Text(value)
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(textPrimary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(16)
+                )
+                .shadow(color: accentColor.opacity(0.25), radius: 10, x: 0, y: 8)
+        }
+    }
+
+    private func dayBackgroundColor(for day: CalendarDay) -> Color {
+        switch day.mascotAssetName {
+        case "mascot1":
+            return Color.red.opacity(day.hasActivity ? 0.35 : 0.12)
+        case "mascot2":
+            return Color.orange.opacity(day.hasActivity ? 0.35 : 0.12)
+        case "mascot3":
+            return Color.yellow.opacity(day.hasActivity ? 0.35 : 0.12)
+        default:
+            return Color.green.opacity(day.hasActivity ? 0.35 : 0.12)
         }
     }
 }
@@ -190,5 +214,3 @@ struct ProgressTrackingView: View {
 #Preview {
     NavigationStack { ProgressTrackingView() }
 }
-
-

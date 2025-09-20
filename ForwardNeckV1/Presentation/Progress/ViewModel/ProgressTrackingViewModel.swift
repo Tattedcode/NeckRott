@@ -2,190 +2,212 @@
 //  ProgressTrackingViewModel.swift
 //  ForwardNeckV1
 //
-//  ViewModel for progress tracking screen with real streak data
-//  Part of B-004: Add F-004 Streaks & Progress on S-004 Progress Screen
+//  Calendar-driven stats view model powering the Stats tab.
 //
 
+import Combine
 import Foundation
 
-struct DayBar: Identifiable {
+struct CalendarDay: Identifiable {
     let id = UUID()
-    let label: String // e.g., Mon, Tue
-    let value: Int
+    let date: Date?
+    let day: Int?
+    let isToday: Bool
+    let completionCount: Int
+    let mascotAssetName: String
+    
+    var hasActivity: Bool { completionCount > 0 }
 }
 
-enum ProgressRange: String, CaseIterable, Identifiable {
-    case last7 = "7 Days"
-    case last14 = "2 Weeks"
-    case last30 = "1 Month"
-    var id: String { rawValue }
+struct MonthlySummary {
+    var totalFixes: Int
+    var averageDaily: Double
+    var bestDay: Date?
+    var topExerciseName: String?
+    
+    static let empty = MonthlySummary(totalFixes: 0, averageDaily: 0, bestDay: nil, topExerciseName: nil)
+    
+    var totalLabel: String { "\(totalFixes)" }
+    var averageLabel: String {
+        guard totalFixes > 0 else { return "0" }
+        return String(format: "%.1f", averageDaily)
+    }
+    var bestDayLabel: String {
+        guard let bestDay else { return "n/a" }
+        return MonthlySummary.bestDayFormatter.string(from: bestDay)
+    }
+    var topExerciseLabel: String { topExerciseName ?? "n/a" }
+    
+    private static let bestDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
 }
 
 @MainActor
 final class ProgressTrackingViewModel: ObservableObject {
-    // Store dependencies for real data
-    private let checkInStore: CheckInStore = CheckInStore.shared
-    private let exerciseStore: ExerciseStore = ExerciseStore.shared
-    private let streakStore: StreakStore = StreakStore.shared
-    private let chartsStore: ChartsStore = ChartsStore.shared
+    @Published var displayedMonth: Date
+    @Published var calendarDays: [CalendarDay] = []
+    @Published var summary: MonthlySummary = .empty
+    @Published private(set) var dailyGoal: Int = 0
     
-    // Daily goal stats shown in the ring
-    @Published var completedToday: Int = 0
-    @Published var dailyGoal: Int = 5
+    private let exerciseStore = ExerciseStore.shared
+    private let userStore = UserStore()
+    private let calendar = Calendar.current
+    private var cancellables = Set<AnyCancellable>()
     
-    // Streak statistics
-    @Published var currentStreak: Int = 0
-    @Published var longestStreak: Int = 0
-    @Published var totalPostureChecks: Int = 0
-    @Published var totalExercises: Int = 0
+    private let monthFormatter: DateFormatter
+    private let startOfMonthComponents: Set<Calendar.Component> = [.year, .month]
     
-    // Charts & Analytics data
-    @Published var weeklyAnalytics: [WeeklyAnalytics] = []
-    @Published var streakOverTime: StreakOverTime = StreakOverTime(streakData: [], maxStreak: 0, currentStreak: 0, averageStreak: 0.0)
-
-    // Past posture check-ins for multiple ranges
-    @Published var last7Days: [DayBar] = []
-    @Published var last14Days: [DayBar] = []
-    @Published var last30Days: [DayBar] = []
-
-    // Selected range
-    @Published var selectedRange: ProgressRange = .last7
-
     init() {
-        loadData()
+        let components = Calendar.current.dateComponents(startOfMonthComponents, from: Date())
+        displayedMonth = Calendar.current.date(from: components) ?? Date()
+        monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "LLLL yyyy"
+        observeStores()
+        rebuild()
+    }
+    
+    func moveMonth(by value: Int) {
+        guard let newMonth = calendar.date(byAdding: .month, value: value, to: displayedMonth) else { return }
+        displayedMonth = newMonth
+        rebuild()
+    }
+    
+    var monthTitle: String {
+        monthFormatter.string(from: displayedMonth).capitalized
+    }
+    
+    var weekdaySymbols: [String] {
+        // Custom symbols to match the design (s, m, t, w, t, f, s)
+        ["s", "m", "t", "w", "t", "f", "s"]
+    }
+    
+    // MARK: - Private helpers
+    
+    private func observeStores() {
+        dailyGoal = max(userStore.dailyGoal, 1)
+
+        exerciseStore.$completions
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.rebuild()
+            }
+            .store(in: &cancellables)
+        
+        exerciseStore.$exercises
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.rebuild()
+            }
+            .store(in: &cancellables)
+
+        userStore.$dailyGoal
+            .receive(on: RunLoop.main)
+            .sink { [weak self] newGoal in
+                self?.dailyGoal = max(newGoal, 1)
+                self?.rebuild()
+            }
+            .store(in: &cancellables)
     }
 
-    /// Load real data from stores and calculate statistics
-    /// Part of F-004: Streaks & Progress feature
-    func loadData() {
-        Task {
-            await loadStreakData()
-            await loadChartData()
-            await loadChartsData()
+    private func rebuild() {
+        let completions = monthCompletions()
+        let dayCounts = dayCounts(from: completions)
+        calendarDays = generateCalendarDays(using: dayCounts)
+        summary = buildSummary(from: completions, dayCounts: dayCounts)
+    }
+    
+    private func monthCompletions() -> [ExerciseCompletion] {
+        guard let interval = calendar.dateInterval(of: .month, for: displayedMonth) else { return [] }
+        let start = calendar.startOfDay(for: interval.start)
+        let end = calendar.startOfDay(for: interval.end)
+        return exerciseStore.completions.filter { completion in
+            completion.completedAt >= start && completion.completedAt < end
         }
     }
     
-    /// Load streak statistics from stores
-    /// Calculates current streak, longest streak, and totals
-    private func loadStreakData() async {
-        // Get all check-ins and exercise completions
-        let allCheckIns = checkInStore.all()
-        let allExercises = exerciseStore.completions
-        
-        // Update daily streaks based on real data
-        let checkInDates = allCheckIns.map { $0.timestamp }
-        let exerciseDates = allExercises.map { $0.completedAt }
-        streakStore.updateDailyStreaks(checkIns: checkInDates, exerciseCompletions: exerciseDates)
-        
-        // Get combined streak statistics
-        let stats = streakStore.getStats(for: .combined)
-        currentStreak = stats.currentStreak
-        longestStreak = stats.longestStreak
-        totalPostureChecks = allCheckIns.count
-        totalExercises = allExercises.count
-        
-        // Calculate today's progress
-        await calculateTodaysProgress()
-    }
-    
-    /// Calculate today's progress for the daily goal ring
-    /// Counts check-ins and exercises completed today
-    private func calculateTodaysProgress() async {
-        let calendar = Calendar.current
-        let today = Date()
-        
-        // Count today's check-ins
-        let allCheckIns = checkInStore.all()
-        let todaysCheckIns = allCheckIns.filter { calendar.isDate($0.timestamp, inSameDayAs: today) }.count
-        
-        // Count today's exercises
-        let allExercises = exerciseStore.completions
-        let _ = allExercises.filter { calendar.isDate($0.completedAt, inSameDayAs: today) }.count
-        
-        // For now, use check-ins as the primary metric for daily goal
-        // In a real app, this could be configurable or combined
-        completedToday = todaysCheckIns
-    }
-    
-    /// Load chart data for different time ranges
-    /// Creates DayBar data for 7, 14, and 30 day charts
-    private func loadChartData() async {
-        let calendar = Calendar.current
-        let today = Date()
-        
-        // Load 7-day data
-        last7Days = await createChartData(days: 7, from: today, calendar: calendar)
-        
-        // Load 14-day data
-        last14Days = await createChartData(days: 14, from: today, calendar: calendar)
-        
-        // Load 30-day data
-        last30Days = await createChartData(days: 30, from: today, calendar: calendar)
-    }
-    
-    /// Create chart data for a specific number of days
-    /// - Parameters:
-    ///   - days: Number of days to include in the chart
-    ///   - from: Starting date (usually today)
-    ///   - calendar: Calendar instance for date calculations
-    /// - Returns: Array of DayBar objects for the chart
-    private func createChartData(days: Int, from: Date, calendar: Calendar) async -> [DayBar] {
-        var chartData: [DayBar] = []
-        
-        for i in 0..<days {
-            let date = calendar.date(byAdding: .day, value: -i, to: from) ?? from
-            let dayLabel = formatDayLabel(for: date, index: i, totalDays: days)
-            
-            // Count check-ins for this day
-            let allCheckIns = checkInStore.all()
-            let dayCheckIns = allCheckIns.filter { calendar.isDate($0.timestamp, inSameDayAs: date) }.count
-            
-            chartData.append(DayBar(label: dayLabel, value: dayCheckIns))
+    private func dayCounts(from completions: [ExerciseCompletion]) -> [Date: Int] {
+        completions.reduce(into: [Date: Int]()) { dict, completion in
+            let key = calendar.startOfDay(for: completion.completedAt)
+            dict[key, default: 0] += 1
         }
-        
-        // Reverse to show oldest to newest
-        return chartData.reversed()
     }
     
-    /// Format day label for chart display
-    /// - Parameters:
-    ///   - date: The date to format
-    ///   - index: Index in the chart (0 = most recent)
-    ///   - totalDays: Total number of days in the chart
-    /// - Returns: Formatted day label
-    private func formatDayLabel(for date: Date, index: Int, totalDays: Int) -> String {
-        let formatter = DateFormatter()
-        
-        if totalDays <= 7 {
-            // For 7 days, show day names (Mon, Tue, etc.)
-            formatter.dateFormat = "E"
-            return formatter.string(from: date)
-        } else if totalDays <= 14 {
-            // For 14 days, show day numbers
-            return "D\(totalDays - index)"
-        } else {
-            // For 30 days, show day numbers
-            return "D\(totalDays - index)"
+    private func generateCalendarDays(using dayCounts: [Date: Int]) -> [CalendarDay] {
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents(startOfMonthComponents, from: displayedMonth)),
+              let dayRange = calendar.range(of: .day, in: .month, for: displayedMonth) else {
+            return []
         }
+        var cells: [CalendarDay] = []
+        let firstWeekday = calendar.component(.weekday, from: startOfMonth)
+        let leadingPlaceholders = (firstWeekday + 6) % 7 // Align weeks to start on Sunday
+        for _ in 0..<leadingPlaceholders {
+            cells.append(CalendarDay(date: nil, day: nil, isToday: false, completionCount: 0, mascotAssetName: "mascot1"))
+        }
+        for day in dayRange {
+            guard let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) else { continue }
+            let dayKey = calendar.startOfDay(for: date)
+            var count = dayCounts[dayKey] ?? 0
+
+            // Inject lightweight dummy data for past days during testing
+            if count == 0, date < calendar.startOfDay(for: Date()) {
+                let dayNumber = calendar.component(.day, from: date)
+                let baseline = max(dailyGoal, 3)
+                count = (dayNumber % (baseline + 1))
+            }
+
+            let mascot = mascotAssetName(for: count)
+            cells.append(
+                CalendarDay(
+                    date: date,
+                    day: day,
+                    isToday: calendar.isDateInToday(date),
+                    completionCount: count,
+                    mascotAssetName: mascot
+                )
+            )
+        }
+        let remainder = cells.count % 7
+        if remainder != 0 {
+            for _ in 0..<(7 - remainder) {
+                cells.append(CalendarDay(date: nil, day: nil, isToday: false, completionCount: 0, mascotAssetName: "mascot1"))
+            }
+        }
+        return cells
+    }
+    
+    private func buildSummary(from completions: [ExerciseCompletion], dayCounts: [Date: Int]) -> MonthlySummary {
+        let total = completions.count
+        let dayCount = (calendar.range(of: .day, in: .month, for: displayedMonth)?.count).map(Double.init) ?? 1
+        let average = dayCount > 0 ? Double(total) / dayCount : 0
+        let bestDayDate = dayCounts.max { lhs, rhs in lhs.value < rhs.value }?.key
+        let topExerciseName = topExerciseName(from: completions)
+        return MonthlySummary(totalFixes: total, averageDaily: average, bestDay: bestDayDate, topExerciseName: topExerciseName)
     }
 
-    var progress: Double {
-        guard dailyGoal > 0 else { return 0 }
-        return min(1, Double(completedToday) / Double(dailyGoal))
+    private func topExerciseName(from completions: [ExerciseCompletion]) -> String? {
+        guard !completions.isEmpty else { return nil }
+        let counts = completions.reduce(into: [UUID: Int]()) { dict, completion in
+            dict[completion.exerciseId, default: 0] += 1
+        }
+        guard let topId = counts.max(by: { $0.value < $1.value })?.key else { return nil }
+        return exerciseStore.exercise(by: topId)?.title
     }
-    
-    /// Load charts and analytics data
-    /// Part of F-007: Charts & Analytics feature
-    private func loadChartsData() async {
-        // Load analytics data from ChartsStore
-        chartsStore.loadAnalyticsData()
-        
-        // Update published properties
-        weeklyAnalytics = chartsStore.weeklyAnalytics
-        streakOverTime = chartsStore.streakOverTime
-        
-        Log.info("Loaded charts data: \(weeklyAnalytics.count) weeks, \(streakOverTime.streakData.count) streak points")
+
+    private func mascotAssetName(for completionCount: Int) -> String {
+        guard dailyGoal > 0 else { return "mascot1" }
+        let ratio = min(1.0, Double(completionCount) / Double(dailyGoal))
+        switch ratio {
+        case ..<0.25:
+            return "mascot1"
+        case 0.25..<0.5:
+            return "mascot2"
+        case 0.5..<0.75:
+            return "mascot3"
+        default:
+            return "mascot4"
+        }
     }
 }
-
-
