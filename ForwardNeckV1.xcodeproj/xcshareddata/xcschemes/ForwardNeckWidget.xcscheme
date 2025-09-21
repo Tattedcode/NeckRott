@@ -17,7 +17,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "008A7EDD2E803D8B004B7591"
-               BuildableName = "ForwardNeckWidget"
+               BuildableName = "ForwardNeckWidget.appex"
                BlueprintName = "ForwardNeckWidget"
                ReferencedContainer = "container:ForwardNeckV1.xcodeproj">
             </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "008A7EDD2E803D8B004B7591"
-            BuildableName = "ForwardNeckWidget"
+            BuildableName = "ForwardNeckWidget.appex"
             BlueprintName = "ForwardNeckWidget"
             ReferencedContainer = "container:ForwardNeckV1.xcodeproj">
          </BuildableReference>

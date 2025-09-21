@@ -30,9 +30,26 @@ struct ForwardNeckProvider: TimelineProvider {
 
     private func loadEntry() -> ForwardNeckEntry {
         let store = UserDefaults(suiteName: WidgetConstants.appGroup)
-        let percentage = store?.integer(forKey: WidgetConstants.Keys.percentage) ?? ForwardNeckEntry.placeholder.percentage
-        let mascot = store?.string(forKey: WidgetConstants.Keys.mascot) ?? ForwardNeckEntry.placeholder.mascot
-        return ForwardNeckEntry(date: Date(), percentage: max(0, min(percentage, 100)), mascot: mascot)
+        let rawPercentage = store?.integer(forKey: WidgetConstants.Keys.percentage) ?? ForwardNeckEntry.placeholder.percentage
+        let clamped = max(0, min(rawPercentage, 100))
+        let storedMascot = store?.string(forKey: WidgetConstants.Keys.mascot)
+        let mascot = storedMascot ?? mascotFor(percentage: clamped)
+
+        return ForwardNeckEntry(date: Date(), percentage: clamped, mascot: mascot)
+    }
+    
+    // Map percentage -> mascot asset, same thresholds used on HomeView
+    private func mascotFor(percentage: Int) -> String {
+        switch percentage {
+        case ..<25:
+            return "mascot1"
+        case 25..<50:
+            return "mascot2"
+        case 50..<75:
+            return "mascot3"
+        default:
+            return "mascot4"
+        }
     }
 }
 
@@ -40,22 +57,30 @@ struct ForwardNeckWidgetEntryView: View {
     var entry: ForwardNeckProvider.Entry
 
     var body: some View {
-        ZStack {
-            WidgetGradient()
+        GeometryReader { proxy in
+            let minSide = min(proxy.size.width, proxy.size.height)
+            let headerFont = minSide * 0.12
+            let percentageFont = minSide * 0.42
+            let mascotHeight = minSide * 0.38
+            let spacing = minSide * 0.08
 
-            VStack(spacing: 12) {
+            VStack(spacing: spacing) {
                 Text("neck health")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.75))
-
-                Text("\(entry.percentage)%")
-                    .font(.system(size: 42, weight: .heavy, design: .rounded))
-                    .foregroundColor(.white)
+                    .font(.system(size: headerFont, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.8))
                     .minimumScaleFactor(0.6)
 
-                MascotImage(name: entry.mascot)
+                Text("\(entry.percentage)%")
+                    .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.5)
+
+                MascotImage(name: entry.mascot, height: mascotHeight)
             }
-            .padding()
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+        .containerBackground(for: .widget) {
+            WidgetGradient()
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Neck health \(entry.percentage) percent")
@@ -71,7 +96,7 @@ struct ForwardNeckWidget: Widget {
         }
         .configurationDisplayName("Neck Health")
         .description("Check your latest neck health progress at a glance.")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
@@ -104,31 +129,40 @@ enum WidgetConstants {
     ForwardNeckEntry.placeholder
 }
 
+#Preview(as: .systemMedium) {
+    ForwardNeckWidget()
+} timeline: {
+    ForwardNeckEntry.placeholder
+}
+
 private struct MascotImage: View {
     let name: String
+    let height: CGFloat
 
     var body: some View {
+        Group {
 #if canImport(UIKit)
-        if let image = UIImage(named: name) {
-            Image(uiImage: image)
+            if let image = UIImage(named: name) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                fallback
+            }
+#else
+            Image(name)
                 .resizable()
                 .scaledToFit()
-                .frame(height: 48)
-                .shadow(color: Color.black.opacity(0.35), radius: 6, x: 0, y: 4)
-                .accessibilityHidden(true)
-        } else {
-            fallback
-        }
-#else
-        fallback
 #endif
+        }
+        .frame(height: height)
+        .shadow(color: Color.black.opacity(0.35), radius: 4, x: 0, y: 2)
+        .accessibilityHidden(true)
     }
 
     private var fallback: some View {
         Image(systemName: "brain.head.profile")
-            .font(.system(size: 40, weight: .medium))
+            .font(.system(size: height * 0.7, weight: .medium))
             .foregroundColor(.white.opacity(0.85))
-            .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
-            .accessibilityHidden(true)
     }
 }

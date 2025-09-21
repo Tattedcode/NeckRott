@@ -10,8 +10,8 @@
 		008A7EDF2E803D8B004B7591 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008A7B782E8036EA004B7591 /* WidgetKit.framework */; };
 		008A7EE02E803D8B004B7591 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008A7B7A2E8036EB004B7591 /* SwiftUI.framework */; };
 		008A7EF12E803D8C004B7591 /* ForwardNeckWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 008A7EDE2E803D8B004B7591 /* ForwardNeckWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2A66932B53774FCDA11223A0 /* ForwardNeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560252D4C4DE062E5070CC37 /* ForwardNeckWidget.swift */; };
-		987F68E962B54E3CA011D638 /* ForwardNeckWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242E5F38E9C357BD651B5BD /* ForwardNeckWidgetBundle.swift */; };
+		2A66932B53774FCDA11223A0 /* ForwardNeckWidget/ForwardNeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560252D4C4DE062E5070CC37 /* ForwardNeckWidget/ForwardNeckWidget.swift */; };
+		987F68E962B54E3CA011D638 /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242E5F38E9C357BD651B5BD /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,8 +43,8 @@
 		008A7B7A2E8036EB004B7591 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		008A7EDE2E803D8B004B7591 /* ForwardNeckWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ForwardNeckWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0097D62C2E7176D700AE9F22 /* ForwardNeckV1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForwardNeckV1.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2242E5F38E9C357BD651B5BD /* ForwardNeckWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardNeckWidgetBundle.swift; sourceTree = "<group>"; };
-		560252D4C4DE062E5070CC37 /* ForwardNeckWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardNeckWidget.swift; sourceTree = "<group>"; };
+		2242E5F38E9C357BD651B5BD /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardNeckWidget/ForwardNeckWidgetBundle.swift; sourceTree = "<group>"; };
+		560252D4C4DE062E5070CC37 /* ForwardNeckWidget/ForwardNeckWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardNeckWidget/ForwardNeckWidget.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,9 +52,14 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
-				ForwardNeckWidget.swift,
-				ForwardNeckWidgetBundle.swift,
 				Info.plist,
+			);
+			target = 008A7EDD2E803D8B004B7591 /* ForwardNeckWidget */;
+		};
+		0083E1902E805F23001F9784 /* Exceptions for "ForwardNeckV1" folder in "ForwardNeckWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
 			);
 			target = 008A7EDD2E803D8B004B7591 /* ForwardNeckWidget */;
 		};
@@ -71,6 +76,9 @@
 		};
 		0097D62E2E7176D700AE9F22 /* ForwardNeckV1 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0083E1902E805F23001F9784 /* Exceptions for "ForwardNeckV1" folder in "ForwardNeckWidget" target */,
+			);
 			path = ForwardNeckV1;
 			sourceTree = "<group>";
 		};
@@ -99,8 +107,8 @@
 		008A7ACB2E802EB3004B7591 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				560252D4C4DE062E5070CC37 /* ForwardNeckWidget.swift */,
-				2242E5F38E9C357BD651B5BD /* ForwardNeckWidgetBundle.swift */,
+				560252D4C4DE062E5070CC37 /* ForwardNeckWidget/ForwardNeckWidget.swift */,
+				2242E5F38E9C357BD651B5BD /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -157,7 +165,7 @@
 			);
 			productName = ForwardNeckWidget;
 			productReference = 008A7EDE2E803D8B004B7591 /* ForwardNeckWidget.appex */;
-			productType = "com.apple.product-type.widgetkit-extension";
+			productType = "com.apple.product-type.app-extension";
 		};
 		0097D62B2E7176D700AE9F22 /* ForwardNeckV1 */ = {
 			isa = PBXNativeTarget;
@@ -243,8 +251,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2A66932B53774FCDA11223A0 /* ForwardNeckWidget.swift in Sources */,
-				987F68E962B54E3CA011D638 /* ForwardNeckWidgetBundle.swift in Sources */,
+				2A66932B53774FCDA11223A0 /* ForwardNeckWidget/ForwardNeckWidget.swift in Sources */,
+				987F68E962B54E3CA011D638 /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,7 +294,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.forwardneck.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.TattedSwifty.ForwardNeckV1.ForwardNeckWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -318,7 +326,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.forwardneck.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.TattedSwifty.ForwardNeckV1.ForwardNeckWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
