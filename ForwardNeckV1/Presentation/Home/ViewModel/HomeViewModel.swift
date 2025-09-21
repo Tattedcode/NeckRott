@@ -139,5 +139,10 @@ final class HomeViewModel: ObservableObject {
         } else {
             healthPercentage = 0
         }
+
+        if #available(iOS 14.0, *) {
+            let mascot = WidgetSyncManager.mascot(for: healthPercentage)
+            WidgetSyncManager.updateWidget(percentage: healthPercentage, mascot: mascot)
+        }
     }
 }

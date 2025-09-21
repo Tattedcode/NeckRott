@@ -2,310 +2,251 @@
 //  SettingsView.swift
 //  ForwardNeckV1
 //
-//  Created by Liam Brown on 10/9/2568 BE.
+//  Redesigned settings screen inspired by the provided mockups.
 //
 
 import SwiftUI
 
-/// Comprehensive Settings screen with reminders, reset options, and dark mode
-/// Part of B-009: Finish S-007 Settings Screen
 struct SettingsView: View {
-    @StateObject private var viewModel: SettingsViewModel = SettingsViewModel()
-    @State private var showingAddReminder: Bool = false
-    
+    @StateObject private var viewModel = SettingsViewModel()
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
         ZStack {
-            // Dynamic background based on theme
-            if viewModel.isDarkMode {
-                Color.black.ignoresSafeArea()
-            } else {
-                Theme.backgroundGradient.ignoresSafeArea()
-            }
-            
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Reminders Section
-                    remindersSection
-                    
-                    // Theme Section
-                    themeSection
-                    
-                    // Reset Section
-                    resetSection
-                    
-                    // App Info Section
-                    appInfoSection
+            Theme.backgroundGradient.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 32) {
+                    header
+                    screenTimeSection
+                    widgetSection
+                    supportSection
+                    legalSection
+                    socialSection
                 }
-                .padding(16)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 32)
             }
         }
-        .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.large)
-        .onAppear {
-            viewModel.loadSettings()
-            Log.info("SettingsView appeared")
-        }
-        .alert("Reset Data", isPresented: $viewModel.showingResetAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Reset", role: .destructive) {
-                viewModel.performReset()
-            }
-        } message: {
-            Text(viewModel.resetType.description)
+        .navigationBarHidden(true)
+        .sheet(isPresented: $viewModel.showingWidgetSheet) {
+            WidgetSetupSheet(
+                isConfigured: viewModel.widgetConfigured,
+                onDone: { viewModel.showingWidgetSheet = false },
+                onToggleConfigured: viewModel.markWidgetConfigured
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
     }
-    
-    /// Reminders section with list and add functionality
-    private var remindersSection: some View {
+
+    private var header: some View {
+        Text("settings")
+            .font(.system(size: 34, weight: .bold, design: .rounded))
+            .foregroundColor(Theme.primaryText)
+    }
+
+    private var screenTimeSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section header
-            HStack {
-                Image(systemName: "bell.fill")
-                    .foregroundColor(.white)
-                Text("Reminders")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Spacer()
-                Button("Add") {
-                    showingAddReminder = true
-                }
-                .foregroundColor(.blue)
-                .font(.subheadline.bold())
-            }
-            
-            // Reminders list
-            VStack(spacing: 8) {
-                ForEach(viewModel.reminders) { reminder in
-                    HStack {
+            sectionTitle("screen time goal")
+            settingsCard {
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(alignment: .top, spacing: 14) {
+                        iconBadge(systemImage: "clock.fill", foreground: Color.blue)
+
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(reminder.timeString)
-                                .font(.title3.bold())
-                                .foregroundColor(.white)
-                            Text(reminder.enabled ? "Enabled" : "Disabled")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.7))
+                            Text("daily screen time goal")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(Theme.primaryText)
+                            Text("set a daily limit for healthy screen usage")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Theme.secondaryText)
                         }
-                        
+                    }
+
+                    Text(viewModel.screenTimeGoalLabel)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(Theme.primaryText)
+
+                    Slider(
+                        value: $viewModel.screenTimeGoalHours,
+                        in: viewModel.screenTimeRange,
+                        step: viewModel.sliderStep
+                    )
+                    .tint(Color.orange)
+
+                    HStack {
+                        Text("1h")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Theme.secondaryText)
                         Spacer()
-                        
-                        Toggle("", isOn: Binding(
-                            get: { reminder.enabled },
-                            set: { _ in viewModel.toggleReminder(reminder) }
-                        ))
-                        .labelsHidden()
+                        Text("8h")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Theme.secondaryText)
                     }
-                    .padding(12)
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                
-                if viewModel.reminders.isEmpty {
-                    Text("No reminders set")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.6))
-                        .frame(maxWidth: .infinity)
-                        .padding(20)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
-        }
-        .sheet(isPresented: $showingAddReminder) {
-            addReminderSheet
         }
     }
-    
-    /// Theme selection section
-    private var themeSection: some View {
+
+    private var widgetSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section header
-            HStack {
-                Image(systemName: "paintbrush.fill")
-                    .foregroundColor(.white)
-                Text("Appearance")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            }
-            
-            // Theme options
-            VStack(spacing: 8) {
-                ForEach(ThemeManager.AppTheme.allCases) { theme in
-                    Button(action: {
-                        viewModel.setTheme(theme)
-                    }) {
-                        HStack {
-                            Image(systemName: theme.icon)
-                                .foregroundColor(.white)
-                                .frame(width: 24)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(theme.rawValue)
-                                    .font(.subheadline.bold())
-                                    .foregroundColor(.white)
-                                Text(theme.description)
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
-                            
-                            Spacer()
-                            
-                            if viewModel.currentTheme == theme {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
-                            }
+            sectionTitle("widget")
+            settingsCard {
+                HStack(alignment: .center, spacing: 16) {
+                    iconBadge(systemImage: "iphone.homebutton", foreground: Color.cyan)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(viewModel.widgetIndicatorColor)
+                                .frame(width: 10, height: 10)
+                            Text(viewModel.widgetStatusHeadline)
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(Theme.primaryText)
                         }
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        Text(viewModel.widgetStatusDescription)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Theme.secondaryText)
+                    }
+
+                    Spacer()
+
+                    Button(action: { viewModel.presentWidgetSheet() }) {
+                        Text(viewModel.widgetButtonTitle)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.blue)
+                            .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
     }
-    
-    /// Reset options section
-    private var resetSection: some View {
+
+    private var supportSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section header
-            HStack {
-                Image(systemName: "arrow.clockwise")
-                    .foregroundColor(.white)
-                Text("Reset Data")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            }
-            
-            // Reset options
-            VStack(spacing: 8) {
-                ForEach(SettingsViewModel.ResetType.allCases) { resetType in
-                    Button(action: {
-                        viewModel.showResetAlert(for: resetType)
-                    }) {
-                        HStack {
-                            Image(systemName: resetType.icon)
-                                .foregroundColor(resetType == .allData ? .red : .white)
-                                .frame(width: 24)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(resetType.rawValue)
-                                    .font(.subheadline.bold())
-                                    .foregroundColor(resetType == .allData ? .red : .white)
-                                Text(resetType.description)
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                    .multilineTextAlignment(.leading)
-                            }
-                            
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.white.opacity(0.5))
-                                .font(.caption)
-                        }
-                        .padding(12)
-                        .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+            sectionTitle("support & feedback")
+            listCard(items: viewModel.supportItems)
+        }
+    }
+
+    private var legalSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionTitle("legal")
+            listCard(items: viewModel.legalItems)
+        }
+    }
+
+    private var socialSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            sectionTitle("follow us")
+
+            HStack(spacing: 24) {
+                ForEach(viewModel.socialLinks) { social in
+                    Button {
+                        viewModel.handle(socialLink: social, openURL: openURL)
+                    } label: {
+                        Text(social.label)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(Theme.primaryText)
                     }
                     .buttonStyle(.plain)
                 }
             }
+
+            Text(viewModel.versionLabel)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Theme.secondaryText)
+                .padding(.top, 8)
         }
+        .padding(.bottom, 16)
     }
-    
-    /// App information section
-    private var appInfoSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Section header
-            HStack {
-                Image(systemName: "info.circle.fill")
-                    .foregroundColor(.white)
-                Text("App Information")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            }
-            
-            // App info
-            VStack(spacing: 12) {
-                HStack {
-                    Text("App Name")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
-                    Spacer()
-                    Text(viewModel.appName)
-                        .font(.subheadline.bold())
-                        .foregroundColor(.white)
-                }
-                
-                HStack {
-                    Text("Version")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
-                    Spacer()
-                    Text(viewModel.appVersion)
-                        .font(.subheadline.bold())
-                        .foregroundColor(.white)
-                }
-                
-                HStack {
-                    Text("Build")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
-                    Spacer()
-                    Text("B-009")
-                        .font(.subheadline.bold())
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(12)
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 16, weight: .semibold, design: .rounded))
+            .foregroundColor(Theme.secondaryText)
+            .textCase(.lowercase)
     }
-    
-    /// Add reminder sheet
-    private var addReminderSheet: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Text("Add New Reminder")
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-                
-                DatePicker("Time", selection: $viewModel.newTime, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel)
-                    .colorScheme(.dark)
-                    .labelsHidden()
-                
-                Button("Add Reminder") {
-                    viewModel.addReminder(time: viewModel.newTime)
-                    showingAddReminder = false
-                }
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                Spacer()
-            }
+
+    private func settingsCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-            .background(Theme.backgroundGradient.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
-                        showingAddReminder = false
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Theme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.08))
+                    )
+            )
+            .shadow(color: Color.black.opacity(0.18), radius: 20, x: 0, y: 14)
+    }
+
+    private func listCard(items: [SettingsViewModel.LinkItem]) -> some View {
+        settingsCard {
+            VStack(spacing: 12) {
+                ForEach(items) { item in
+                    Button {
+                        viewModel.handle(link: item, openURL: openURL)
+                    } label: {
+                        HStack(spacing: 14) {
+                            iconBadge(systemImage: item.icon, foreground: item.iconColor)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.title)
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(Theme.primaryText)
+                                if let subtitle = item.subtitle {
+                                    Text(subtitle)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(Theme.secondaryText)
+                                }
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(Theme.secondaryText)
+                        }
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Theme.cardBackground.opacity(0.55))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(Color.white.opacity(0.06))
+                                )
+                        )
                     }
-                    .foregroundColor(.white)
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private func iconBadge(systemImage: String, foreground: Color) -> some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(foreground.opacity(0.18))
+            .frame(width: 36, height: 36)
+            .overlay(
+                Image(systemName: systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(foreground)
+            )
     }
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         SettingsView()
     }
 }
