@@ -15,34 +15,21 @@ struct CalendarDay: Identifiable {
     let isToday: Bool
     let completionCount: Int
     let mascotAssetName: String
+    let didReachGoal: Bool
     
     var hasActivity: Bool { completionCount > 0 }
 }
 
 struct MonthlySummary {
     var totalFixes: Int
-    var averageDaily: Double
-    var bestDay: Date?
-    var topExerciseName: String?
+    var completedDays: Int
+    var missedDays: Int
     
-    static let empty = MonthlySummary(totalFixes: 0, averageDaily: 0, bestDay: nil, topExerciseName: nil)
+    static let empty = MonthlySummary(totalFixes: 0, completedDays: 0, missedDays: 0)
     
     var totalLabel: String { "\(totalFixes)" }
-    var averageLabel: String {
-        guard totalFixes > 0 else { return "0" }
-        return String(format: "%.1f", averageDaily)
-    }
-    var bestDayLabel: String {
-        guard let bestDay else { return "n/a" }
-        return MonthlySummary.bestDayFormatter.string(from: bestDay)
-    }
-    var topExerciseLabel: String { topExerciseName ?? "n/a" }
-    
-    private static let bestDayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter
-    }()
+    var completedDaysLabel: String { "\(completedDays)" }
+    var missedDaysLabel: String { "\(missedDays)" }
 }
 
 @MainActor
@@ -59,6 +46,7 @@ final class ProgressTrackingViewModel: ObservableObject {
     
     private let monthFormatter: DateFormatter
     private let startOfMonthComponents: Set<Calendar.Component> = [.year, .month]
+    private let enableDummyDataForPastDays = true // Preview helper to make the calendar feel populated
     
     init() {
         let components = Calendar.current.dateComponents(startOfMonthComponents, from: Date())
@@ -116,7 +104,7 @@ final class ProgressTrackingViewModel: ObservableObject {
         let completions = monthCompletions()
         let dayCounts = dayCounts(from: completions)
         calendarDays = generateCalendarDays(using: dayCounts)
-        summary = buildSummary(from: completions, dayCounts: dayCounts)
+        summary = buildSummary(from: calendarDays)
     }
     
     private func monthCompletions() -> [ExerciseCompletion] {
@@ -144,56 +132,82 @@ final class ProgressTrackingViewModel: ObservableObject {
         let firstWeekday = calendar.component(.weekday, from: startOfMonth)
         let leadingPlaceholders = (firstWeekday + 6) % 7 // Align weeks to start on Sunday
         for _ in 0..<leadingPlaceholders {
-            cells.append(CalendarDay(date: nil, day: nil, isToday: false, completionCount: 0, mascotAssetName: "mascot1"))
+            cells.append(
+                CalendarDay(
+                    date: nil,
+                    day: nil,
+                    isToday: false,
+                    completionCount: 0,
+                    mascotAssetName: "mascot1",
+                    didReachGoal: false
+                )
+            )
         }
+        let todayStart = calendar.startOfDay(for: Date())
         for day in dayRange {
             guard let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) else { continue }
             let dayKey = calendar.startOfDay(for: date)
             var count = dayCounts[dayKey] ?? 0
 
-            // Inject lightweight dummy data for past days during testing
-            if count == 0, date < calendar.startOfDay(for: Date()) {
+            if enableDummyDataForPastDays,
+               count == 0,
+               dayKey < todayStart {
                 let dayNumber = calendar.component(.day, from: date)
                 let baseline = max(dailyGoal, 3)
-                count = (dayNumber % (baseline + 1))
+                count = dayNumber % (baseline + 1)
             }
 
             let mascot = mascotAssetName(for: count)
+            let didReachGoal = count >= dailyGoal
             cells.append(
                 CalendarDay(
                     date: date,
                     day: day,
                     isToday: calendar.isDateInToday(date),
                     completionCount: count,
-                    mascotAssetName: mascot
+                    mascotAssetName: mascot,
+                    didReachGoal: didReachGoal
                 )
             )
         }
         let remainder = cells.count % 7
         if remainder != 0 {
             for _ in 0..<(7 - remainder) {
-                cells.append(CalendarDay(date: nil, day: nil, isToday: false, completionCount: 0, mascotAssetName: "mascot1"))
+                cells.append(
+                    CalendarDay(
+                        date: nil,
+                        day: nil,
+                        isToday: false,
+                        completionCount: 0,
+                        mascotAssetName: "mascot1",
+                        didReachGoal: false
+                    )
+                )
             }
         }
         return cells
     }
-    
-    private func buildSummary(from completions: [ExerciseCompletion], dayCounts: [Date: Int]) -> MonthlySummary {
-        let total = completions.count
-        let dayCount = (calendar.range(of: .day, in: .month, for: displayedMonth)?.count).map(Double.init) ?? 1
-        let average = dayCount > 0 ? Double(total) / dayCount : 0
-        let bestDayDate = dayCounts.max { lhs, rhs in lhs.value < rhs.value }?.key
-        let topExerciseName = topExerciseName(from: completions)
-        return MonthlySummary(totalFixes: total, averageDaily: average, bestDay: bestDayDate, topExerciseName: topExerciseName)
-    }
 
-    private func topExerciseName(from completions: [ExerciseCompletion]) -> String? {
-        guard !completions.isEmpty else { return nil }
-        let counts = completions.reduce(into: [UUID: Int]()) { dict, completion in
-            dict[completion.exerciseId, default: 0] += 1
+    private func buildSummary(from calendarDays: [CalendarDay]) -> MonthlySummary {
+        let total = calendarDays.reduce(into: 0) { partialResult, calendarDay in
+            guard calendarDay.date != nil else { return }
+            partialResult += calendarDay.completionCount
         }
-        guard let topId = counts.max(by: { $0.value < $1.value })?.key else { return nil }
-        return exerciseStore.exercise(by: topId)?.title
+        let todayStart = calendar.startOfDay(for: Date())
+        let completedDays = calendarDays.filter { calendarDay in
+            guard let date = calendarDay.date else { return false }
+            let dayStart = calendar.startOfDay(for: date)
+            guard dayStart <= todayStart else { return false }
+            return calendarDay.didReachGoal
+        }.count
+        let missedDays = calendarDays.filter { calendarDay in
+            guard let date = calendarDay.date else { return false }
+            let dayStart = calendar.startOfDay(for: date)
+            guard dayStart < todayStart else { return false }
+            return !calendarDay.hasActivity
+        }.count
+
+        return MonthlySummary(totalFixes: total, completedDays: completedDays, missedDays: missedDays)
     }
 
     private func mascotAssetName(for completionCount: Int) -> String {

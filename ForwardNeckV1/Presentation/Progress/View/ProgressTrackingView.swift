@@ -17,7 +17,7 @@ struct ProgressTrackingView: View {
     private let secondaryText = Color.white.opacity(0.7)
     
     private let calendarColumns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 7)
-    private let summaryColumns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 2)
+    private let summaryColumns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
     
     var body: some View {
         ZStack {
@@ -39,10 +39,7 @@ struct ProgressTrackingView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("neck fix calendar")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(textPrimary)
-            Text(viewModel.monthTitle.capitalized)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(secondaryText)
+                .foregroundColor(.red)
         }
     }
     
@@ -151,10 +148,16 @@ struct ProgressTrackingView: View {
                     accentColor: Color.blue.opacity(0.8)
                 )
                 SummaryCard(
-                    title: "average daily",
-                    value: viewModel.summary.averageLabel,
-                    systemIcon: "clock.fill",
+                    title: "days complete",
+                    value: viewModel.summary.completedDaysLabel,
+                    systemIcon: "calendar.badge.checkmark",
                     accentColor: Color.orange.opacity(0.8)
+                )
+                SummaryCard(
+                    title: "days missed",
+                    value: viewModel.summary.missedDaysLabel,
+                    systemIcon: "calendar.badge.exclamationmark",
+                    accentColor: Color.pink.opacity(0.8)
                 )
             }
         }
@@ -170,24 +173,24 @@ struct ProgressTrackingView: View {
         private var secondaryText: Color { Color.white.opacity(0.7) }
 
         var body: some View {
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.08))
-                .frame(height: 110)
+                .frame(height: 100)
                 .overlay(
                     VStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(accentColor.opacity(0.35))
-                            .frame(width: 32, height: 32)
+                            .frame(width: 28, height: 28)
                             .overlay(
                                 Image(systemName: systemIcon)
-                                    .font(.system(size: 15, weight: .semibold))
+                                    .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(Color.white)
                             )
                         Text(title)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(secondaryText)
                         Text(value)
-                            .font(.system(size: 24, weight: .bold))
+                            .font(.system(size: 22, weight: .bold))
                             .foregroundColor(textPrimary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
