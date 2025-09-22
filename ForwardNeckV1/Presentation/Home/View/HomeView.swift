@@ -15,6 +15,8 @@ struct HomeView: View {
     @State private var isInstructionsExpanded = false
     @State private var isAppPickerPresented = false
     @State private var presentedAchievement: MonthlyAchievement?
+    @State private var shouldCelebrate = false
+    @State private var lastPresentedAchievement: MonthlyAchievement?
     
     var body: some View {
         ZStack {
@@ -84,10 +86,21 @@ struct HomeView: View {
         .onChange(of: viewModel.recentlyUnlockedAchievement) { newValue in
             guard let newValue else { return }
             presentedAchievement = newValue
+            lastPresentedAchievement = newValue
+            shouldCelebrate = true
             viewModel.clearRecentlyUnlockedAchievement()
         }
-        .sheet(item: $presentedAchievement, onDismiss: { presentedAchievement = nil }) { achievement in
-            AchievementUnlockedSheet(achievement: achievement) {
+        .sheet(item: $presentedAchievement, onDismiss: {
+            if shouldCelebrate, let last = lastPresentedAchievement {
+                viewModel.markAchievementCelebrated(last)
+            }
+            shouldCelebrate = false
+            lastPresentedAchievement = nil
+        }) { achievement in
+            AchievementUnlockedSheet(
+                achievement: achievement,
+                isCelebrating: shouldCelebrate
+            ) {
                 presentedAchievement = nil
             }
             .presentationDetents([.fraction(0.5)])
@@ -353,8 +366,9 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, minHeight: 120)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard achievement.isUnlocked else { return }
                         presentedAchievement = achievement
+                        lastPresentedAchievement = achievement
+                        shouldCelebrate = false
                     }
                 }
             }
@@ -487,9 +501,11 @@ struct HomeView: View {
 
 private struct AchievementUnlockedSheet: View {
     let achievement: MonthlyAchievement
+    let isCelebrating: Bool
     let onDismiss: () -> Void
 
     @State private var animateOverlay = false
+    @State private var confettiActive = false
 
     private var gradient: LinearGradient {
         LinearGradient(
@@ -503,84 +519,206 @@ private struct AchievementUnlockedSheet: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
 
-            VStack {
-                Spacer(minLength: 12)
+            VStack(spacing: 24) {
+                ZStack {
+                    achievementArtwork
+                        .frame(width: 190, height: 190)
+                        .shadow(color: Color.black.opacity(0.35), radius: 20, x: 0, y: 18)
 
-                VStack(spacing: 24) {
-                    ZStack {
-                        achievementArtwork
-                            .frame(width: 190, height: 190)
-                            .shadow(color: Color.black.opacity(0.35), radius: 20, x: 0, y: 18)
+                    Circle()
+                        .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                        .frame(width: 210, height: 210)
+                        .scaleEffect(animateOverlay ? 1.08 : 0.92)
+                        .opacity(animateOverlay ? 0.1 : 0.28)
 
-                        Circle()
-                            .stroke(Color.white.opacity(0.35), lineWidth: 3)
-                            .frame(width: 210, height: 210)
-                            .scaleEffect(animateOverlay ? 1.08 : 0.92)
-                            .opacity(animateOverlay ? 0.1 : 0.28)
-
-                        Circle()
-                            .stroke(Color.white.opacity(0.18), lineWidth: 2)
-                            .frame(width: 230, height: 230)
-                            .scaleEffect(animateOverlay ? 1.15 : 0.85)
-                            .opacity(animateOverlay ? 0.05 : 0.16)
-                    }
-                    .frame(height: 210)
-                    .onAppear {
-                        withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
-                            animateOverlay = true
-                        }
-                    }
-
-                    VStack(spacing: 8) {
-                        Text("Achievement Unlocked!")
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundColor(.white)
-
-                        Text(achievement.title)
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button(action: onDismiss) {
-                        Text("Good Job!")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(gradient)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .shadow(color: Color.purple.opacity(0.3), radius: 12, x: 0, y: 8)
+                    Circle()
+                        .stroke(Color.white.opacity(0.18), lineWidth: 2)
+                        .frame(width: 230, height: 230)
+                        .scaleEffect(animateOverlay ? 1.15 : 0.85)
+                        .opacity(animateOverlay ? 0.05 : 0.16)
+                }
+                .frame(height: 210)
+                .onAppear {
+                    withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
+                        animateOverlay = true
                     }
                 }
-                .padding(28)
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 32, style: .continuous)
-                        .fill(Color.white.opacity(0.12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                        )
-                )
-                .padding(.horizontal, 20)
 
-                Spacer(minLength: 24)
+                VStack(spacing: 8) {
+                    Text(achievement.isUnlocked ? "Achievement Unlocked!" : "Achievement Goal")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(.white)
+
+                    Text(achievement.title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button(action: onDismiss) {
+                    Text(achievement.isUnlocked ? "Good Job!" : "Got it")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(gradient)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: Color.purple.opacity(0.3), radius: 12, x: 0, y: 8)
+                }
             }
+            .padding(.horizontal, 28)
+            .padding(.top, 32)
+            .padding(.bottom, 36)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white.opacity(0.12))
+        }
+        .overlay(
+            ConfettiOverlay(isActive: $confettiActive)
+        )
+        .ignoresSafeArea()
+        .onAppear {
+            if isCelebrating {
+                confettiActive = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    confettiActive = false
+                }
+            }
+        }
+        .onDisappear {
+            confettiActive = false
         }
     }
 
     @ViewBuilder
     private var achievementArtwork: some View {
-        if achievement.kind.usesSystemImage {
-            Image(systemName: achievement.kind.unlockedImageName)
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.white)
-        } else {
-            Image(achievement.kind.unlockedImageName)
-                .resizable()
-                .scaledToFit()
+        Group {
+            if achievement.kind.usesSystemImage {
+                Image(systemName: achievement.kind.unlockedImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(Color.white)
+            } else {
+                Image(achievement.kind.unlockedImageName)
+                    .resizable()
+                    .scaledToFit()
+            }
+        }
+        .opacity(achievement.isUnlocked ? 1 : 0.35)
+        .grayscale(achievement.isUnlocked ? 0 : 1)
+    }
+}
+
+private struct ConfettiOverlay: View {
+    @Binding var isActive: Bool
+    @State private var pieces: [ConfettiPiece] = []
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                ForEach(pieces) { piece in
+                    ConfettiPieceView(
+                        piece: piece,
+                        containerSize: proxy.size,
+                        isActive: $isActive
+                    )
+                }
+            }
+            .onChange(of: isActive) { active in
+                if active {
+                    pieces = ConfettiPiece.generate(count: 36, height: proxy.size.height)
+                } else {
+                    pieces.removeAll()
+                }
+            }
+            .onAppear {
+                if isActive {
+                    pieces = ConfettiPiece.generate(count: 36, height: proxy.size.height)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct ConfettiPiece: Identifiable {
+    let id = UUID()
+    let isLeft: Bool
+    let startY: CGFloat
+    let delay: Double
+    let duration: Double
+    let size: CGFloat
+    let color: Color
+
+    static func generate(count: Int, height: CGFloat) -> [ConfettiPiece] {
+        let colors: [Color] = [.pink, .purple, .blue, .yellow, .orange, .green]
+        return (0..<count).map { index in
+            let isLeft = index.isMultiple(of: 2)
+            return ConfettiPiece(
+                isLeft: isLeft,
+                startY: CGFloat.random(in: 20...(height * 0.5).clamped(to: 20...height)),
+                delay: Double.random(in: 0...0.8),
+                duration: Double.random(in: 2.6...4.2),
+                size: CGFloat.random(in: 8...16),
+                color: colors.randomElement() ?? .white
+            )
+        }
+    }
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+private struct ConfettiPieceView: View {
+    let piece: ConfettiPiece
+    let containerSize: CGSize
+    @Binding var isActive: Bool
+    @State private var position: CGPoint = .zero
+    @State private var rotation: Double = 0
+    @State private var opacity: Double = 0
+
+    var body: some View {
+        Rectangle()
+            .fill(piece.color)
+            .frame(width: piece.size, height: piece.size * 0.35)
+            .rotationEffect(.degrees(rotation))
+            .position(position)
+            .opacity(opacity)
+            .onAppear { startAnimation() }
+            .onChange(of: isActive) { newValue in
+                if newValue {
+                    startAnimation()
+                } else {
+                    opacity = 0
+                }
+            }
+    }
+
+    private func startAnimation() {
+        guard isActive else { return }
+        let startX = piece.isLeft ? -60.0 : containerSize.width + 60.0
+        let endX = piece.isLeft ? containerSize.width + 60.0 : -60.0
+        position = CGPoint(x: startX, y: piece.startY)
+        rotation = 0
+        opacity = 0
+
+        withAnimation(.easeOut(duration: piece.duration).delay(piece.delay)) {
+            position = CGPoint(x: endX, y: piece.startY + containerSize.height * 0.85)
+        }
+
+        withAnimation(.linear(duration: piece.duration).repeatForever(autoreverses: false).delay(piece.delay)) {
+            rotation = piece.isLeft ? 720 : -720
+        }
+
+        withAnimation(.easeIn(duration: 0.2).delay(piece.delay)) {
+            opacity = 1
+        }
+
+        let fadeDelay = piece.delay + max(0, piece.duration - 0.6)
+        withAnimation(.easeOut(duration: 0.6).delay(fadeDelay)) {
+            opacity = 0
         }
     }
 }

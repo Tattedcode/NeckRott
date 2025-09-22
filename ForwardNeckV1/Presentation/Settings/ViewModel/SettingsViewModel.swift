@@ -34,6 +34,8 @@ final class SettingsViewModel: ObservableObject {
     }
 
     @Published var showingWidgetSheet: Bool = false
+    @Published var isResetting = false
+    @Published var resetCompleted = false
 
     let screenTimeRange: ClosedRange<Double> = 1...8
     let sliderStep: Double = 1
@@ -153,6 +155,22 @@ final class SettingsViewModel: ObservableObject {
     func handle(socialLink: SocialLink, openURL: OpenURLAction) {
         guard let url = socialLink.url else { return }
         openURL(url)
+    }
+
+    func resetAppData() {
+        guard !isResetting else { return }
+        isResetting = true
+        Task {
+            await AppResetService.shared.resetAll()
+            await MainActor.run {
+                self.isResetting = false
+                self.resetCompleted = true
+            }
+        }
+    }
+
+    func acknowledgeResetCompletion() {
+        resetCompleted = false
     }
 
     private func storeScreenTimeGoal() {

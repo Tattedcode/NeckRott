@@ -10,6 +10,8 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @Environment(\.openURL) private var openURL
+    @State private var showResetConfirmation = false
+    @State private var showResetSuccess = false
 
     var body: some View {
         ZStack {
@@ -22,6 +24,7 @@ struct SettingsView: View {
                     widgetSection
                     supportSection
                     legalSection
+                    resetSection
                     socialSection
                 }
                 .padding(.horizontal, 20)
@@ -37,6 +40,24 @@ struct SettingsView: View {
             )
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
+        }
+        .confirmationDialog("Reset All Progress?", isPresented: $showResetConfirmation, titleVisibility: .visible) {
+            Button("Reset", role: .destructive) {
+                viewModel.resetAppData()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This clears streaks, exercise history, goals, and achievements. This action cannot be undone.")
+        }
+        .alert("Data Reset", isPresented: $showResetSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("All stats and achievements have been reset.")
+        }
+        .onChange(of: viewModel.resetCompleted) { completed in
+            guard completed else { return }
+            showResetSuccess = true
+            viewModel.acknowledgeResetCompletion()
         }
     }
 
@@ -165,6 +186,51 @@ struct SettingsView: View {
                 .padding(.top, 8)
         }
         .padding(.bottom, 16)
+    }
+
+    private var resetSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionTitle("danger zone")
+            settingsCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Reset stats & achievements")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundColor(Theme.primaryText)
+
+                    Text("Start fresh by clearing your streaks, exercise history, goals, and achievements.")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Theme.secondaryText)
+
+                    Button {
+                        showResetConfirmation = true
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.red.opacity(0.85))
+
+                            HStack(spacing: 12) {
+                                if viewModel.isResetting {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "arrow.counterclockwise.circle.fill")
+                                        .font(.system(size: 18, weight: .semibold))
+                                }
+
+                                Text(viewModel.isResetting ? "Resetting…" : "Reset Now")
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                            }
+                            .padding(.vertical, 14)
+                            .foregroundColor(.white)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .disabled(viewModel.isResetting)
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     private func sectionTitle(_ text: String) -> some View {

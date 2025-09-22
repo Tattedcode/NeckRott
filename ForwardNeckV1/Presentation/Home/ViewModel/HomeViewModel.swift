@@ -47,6 +47,11 @@ final class HomeViewModel: ObservableObject {
         formatter.dateFormat = "MMM d"
         return formatter
     }()
+    private let achievementsShownKey = "home.achievements.shown"
+    private var shownAchievementKinds: Set<MonthlyAchievementKind> {
+        didSet { saveShownAchievements() }
+    }
+    private var celebrationsEnabled = false
     
     init(
         // screenTimeService: ScreenTimeService? = nil,
@@ -58,6 +63,14 @@ final class HomeViewModel: ObservableObject {
         self.streakStore = streakStore ?? StreakStore.shared
         self.exerciseStore = exerciseStore ?? ExerciseStore.shared
         self.userStore = userStore ?? UserStore()
+        self.shownAchievementKinds = Self.loadShownAchievements(key: achievementsShownKey)
+
+        NotificationCenter.default.publisher(for: .appDataDidReset)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.handleAppDataReset()
+            }
+            .store(in: &cancellables)
 
         bindStreakStore()
         bindExerciseStore()
@@ -66,7 +79,6 @@ final class HomeViewModel: ObservableObject {
         updateNextExercise()
         selectedNeckFixDate = Calendar.current.startOfDay(for: Date())
         updateNeckFixes(for: selectedNeckFixDate)
-        updateMonthlyAchievements()
         activitySelection = appMonitoringStore.activitySelection
     }
     
@@ -76,6 +88,7 @@ final class HomeViewModel: ObservableObject {
         updateNeckFixes(for: selectedNeckFixDate)
         // await refreshScreenTime()
         refreshTrackedAppUsage()
+        celebrationsEnabled = true
     }
 
     // func refreshScreenTime() async {
@@ -169,6 +182,13 @@ final class HomeViewModel: ObservableObject {
         updateNeckFixes(for: normalizedDate)
     }
 
+    func markAchievementCelebrated(_ achievement: MonthlyAchievement) {
+        guard achievement.isUnlocked else { return }
+        if !shownAchievementKinds.contains(achievement.kind) {
+            shownAchievementKinds.insert(achievement.kind)
+        }
+    }
+
     private func updateNeckFixes(for date: Date) {
         neckFixesTarget = max(0, userStore.dailyGoal)
 
@@ -187,7 +207,7 @@ final class HomeViewModel: ObservableObject {
 
         let referenceDate = max(date, Date())
         neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 6)
-        updateMonthlyAchievements()
+        updateMonthlyAchievements(skipCelebration: !celebrationsEnabled)
 
         if #available(iOS 14.0, *) {
             let mascot = WidgetSyncManager.mascot(for: healthPercentage)
@@ -212,7 +232,7 @@ final class HomeViewModel: ObservableObject {
 }
 
 private extension HomeViewModel {
-    func updateMonthlyAchievements() {
+    func updateMonthlyAchievements(skipCelebration: Bool) {
         var updated = monthlyAchievements
         guard !updated.isEmpty else { return }
 
@@ -225,10 +245,14 @@ private extension HomeViewModel {
         let completionsThisMonth = completions.filter { completion in
             completion.completedAt >= startOfMonth && completion.completedAt < startOfNextMonth
         }
+        let completionsToday = completions.filter { completion in
+            calendar.isDate(completion.completedAt, inSameDayAs: now)
+        }
+        let completionsTodayCount = completionsToday.count
         let currentPostureStreak = streakStore.currentStreak(for: .postureChecks)
         let totalCompletions = completions.count
         let monthlyCompletionCount = completionsThisMonth.count
-        let dailyGoal = max(1, userStore.dailyGoal)
+        let dailyGoal = userStore.dailyGoal
 
         var newlyUnlocked: MonthlyAchievement?
 
@@ -241,9 +265,11 @@ private extension HomeViewModel {
                 case .firstExercise:
                     return monthlyCompletionCount >= 1
                 case .extraExercises:
-                    return monthlyCompletionCount >= max(10, dailyGoal * 5)
+                    let goal = max(0, dailyGoal)
+                    return goal == 0 ? completionsTodayCount >= 1 : completionsTodayCount > goal
                 case .dailyStreakStarted:
-                    return currentPostureStreak >= 1
+                    let goalMetToday = dailyGoal <= 0 ? completionsTodayCount >= 1 : completionsTodayCount >= dailyGoal
+                    return currentPostureStreak >= 1 && goalMetToday
                 case .fifteenDayStreak:
                     return currentPostureStreak >= 15
                 case .fullMonthStreak:
@@ -256,7 +282,14 @@ private extension HomeViewModel {
             }()
 
             updated[index].isUnlocked = isUnlocked
-            if isUnlocked && !wasUnlocked {
+            if isUnlocked && skipCelebration && !shownAchievementKinds.contains(kind) {
+                shownAchievementKinds.insert(kind)
+            }
+
+            if !skipCelebration,
+               isUnlocked,
+               !wasUnlocked,
+               !shownAchievementKinds.contains(kind) {
                 newlyUnlocked = updated[index]
             }
         }
@@ -265,6 +298,39 @@ private extension HomeViewModel {
         if let newlyUnlocked {
             recentlyUnlockedAchievement = newlyUnlocked
         }
+    }
+}
+
+private extension HomeViewModel {
+    static func loadShownAchievements(key: String) -> Set<MonthlyAchievementKind> {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let rawValues = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        let kinds = rawValues.compactMap { MonthlyAchievementKind(rawValue: $0) }
+        return Set(kinds)
+    }
+
+    func saveShownAchievements() {
+        let rawValues = shownAchievementKinds.map { $0.rawValue }
+        if rawValues.isEmpty {
+            UserDefaults.standard.removeObject(forKey: achievementsShownKey)
+        } else if let data = try? JSONEncoder().encode(rawValues) {
+            UserDefaults.standard.set(data, forKey: achievementsShownKey)
+        }
+    }
+
+    func handleAppDataReset() {
+        celebrationsEnabled = false
+        shownAchievementKinds = []
+        recentlyUnlockedAchievement = nil
+        UserDefaults.standard.removeObject(forKey: achievementsShownKey)
+        userStore.loadUserData()
+        updateStreaks()
+        updateNextExercise()
+        selectedNeckFixDate = Calendar.current.startOfDay(for: Date())
+        updateNeckFixes(for: selectedNeckFixDate)
+        celebrationsEnabled = true
     }
 }
 
@@ -328,7 +394,7 @@ struct NeckFixDaySummary: Identifiable, Equatable {
     let count: Int
 }
 
-enum MonthlyAchievementKind: CaseIterable, Hashable {
+enum MonthlyAchievementKind: String, CaseIterable, Hashable, Codable {
     case firstExercise
     case extraExercises
     case tenCompleted
@@ -341,13 +407,13 @@ enum MonthlyAchievementKind: CaseIterable, Hashable {
 extension MonthlyAchievementKind {
     var title: String {
         switch self {
-        case .firstExercise: return "First Exercise this Month"
-        case .extraExercises: return "Extra Exercises"
-        case .dailyStreakStarted: return "Daily Streak Started"
-        case .fifteenDayStreak: return "15-Day Streak"
-        case .fullMonthStreak: return "Full Month Streak"
+        case .firstExercise: return "First Exercise This Month"
+        case .extraExercises: return "Completed Extra Exercise"
         case .tenCompleted: return "10 Exercises Completed"
         case .twentyCompleted: return "20 Exercises Completed"
+        case .dailyStreakStarted: return "Daily Streak Started"
+        case .fifteenDayStreak: return "15 Day Streak"
+        case .fullMonthStreak: return "Full Month Streak"
         }
     }
 
