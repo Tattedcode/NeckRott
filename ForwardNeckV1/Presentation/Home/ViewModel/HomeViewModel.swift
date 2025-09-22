@@ -32,6 +32,7 @@ final class HomeViewModel: ObservableObject {
     }
     @Published private(set) var trackedUsageMinutes: Int = 0
     @Published private(set) var monthlyAchievements: [MonthlyAchievement] = MonthlyAchievementKind.allCases.map { MonthlyAchievement(kind: $0) }
+    @Published private(set) var recentlyUnlockedAchievement: MonthlyAchievement?
     @Published private(set) var neckFixHistory: [NeckFixDaySummary] = []
     
     // private let screenTimeService: ScreenTimeService
@@ -194,6 +195,10 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    func clearRecentlyUnlockedAchievement() {
+        recentlyUnlockedAchievement = nil
+    }
+
     private func formatMinutes(_ minutes: Int) -> String {
         let hours = minutes / 60
         let remainingMinutes = minutes % 60
@@ -213,19 +218,53 @@ private extension HomeViewModel {
 
         let calendar = Calendar.current
         let now = Date()
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let startOfNextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) ?? now
 
-        if let index = updated.firstIndex(where: { $0.kind == .firstExerciseThisMonth }) {
-            let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-            let startOfNextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) ?? now
+        let completions = exerciseStore.completions.filter { $0.completedAt <= now }
+        let completionsThisMonth = completions.filter { completion in
+            completion.completedAt >= startOfMonth && completion.completedAt < startOfNextMonth
+        }
+        let currentPostureStreak = streakStore.currentStreak(for: .postureChecks)
+        let totalCompletions = completions.count
+        let monthlyCompletionCount = completionsThisMonth.count
+        let dailyGoal = max(1, userStore.dailyGoal)
 
-            let hasCompletionThisMonth = exerciseStore.completions.contains { completion in
-                let date = completion.completedAt
-                return date >= startOfMonth && date < startOfNextMonth && date <= now
+        var newlyUnlocked: MonthlyAchievement?
+
+        for index in updated.indices {
+            let kind = updated[index].kind
+            let wasUnlocked = updated[index].isUnlocked
+
+            let isUnlocked: Bool = {
+                switch kind {
+                case .firstExercise:
+                    return monthlyCompletionCount >= 1
+                case .extraExercises:
+                    return monthlyCompletionCount >= max(10, dailyGoal * 5)
+                case .dailyStreakStarted:
+                    return currentPostureStreak >= 1
+                case .fifteenDayStreak:
+                    return currentPostureStreak >= 15
+                case .fullMonthStreak:
+                    return currentPostureStreak >= 30
+                case .tenCompleted:
+                    return totalCompletions >= 10
+                case .twentyCompleted:
+                    return totalCompletions >= 20
+                }
+            }()
+
+            updated[index].isUnlocked = isUnlocked
+            if isUnlocked && !wasUnlocked {
+                newlyUnlocked = updated[index]
             }
-            updated[index].isUnlocked = hasCompletionThisMonth
         }
 
         monthlyAchievements = updated
+        if let newlyUnlocked {
+            recentlyUnlockedAchievement = newlyUnlocked
+        }
     }
 }
 
@@ -275,7 +314,7 @@ private extension HomeViewModel {
     #endif
 }
 
-struct MonthlyAchievement: Identifiable {
+struct MonthlyAchievement: Identifiable, Equatable {
     let kind: MonthlyAchievementKind
     var isUnlocked: Bool = false
     var id: MonthlyAchievementKind { kind }
@@ -290,28 +329,67 @@ struct NeckFixDaySummary: Identifiable, Equatable {
 }
 
 enum MonthlyAchievementKind: CaseIterable, Hashable {
-    case firstExerciseThisMonth
-    case extraExercisesThisMonth
-    case completedHalf
-    case consistentWeek
-    case sharedProgress
-    case stretchedEveryDay
+    case firstExercise
+    case extraExercises
+    case tenCompleted
+    case twentyCompleted
+    case dailyStreakStarted
+    case fifteenDayStreak
+    case fullMonthStreak
 }
 
 extension MonthlyAchievementKind {
     var title: String {
         switch self {
-        case .firstExerciseThisMonth: return "First Exercise this month"
-        case .extraExercisesThisMonth: return "Did extra exercises this month"
-        case .completedHalf: return "Completed half"
-        case .consistentWeek: return "Consistent week"
-        case .sharedProgress: return "Shared your progress"
-        case .stretchedEveryDay: return "Stretched every day"
+        case .firstExercise: return "First Exercise this Month"
+        case .extraExercises: return "Extra Exercises"
+        case .dailyStreakStarted: return "Daily Streak Started"
+        case .fifteenDayStreak: return "15-Day Streak"
+        case .fullMonthStreak: return "Full Month Streak"
+        case .tenCompleted: return "10 Exercises Completed"
+        case .twentyCompleted: return "20 Exercises Completed"
         }
     }
 
-    var lockedImageName: String { "photo" }
-    var unlockedImageName: String { "photo.fill" }
+    var lockedImageName: String {
+        switch self {
+        case .extraExercises:
+            return "extraexercises"
+        case .dailyStreakStarted:
+            return "dailystreakstarted"
+        case .fifteenDayStreak:
+            return "fifteendaystreak"
+        case .firstExercise:
+            return "firstexcersise"
+        case .fullMonthStreak:
+            return "fullmonthstreak"
+        case .tenCompleted:
+            return "tencompleted"
+        case .twentyCompleted:
+            return "twentycompleted"
+        }
+    }
+
+    var unlockedImageName: String {
+        switch self {
+        case .extraExercises:
+            return "extraexercises"
+        case .dailyStreakStarted:
+            return "dailystreakstarted"
+        case .fifteenDayStreak:
+            return "fifteendaystreak"
+        case .firstExercise:
+            return "firstexcersise"
+        case .fullMonthStreak:
+            return "fullmonthstreak"
+        case .tenCompleted:
+            return "tencompleted"
+        case .twentyCompleted:
+            return "twentycompleted"
+        }
+    }
+
+    var usesSystemImage: Bool { false }
 }
 
 private extension HomeViewModel {

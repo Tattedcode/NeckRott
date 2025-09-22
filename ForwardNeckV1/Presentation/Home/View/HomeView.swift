@@ -10,11 +10,11 @@ import SwiftUI
 import FamilyControls
 
 struct HomeView: View {
-    @State private var selectedDate = "today"
     @StateObject private var viewModel = HomeViewModel()
     @State private var isShowingExerciseTimer = false
     @State private var isInstructionsExpanded = false
     @State private var isAppPickerPresented = false
+    @State private var presentedAchievement: MonthlyAchievement?
     
     var body: some View {
         ZStack {
@@ -23,9 +23,6 @@ struct HomeView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Top section with date and help buttons
-                topSection
-                
                 // Main content
                 ScrollView {
                     VStack(spacing: 24) {
@@ -84,52 +81,18 @@ struct HomeView: View {
             }
         }
         .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
-    }
-    
-    // MARK: - Top Section
-    
-    private var topSection: some View {
-        HStack {
-            // Date selector
-            Button(action: {
-                // Handle date selection
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 14))
-                    Text(selectedDate)
-                        .font(.system(size: 14, weight: .medium))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12))
-                }
-                .foregroundColor(.gray)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            
-            Spacer()
-            
-            // Help button
-            Button(action: {
-                // Handle help action
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "questionmark")
-                        .font(.system(size: 14))
-                    Text("help")
-                        .font(.system(size: 14, weight: .medium))
-                }
-                .foregroundColor(.gray)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
+        .onChange(of: viewModel.recentlyUnlockedAchievement) { newValue in
+            guard let newValue else { return }
+            presentedAchievement = newValue
+            viewModel.clearRecentlyUnlockedAchievement()
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
+        .sheet(item: $presentedAchievement, onDismiss: { presentedAchievement = nil }) { achievement in
+            AchievementUnlockedSheet(achievement: achievement) {
+                presentedAchievement = nil
+            }
+            .presentationDetents([.fraction(0.5)])
+            .presentationDragIndicator(.hidden)
+        }
     }
     
     // MARK: - Mascot Section
@@ -275,11 +238,6 @@ struct HomeView: View {
                 if let exercise = viewModel.nextExercise {
                     HStack(alignment: .top, spacing: 16) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(exercise.title)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
-                                .accessibilityAddTraits(.isHeader)
-                            
                             Text(exercise.description)
                                 .font(.system(size: 14))
                                 .foregroundColor(.white.opacity(0.8))
@@ -374,37 +332,30 @@ struct HomeView: View {
             LazyVGrid(columns: achievementColumns, spacing: 14) {
                 ForEach(viewModel.monthlyAchievements) { achievement in
                     let imageName = achievement.isUnlocked ? achievement.kind.unlockedImageName : achievement.kind.lockedImageName
-                    let cardBackground = achievement.isUnlocked ? Color.white.opacity(0.16) : Color.white.opacity(0.06)
-                    let imageBackground = achievement.isUnlocked ? Color.white.opacity(0.18) : Color.white.opacity(0.08)
-                    let imageStroke = achievement.isUnlocked ? Color.white.opacity(0.35) : Color.white.opacity(0.18)
 
-                    VStack(spacing: 10) {
-                        Text(achievement.title)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.white.opacity(achievement.isUnlocked ? 1 : 0.75))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-
-                        Image(systemName: imageName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 48, height: 48)
-                            .padding(10)
-                            .background(imageBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(imageStroke, lineWidth: 1)
-                            )
-                            .opacity(achievement.isUnlocked ? 1 : 0.3)
-                            .grayscale(achievement.isUnlocked ? 0 : 1)
+                    VStack {
+                        Group {
+                            if achievement.kind.usesSystemImage {
+                                Image(systemName: imageName)
+                                    .resizable()
+                            } else {
+                                Image(imageName)
+                                    .resizable()
+                            }
+                        }
+                        .scaledToFit()
+                        .frame(width: 96, height: 96)
+                        .padding(4)
+                        .opacity(achievement.isUnlocked ? 1 : 0.3)
+                        .grayscale(achievement.isUnlocked ? 0 : 1)
+                        .animation(.easeInOut(duration: 0.2), value: achievement.isUnlocked)
                     }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 10)
                     .frame(maxWidth: .infinity, minHeight: 120)
-                    .background(cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard achievement.isUnlocked else { return }
+                        presentedAchievement = achievement
+                    }
                 }
             }
         }
@@ -451,7 +402,6 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 4)
         }
         .frame(maxWidth: .infinity)
     }
@@ -533,6 +483,106 @@ struct HomeView: View {
         }
     }
 
+}
+
+private struct AchievementUnlockedSheet: View {
+    let achievement: MonthlyAchievement
+    let onDismiss: () -> Void
+
+    @State private var animateOverlay = false
+
+    private var gradient: LinearGradient {
+        LinearGradient(
+            colors: [Color.purple.opacity(0.9), Color.blue.opacity(0.9)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.backgroundGradient.ignoresSafeArea()
+
+            VStack {
+                Spacer(minLength: 12)
+
+                VStack(spacing: 24) {
+                    ZStack {
+                        achievementArtwork
+                            .frame(width: 190, height: 190)
+                            .shadow(color: Color.black.opacity(0.35), radius: 20, x: 0, y: 18)
+
+                        Circle()
+                            .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                            .frame(width: 210, height: 210)
+                            .scaleEffect(animateOverlay ? 1.08 : 0.92)
+                            .opacity(animateOverlay ? 0.1 : 0.28)
+
+                        Circle()
+                            .stroke(Color.white.opacity(0.18), lineWidth: 2)
+                            .frame(width: 230, height: 230)
+                            .scaleEffect(animateOverlay ? 1.15 : 0.85)
+                            .opacity(animateOverlay ? 0.05 : 0.16)
+                    }
+                    .frame(height: 210)
+                    .onAppear {
+                        withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
+                            animateOverlay = true
+                        }
+                    }
+
+                    VStack(spacing: 8) {
+                        Text("Achievement Unlocked!")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Text(achievement.title)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    Button(action: onDismiss) {
+                        Text("Good Job!")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(gradient)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .shadow(color: Color.purple.opacity(0.3), radius: 12, x: 0, y: 8)
+                    }
+                }
+                .padding(28)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(Color.white.opacity(0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        )
+                )
+                .padding(.horizontal, 20)
+
+                Spacer(minLength: 24)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var achievementArtwork: some View {
+        if achievement.kind.usesSystemImage {
+            Image(systemName: achievement.kind.unlockedImageName)
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Color.white)
+        } else {
+            Image(achievement.kind.unlockedImageName)
+                .resizable()
+                .scaledToFit()
+        }
+    }
 }
 
 // MARK: - Preview
