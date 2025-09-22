@@ -7,12 +7,14 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct HomeView: View {
     @State private var selectedDate = "today"
     @StateObject private var viewModel = HomeViewModel()
     @State private var isShowingExerciseTimer = false
     @State private var isInstructionsExpanded = false
+    @State private var isAppPickerPresented = false
     
     var body: some View {
         ZStack {
@@ -35,12 +37,15 @@ struct HomeView: View {
                         
                         // Mascot and health score
                         mascotSection
-                        
+
                         // Statistics section
                         statisticsSection
                         
                         // Next exercise prompt
                         nextExerciseSection
+
+                        // Monthly achievements
+                        monthlyAchievementsSection
 
                         Spacer(minLength: 60)
                     }
@@ -78,6 +83,7 @@ struct HomeView: View {
                 }
             }
         }
+        .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
     }
     
     // MARK: - Top Section
@@ -171,6 +177,8 @@ struct HomeView: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
+
+            neckFixHistorySection
         }
     }
     
@@ -185,24 +193,35 @@ struct HomeView: View {
             
             // Four column stats
             HStack(spacing: 30) {
-                // Left column - Screen time
-                VStack(alignment: .center, spacing: 4) {
-                    Text("screen time")
+                // Left column - App time
+                VStack(alignment: .center, spacing: 6) {
+                    Text(viewModel.hasMonitoredApps ? "tracked app time" : "app time")
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.7))
-                    
-                    if viewModel.isLoadingScreenTime {
-                        HStack {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text("Loading...")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white.opacity(0.7))
+
+                    if viewModel.hasMonitoredApps {
+                        Button {
+                            isAppPickerPresented = true
+                        } label: {
+                            Text(viewModel.trackedUsageDisplay)
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                                .accessibilityLabel("Tracked app time \(viewModel.trackedUsageDisplay)")
                         }
+                        .buttonStyle(.plain)
                     } else {
-                        Text(viewModel.screenTimeDisplay)
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
+                        Button {
+                            isAppPickerPresented = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 36, height: 36)
+                                .background(Color.white.opacity(0.12))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Add apps to track usage")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -345,6 +364,104 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
     }
+
+    private var monthlyAchievementsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Monthly Achievements")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+
+            LazyVGrid(columns: achievementColumns, spacing: 14) {
+                ForEach(viewModel.monthlyAchievements) { achievement in
+                    let imageName = achievement.isUnlocked ? achievement.kind.unlockedImageName : achievement.kind.lockedImageName
+                    let cardBackground = achievement.isUnlocked ? Color.white.opacity(0.16) : Color.white.opacity(0.06)
+                    let imageBackground = achievement.isUnlocked ? Color.white.opacity(0.18) : Color.white.opacity(0.08)
+                    let imageStroke = achievement.isUnlocked ? Color.white.opacity(0.35) : Color.white.opacity(0.18)
+
+                    VStack(spacing: 10) {
+                        Text(achievement.title)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(achievement.isUnlocked ? 1 : 0.75))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
+                        Image(systemName: imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 48, height: 48)
+                            .padding(10)
+                            .background(imageBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(imageStroke, lineWidth: 1)
+                            )
+                            .opacity(achievement.isUnlocked ? 1 : 0.3)
+                            .grayscale(achievement.isUnlocked ? 0 : 1)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: .infinity, minHeight: 120)
+                    .background(cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                }
+            }
+        }
+    }
+
+    private var achievementColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
+    }
+
+    private var neckFixHistorySection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(viewModel.neckFixHistory) { summary in
+                    let isSelected = Calendar.current.isDate(summary.date, inSameDayAs: viewModel.selectedNeckFixDate)
+                    let dayNumber = Calendar.current.component(.day, from: summary.date)
+                    let weekday = Calendar.current.isDateInToday(summary.date) ? "Today" : Self.historyWeekdayFormatter.string(from: summary.date)
+
+                    Button {
+                        viewModel.selectNeckFixDate(summary.date)
+                    } label: {
+                        VStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .fill(isSelected ? Color.purple.opacity(0.65) : Color.white.opacity(0.14))
+                                    .frame(width: 48, height: 48)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(isSelected ? Color.white.opacity(0.9) : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                                    )
+
+                                Text("\(dayNumber)")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+
+                            Text(weekday)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.7))
+                                .textCase(.uppercase)
+                                .lineLimit(1)
+                        }
+                        .frame(width: 60)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private static let historyWeekdayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
 
     private func color(for difficulty: ExerciseDifficulty) -> Color {
         switch difficulty {

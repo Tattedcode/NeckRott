@@ -39,7 +39,7 @@ struct ProgressTrackingView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("neck fix calendar")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.red)
+                .foregroundColor(.white)
         }
     }
     
@@ -203,13 +203,13 @@ struct ProgressTrackingView: View {
     private func dayBackgroundColor(for day: CalendarDay) -> Color {
         switch day.mascotAssetName {
         case "mascot1":
-            return Color.red.opacity(day.hasActivity ? 0.35 : 0.12)
+            return Color.red.opacity(day.hasActivity ? 0.55 : 0.2)
         case "mascot2":
-            return Color.orange.opacity(day.hasActivity ? 0.35 : 0.12)
+            return Color.orange.opacity(day.hasActivity ? 0.55 : 0.2)
         case "mascot3":
-            return Color.yellow.opacity(day.hasActivity ? 0.35 : 0.12)
+            return Color.yellow.opacity(day.hasActivity ? 0.55 : 0.2)
         default:
-            return Color.green.opacity(day.hasActivity ? 0.35 : 0.12)
+            return Color.green.opacity(day.hasActivity ? 0.55 : 0.2)
         }
     }
 }

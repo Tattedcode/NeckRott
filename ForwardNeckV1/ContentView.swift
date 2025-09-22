@@ -7,9 +7,24 @@
 
 import SwiftUI
 
+private enum OnboardingKeys {
+    static let hasCompleted = "hasCompletedOnboarding"
+}
+
 struct ContentView: View {
+    @AppStorage(OnboardingKeys.hasCompleted) private var hasCompletedOnboarding = false
+
     var body: some View {
-        RootTabView()
+        Group {
+            if hasCompletedOnboarding {
+                RootTabView()
+            } else {
+                OnboardingContainer {
+                    hasCompletedOnboarding = true
+                }
+            }
+        }
+        .animation(.easeInOut, value: hasCompletedOnboarding)
     }
 }
 
