@@ -32,12 +32,20 @@ struct MonthlySummary {
     var missedDaysLabel: String { "\(missedDays)" }
 }
 
+struct DailyActivity: Identifiable {
+    let id = UUID()
+    let date: Date
+    let count: Int
+    let label: String
+}
+
 @MainActor
 final class ProgressTrackingViewModel: ObservableObject {
     @Published var displayedMonth: Date
     @Published var calendarDays: [CalendarDay] = []
     @Published var summary: MonthlySummary = .empty
     @Published private(set) var dailyGoal: Int = 0
+    @Published private(set) var dailySummary: [DailyActivity] = []
     
     private let exerciseStore = ExerciseStore.shared
     private let userStore = UserStore()
@@ -45,6 +53,7 @@ final class ProgressTrackingViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     private let monthFormatter: DateFormatter
+    private let dayLabelFormatter: DateFormatter
     private let startOfMonthComponents: Set<Calendar.Component> = [.year, .month]
     private let enableDummyDataForPastDays = true // Preview helper to make the calendar feel populated
     
@@ -53,6 +62,8 @@ final class ProgressTrackingViewModel: ObservableObject {
         displayedMonth = Calendar.current.date(from: components) ?? Date()
         monthFormatter = DateFormatter()
         monthFormatter.dateFormat = "LLLL yyyy"
+        dayLabelFormatter = DateFormatter()
+        dayLabelFormatter.dateFormat = "d"
         observeStores()
         rebuild()
     }
@@ -105,6 +116,7 @@ final class ProgressTrackingViewModel: ObservableObject {
         let dayCounts = dayCounts(from: completions)
         calendarDays = generateCalendarDays(using: dayCounts)
         summary = buildSummary(from: calendarDays)
+        dailySummary = buildDailySummary(from: calendarDays)
     }
     
     private func monthCompletions() -> [ExerciseCompletion] {
@@ -208,6 +220,20 @@ final class ProgressTrackingViewModel: ObservableObject {
         }.count
 
         return MonthlySummary(totalFixes: total, completedDays: completedDays, missedDays: missedDays)
+    }
+
+    private func buildDailySummary(from calendarDays: [CalendarDay]) -> [DailyActivity] {
+        let todayStart = calendar.startOfDay(for: Date())
+        let actualDays = calendarDays.compactMap { day -> DailyActivity? in
+            guard let date = day.date else { return nil }
+            let dayStart = calendar.startOfDay(for: date)
+            guard dayStart <= todayStart else { return nil }
+            let label = dayLabelFormatter.string(from: dayStart)
+            return DailyActivity(date: dayStart, count: max(day.completionCount, 0), label: label)
+        }
+
+        let recent = actualDays.sorted { $0.date > $1.date }.prefix(7)
+        return Array(recent).sorted { $0.date < $1.date }
     }
 
     private func mascotAssetName(for completionCount: Int) -> String {

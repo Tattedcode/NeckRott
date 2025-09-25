@@ -10,15 +10,17 @@ import SwiftUI
 struct OnboardingFour: View {
     @State private var selectedReasons: Set<String> = []
     @State private var showCards = Array(repeating: false, count: 6)
+    @State private var shakeReasons = false // Controls shake animation when validation fails
     @Binding var hasReasonSelected: Bool
+    @Binding var triggerValidation: Bool
     
     private let reasons = [
-        "fix forward neck",
-        "reduce mindless scrolling",
-        "sleep better",
-        "be more confident",
-        "be more productive",
-        "just curious"
+        "Fix Neckrot",
+        "Spend Less Time Scrolling",
+        "Sleep Better",
+        "Be More Confident",
+        "Look Better",
+        "Just Curious"
     ]
     
     var body: some View {
@@ -33,7 +35,7 @@ struct OnboardingFour: View {
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
             // Title underneath image
-            Text("you're here for a reason")
+            Text("You're here for a reason")
                 .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
@@ -64,6 +66,15 @@ struct OnboardingFour: View {
                     )
                 }
             }
+            .offset(x: shakeReasons ? -10 : 0)
+            .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeReasons)
+        }
+        .onChange(of: triggerValidation) { shouldValidate in
+            if shouldValidate {
+                Log.info("OnboardingFour validation triggered")
+                validateSelection()
+                triggerValidation = false
+            }
         }
         
         // Parent container that centers the grouped content vertically
@@ -79,6 +90,24 @@ struct OnboardingFour: View {
             for i in 0..<showCards.count {
                 showCards[i] = true
             }
+        }
+    }
+
+    private func validateSelection() {
+        guard hasReasonSelected else {
+            Log.info("OnboardingFour no reason selected, triggering shake")
+            triggerReasonShake()
+            return
+        }
+        Log.info("OnboardingFour reason already selected, skipping shake")
+    }
+
+    private func triggerReasonShake() {
+        withAnimation {
+            shakeReasons = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            shakeReasons = false
         }
     }
 }
@@ -119,7 +148,7 @@ struct ReasonOption: View {
 }
 
 #Preview {
-    OnboardingFour(hasReasonSelected: .constant(false))
+    OnboardingFour(hasReasonSelected: .constant(false), triggerValidation: .constant(false))
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)

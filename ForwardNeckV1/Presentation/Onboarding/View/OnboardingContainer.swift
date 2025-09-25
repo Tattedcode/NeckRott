@@ -17,16 +17,17 @@ struct OnboardingContainer: View {
     @State private var hasScreenTimeAlertBeenDismissed = false
     @State private var hasNotificationsAlertBeenDismissed = false
     @State private var hasReasonSelected = false // Track if user selected a reason
+    @State private var triggerReasonValidation = false // Fire when user taps continue without a reason selected
+    @State private var hasSelectedAge = false // Track if an age has been selected
     @State private var hasScreenTimePermissionResponded = false // Track if user responded to permission
     @State private var selectedScreenTime = 0 // Track selected screen time (0-8 for 1-9+ hours)
-    @State private var selectedGoal = 3 // Track selected daily goal (0-8 hours)
     let onComplete: () -> Void
     
     private let onboardingScreens = [
         OnboardingScreen(
             id: 0,
-            title: "stop scrolling.",
-            subtitle: "save your neck.",
+            title: "Stop Scrolling.",
+            subtitle: "Save Your Neck.",
             content: .phoneMockup,
             buttonText: "continue"
         ),
@@ -53,7 +54,7 @@ struct OnboardingContainer: View {
         ),
         OnboardingScreen(
             id: 4,
-            title: "how much time do you spend scrolling daily?",
+            title: "How much time do you spend scrolling daily?",
             subtitle: "",
             content: .screenTimeSelection,
             buttonText: "continue"
@@ -69,21 +70,21 @@ struct OnboardingContainer: View {
             id: 6,
             title: "",
             subtitle: "",
-            content: .goalSetting,
+            content: .screenTimePermission,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 7,
             title: "",
             subtitle: "",
-            content: .screenTimePermission,
+            content: .notificationsPermission,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 8,
             title: "",
             subtitle: "",
-            content: .notificationsPermission,
+            content: .reviews,
             buttonText: "continue"
         ),
     ]
@@ -223,7 +224,7 @@ struct OnboardingContainer: View {
     
     private var buttonColors: [Color] {
         // Check if button should be disabled
-        if (currentScreen == 1 && !hasReasonSelected) {
+        if (currentScreen == 1 && !hasReasonSelected) || (currentScreen == 2 && !hasSelectedAge) {
             return [Color.gray, Color.gray.opacity(0.8)]
         }
         
@@ -241,11 +242,16 @@ struct OnboardingContainer: View {
             case .forwardNeckInfo:
                 OnboardingThree()
             case .reasonSelection:
-                OnboardingFour(hasReasonSelected: $hasReasonSelected)
+                OnboardingFour(
+                    hasReasonSelected: $hasReasonSelected,
+                    triggerValidation: $triggerReasonValidation
+                )
             case .ageSelection:
                 OnboardingSeven(
                     triggerValidation: $triggerAgeValidation,
+                    hasSelectedAge: $hasSelectedAge,
                     onAgeSelected: { age in
+                        hasSelectedAge = true
                         // Trigger navigation to next screen after validation
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             if currentScreen < onboardingScreens.count - 1 {
@@ -260,15 +266,13 @@ struct OnboardingContainer: View {
                 OnboardingTwo(selectedScreenTime: $selectedScreenTime)
             case .screenTimeMath:
                 OnboardingScreenTimeMath(selectedScreenTime: selectedScreenTime)
-            case .goalSetting:
-                OnboardingGoalSetting(selectedGoal: $selectedGoal, currentScreenTime: selectedScreenTime)
             case .screenTimePermission:
                 OnboardingFive(
                     triggerPermissionRequest: $triggerScreenTimePermission,
                     isScreenTimePermissionGranted: $isScreenTimePermissionGranted,
                     hasAlertBeenDismissed: $hasScreenTimeAlertBeenDismissed,
                     hasScreenTimePermissionResponded: $hasScreenTimePermissionResponded,
-                    subtitle: onboardingScreens[7].subtitle,
+                    subtitle: onboardingScreens[6].subtitle,
                     onPermissionGranted: {
                         // Automatically proceed to next screen when permission is granted
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -282,12 +286,21 @@ struct OnboardingContainer: View {
                 OnboardingSix(
                     hasAlertBeenDismissed: $hasNotificationsAlertBeenDismissed,
                     triggerPermissionRequest: $triggerNotificationPermission,
-                    subtitle: onboardingScreens[8].subtitle
+                    onPermissionGranted: {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                currentScreen += 1
+                            }
+                        }
+                    },
+                    subtitle: onboardingScreens[7].subtitle
                 )
             case .progressChart:
                 progressChartMockup
             case .rewards:
                 rewardsMockup
+            case .reviews:
+                OnboardingReviewsView()
             }
         }
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
@@ -300,6 +313,14 @@ struct OnboardingContainer: View {
                 // Add haptic feedback for continue button
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 
+                if currentScreen == 1 {
+                    guard hasReasonSelected else {
+                        Log.info("OnboardingContainer detected missing reason selection, triggering shake")
+                        triggerReasonValidation = true
+                        return
+                    }
+                }
+
                 // Check if we're on the age selection screen and validate input
                 if currentScreen == 2 { // Age selection screen
                     // Trigger validation in the AgeSelectionView
@@ -336,8 +357,6 @@ struct OnboardingContainer: View {
                         currentScreen += 1
                     }
                 } else {
-                    // Save user's goal data before completing onboarding
-                    userStore.saveDailyGoal(selectedGoal)
                     onComplete()
                 }
             }) {
@@ -459,11 +478,11 @@ enum OnboardingContent {
     case ageSelection
     case screenTimeSelection
     case screenTimeMath
-    case goalSetting
     case screenTimePermission
     case notificationsPermission
     case progressChart
     case rewards
+    case reviews
 }
 
 #Preview {

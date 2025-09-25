@@ -22,6 +22,7 @@ struct OnboardingOne: View {
             )
             .font(.largeTitle.bold())
             .foregroundColor(.white)
+            .multilineTextAlignment(.center)
         }
     }
 }
@@ -47,7 +48,7 @@ struct TypewriterTextView: View {
     }
     
     private func startTyping() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.07, repeats: true) { _ in
             if currentIndex < text.count {
                 let index = text.index(text.startIndex, offsetBy: currentIndex)
                 displayedText += String(text[index])
@@ -87,7 +88,7 @@ struct FirstScreenTypewriterView: View {
     @State private var showSubtitle = false
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             // Title with typewriter animation
             TypewriterTextView(
                 text: "Welcome To Neckrot",
@@ -100,17 +101,22 @@ struct FirstScreenTypewriterView: View {
             )
             .font(.largeTitle.bold())
             .foregroundColor(.white)
+            .multilineTextAlignment(.center)
             
             // Subtitle that appears after title completes
             if showSubtitle {
+                // Updated subtitle copy and layout so the full sentence fits in one line
                 TypewriterTextView(
-                    text: "save your neck",
+                    text: "Using your phone alot makes your neck rot.\nLet's save it",
                     onComplete: {
                         // Animation complete
                     }
                 )
-                .font(.title2)
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.white.opacity(0.8))
+                .multilineTextAlignment(.center)
+                .lineSpacing(10)
+                .padding(.top, 8)
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
@@ -121,7 +127,6 @@ struct FirstScreenTypewriterView: View {
 
 struct PhoneMockupView: View {
     var body: some View {
-        // Mascot image instead of phone mockup
         Image("mascot1")
             .resizable()
             .aspectRatio(contentMode: .fit)

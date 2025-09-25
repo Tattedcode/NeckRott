@@ -10,6 +10,7 @@ import SwiftUI
 struct OnboardingSix: View {
     @Binding var hasAlertBeenDismissed: Bool
     @Binding var triggerPermissionRequest: Bool
+    let onPermissionGranted: (() -> Void)?
     let subtitle: String
     
     @State private var showCards = Array(repeating: false, count: 4)
@@ -99,6 +100,7 @@ struct OnboardingSix: View {
             Button("Allow") {
                 isPermissionGranted = true
                 hasAlertBeenDismissed = true
+                onPermissionGranted?()
             }
         } message: {
             Text(alertMessage)
@@ -148,6 +150,7 @@ struct NotificationFeatureCard: View {
     OnboardingSix(
         hasAlertBeenDismissed: .constant(false),
         triggerPermissionRequest: .constant(false),
+        onPermissionGranted: nil,
         subtitle: "We need permission to send you notifications"
     )
 }

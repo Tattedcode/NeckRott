@@ -22,6 +22,10 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var neckFixesCompleted: Int = 0
     @Published private(set) var neckFixesTarget: Int = 0
     @Published private(set) var healthPercentage: Int = 100
+    /// Expose the hero mascot that lines up with the current health percent so the view stays in sync
+    var heroMascotName: String {
+        mascotAssetName(for: healthPercentage)
+    }
     @Published private(set) var selectedNeckFixDate: Date = Date()
     @Published var activitySelection: FamilyActivitySelection = .init() {
         didSet {
@@ -34,12 +38,15 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var monthlyAchievements: [MonthlyAchievement] = MonthlyAchievementKind.allCases.map { MonthlyAchievement(kind: $0) }
     @Published private(set) var recentlyUnlockedAchievement: MonthlyAchievement?
     @Published private(set) var neckFixHistory: [NeckFixDaySummary] = []
+    /// Cards showing how the last few days went so we can fill the "Previous Dates" carousel
+    @Published private(set) var previousDayCards: [PreviousDaySummary] = []
     
     // private let screenTimeService: ScreenTimeService
     private let streakStore: StreakStore
     private let exerciseStore: ExerciseStore
     private let userStore: UserStore
     private let appMonitoringStore = AppMonitoringStore()
+    private let levelProgressManager = LevelProgressManager.shared
     private var cancellables = Set<AnyCancellable>()
     private var lastExerciseId: UUID?
     private let historyFormatter: DateFormatter = {
@@ -206,8 +213,18 @@ final class HomeViewModel: ObservableObject {
         }
 
         let referenceDate = max(date, Date())
-        neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 6)
+        neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 7)
+        updatePreviousDayCards(goal: neckFixesTarget)
         updateMonthlyAchievements(skipCelebration: !celebrationsEnabled)
+
+        if Calendar.current.isDateInToday(date) {
+            levelProgressManager.processDailyProgress(
+                date: date,
+                dailyGoal: neckFixesTarget,
+                completions: neckFixesCompleted,
+                currentStreak: currentStreak
+            )
+        }
 
         if #available(iOS 14.0, *) {
             let mascot = WidgetSyncManager.mascot(for: healthPercentage)
@@ -326,6 +343,7 @@ private extension HomeViewModel {
         recentlyUnlockedAchievement = nil
         UserDefaults.standard.removeObject(forKey: achievementsShownKey)
         userStore.loadUserData()
+        levelProgressManager.resetTracking()
         updateStreaks()
         updateNextExercise()
         selectedNeckFixDate = Calendar.current.startOfDay(for: Date())
@@ -392,6 +410,20 @@ struct NeckFixDaySummary: Identifiable, Equatable {
     let date: Date
     let label: String
     let count: Int
+}
+
+/// Data model for the "Previous Dates" horizontal cards
+struct PreviousDaySummary: Identifiable, Equatable {
+    var id: Date { date }
+    let date: Date
+    let label: String
+    let completionCount: Int
+    let goal: Int
+    let percentage: Int
+    let mascotAssetName: String
+
+    /// Pretty string that the UI can show without doing extra math
+    var percentageText: String { "\(percentage)%" }
 }
 
 enum MonthlyAchievementKind: String, CaseIterable, Hashable, Codable {
@@ -474,5 +506,50 @@ private extension HomeViewModel {
         }
 
         return summaries.sorted { $0.date < $1.date }
+    }
+
+    /// Refresh the horizontal history cards so the home screen stays in sync
+    func updatePreviousDayCards(goal: Int) {
+        let calendar = Calendar.current
+        let normalizedGoal = max(goal, 1)
+        let filteredDays = neckFixHistory.filter { !calendar.isDateInToday($0.date) }
+        let recentDays = Array(filteredDays.sorted { $0.date > $1.date }.prefix(7))
+
+        let cards = recentDays.map { summary -> PreviousDaySummary in
+            let percentage = calculatePercentage(for: summary.count, goal: normalizedGoal)
+            let mascot = mascotAssetName(for: percentage)
+            return PreviousDaySummary(
+                date: summary.date,
+                label: summary.label,
+                completionCount: summary.count,
+                goal: normalizedGoal,
+                percentage: percentage,
+                mascotAssetName: mascot
+            )
+        }
+
+        previousDayCards = cards
+        Log.info("HomeViewModel updated previous day cards: count=\(previousDayCards.count)")
+    }
+
+    /// Clamp the completion count into a tidy 0-100 percentage
+    func calculatePercentage(for completions: Int, goal: Int) -> Int {
+        guard goal > 0 else { return completions > 0 ? 100 : 0 }
+        let ratio = min(1.0, max(0.0, Double(completions) / Double(goal)))
+        return Int((ratio * 100).rounded())
+    }
+
+    /// Match the mascot to the score so the UI stays consistent with widgets
+    func mascotAssetName(for percentage: Int) -> String {
+        switch percentage {
+        case ..<25:
+            return "mascot1"
+        case 25..<50:
+            return "mascot2"
+        case 50..<75:
+            return "mascot3"
+        default:
+            return "mascot4"
+        }
     }
 }

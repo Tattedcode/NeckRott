@@ -40,7 +40,7 @@ final class GamificationStore: ObservableObject {
         // Load existing data on initialization
         loadAllData()
     }
-    
+
     /// Load all gamification data from disk
     /// Called during initialization and when data needs to be refreshed
     private func loadAllData() {
@@ -56,9 +56,11 @@ final class GamificationStore: ObservableObject {
             let data = try Data(contentsOf: progressFileURL)
             userProgress = try JSONDecoder().decode(UserProgress.self, from: data)
             Log.info("Loaded user progress: Level \(userProgress.level), XP: \(userProgress.xp), Coins: \(userProgress.coins)")
+            notifyProgressChange(reason: "loadUserProgress_success")
         } catch {
             Log.error("Failed to load user progress: \(error)")
             userProgress = UserProgress() // Use default values
+            notifyProgressChange(reason: "loadUserProgress_default")
         }
     }
     
@@ -112,9 +114,10 @@ final class GamificationStore: ObservableObject {
         
         // Check for level up
         checkForLevelUp()
-        
+
         // Save progress
         saveUserProgress()
+        notifyProgressChange(reason: "addXP")
         
         Log.info("Added \(xp) XP from \(source). Total XP: \(userProgress.xp)")
     }
@@ -130,6 +133,7 @@ final class GamificationStore: ObservableObject {
         
         // Save progress
         saveUserProgress()
+        notifyProgressChange(reason: "addCoins")
         
         Log.info("Added \(coins) coins from \(source). Total coins: \(userProgress.coins)")
     }
@@ -150,6 +154,7 @@ final class GamificationStore: ObservableObject {
         
         // Save progress
         saveUserProgress()
+        notifyProgressChange(reason: "spendCoins")
         
         Log.info("Spent \(coins) coins on \(source). Remaining coins: \(userProgress.coins)")
         return true
@@ -157,20 +162,15 @@ final class GamificationStore: ObservableObject {
     
     /// Check if user should level up and handle level up
     private func checkForLevelUp() {
-        let currentLevel = userProgress.level
-        let nextLevel = levels.first { $0.number == currentLevel + 1 }
-        
-        if let nextLevel = nextLevel, userProgress.xp >= nextLevel.xpRequired {
-            // Level up!
+        while let nextLevel = levels.first(where: { $0.number == userProgress.level + 1 }),
+              userProgress.xp >= nextLevel.xpRequired {
             userProgress.level = nextLevel.number
-            
-            // Add coins reward for leveling up
-            addCoins(nextLevel.coinsReward, source: "Level \(nextLevel.number) up")
-            
             Log.info("Level up! Now level \(userProgress.level)")
-            
-            // Check for more level ups
-            checkForLevelUp()
+            NotificationCenter.default.post(
+                name: .levelDidChange,
+                object: nil,
+                userInfo: ["level": userProgress.level]
+            )
         }
     }
     
@@ -260,22 +260,67 @@ final class GamificationStore: ObservableObject {
     /// Create default levels for the gamification system
     /// - Returns: Array of default levels
     private func createDefaultLevels() -> [Level] {
-        return [
-            Level(id: 1, number: 1, xpRequired: 0, coinsReward: 0, title: "Beginner", 
-                  description: "Starting your posture journey", iconSystemName: "person.fill", colorHex: "#8E8E93"),
-            Level(id: 2, number: 2, xpRequired: 100, coinsReward: 10, title: "Aware", 
-                  description: "You're becoming aware of your posture", iconSystemName: "eye.fill", colorHex: "#34C759"),
-            Level(id: 3, number: 3, xpRequired: 250, coinsReward: 25, title: "Focused", 
-                  description: "You're focused on improving", iconSystemName: "target", colorHex: "#007AFF"),
-            Level(id: 4, number: 4, xpRequired: 500, coinsReward: 50, title: "Dedicated", 
-                  description: "You're dedicated to good posture", iconSystemName: "heart.fill", colorHex: "#FF2D92"),
-            Level(id: 5, number: 5, xpRequired: 1000, coinsReward: 100, title: "Expert", 
-                  description: "You're a posture expert", iconSystemName: "star.fill", colorHex: "#FF9500"),
-            Level(id: 6, number: 6, xpRequired: 2000, coinsReward: 200, title: "Master", 
-                  description: "You've mastered good posture", iconSystemName: "crown.fill", colorHex: "#FFD700"),
-            Level(id: 7, number: 7, xpRequired: 5000, coinsReward: 500, title: "Legend", 
-                  description: "You're a posture legend", iconSystemName: "sparkles", colorHex: "#AF52DE")
+        let levelConfigs: [(title: String, description: String, icon: String, color: String)] = [
+            ("Neck Rookie", "Just getting started", "figure.walk", "#8E8E93"),
+            ("Posture Learner", "Finding your rhythm", "lightbulb", "#60A5FA"),
+            ("Stance Scout", "Tracking your habits", "scope", "#34C759"),
+            ("Alignment Apprentice", "Noticing the gains", "line.diagonal", "#FF9F0A"),
+            ("Strain Slayer", "Tension is easing", "bolt.heart", "#FF375F"),
+            ("Habit Builder", "Consistency is coming", "calendar", "#5AC8FA"),
+            ("Alignment Advocate", "Your posture inspires", "megaphone", "#FF453A"),
+            ("Neck Defender", "Daily moves on lock", "shield.lefthalf.filled", "#32ADE6"),
+            ("Posture Protector", "You catch the slouch", "lock.shield", "#AF52DE"),
+            ("Routine Hero", "No days skipped", "medal", "#FFD60A"),
+            ("Balance Keeper", "Strong and centered", "figure.core.training", "#34C759"),
+            ("Form Guardian", "Precision with every rep", "waveform.path.ecg", "#FF9F0A"),
+            ("Mobility Mentor", "Sharing what works", "person.2.wave.2", "#30B0C7"),
+            ("Core Champion", "Neck and core synced", "circle.grid.cross", "#FF2D55"),
+            ("Focus Veteran", "Locked into progress", "eye.trianglebadge.exclamationmark", "#BF5AF2"),
+            ("Resilience Expert", "Bounce back instantly", "arrow.uturn.backward", "#0A84FF"),
+            ("Discipline Master", "Habits are automatic", "checkmark.seal", "#32D74B"),
+            ("Mindful Pro", "Every lift is intentional", "brain.head.profile", "#FFB300"),
+            ("Posture Sage", "You teach through example", "sparkles", "#FFD60A"),
+            ("Neck Legend", "Posture perfected", "crown.fill", "#FFD700")
         ]
+
+        var levels: [Level] = []
+        var xpRequired = 0
+
+        for index in 0..<levelConfigs.count {
+            let levelNumber = index + 1
+            if levelNumber == 1 {
+                xpRequired = 0
+            } else {
+                let increment: Int
+                switch levelNumber {
+                case 2...5:
+                    increment = 100
+                case 6...10:
+                    increment = 150
+                case 11...15:
+                    increment = 200
+                default:
+                    increment = 250
+                }
+                xpRequired += increment
+            }
+
+            let config = levelConfigs[index]
+            levels.append(
+                Level(
+                    id: levelNumber,
+                    number: levelNumber,
+                    xpRequired: xpRequired,
+                    coinsReward: 0,
+                    title: config.title,
+                    description: config.description,
+                    iconSystemName: config.icon,
+                    colorHex: config.color
+                )
+            )
+        }
+
+        return levels
     }
     
     /// Create default achievements for the gamification system
@@ -366,6 +411,26 @@ final class GamificationStore: ObservableObject {
         saveAchievements()
         saveRewards()
         
+        notifyProgressChange(reason: "resetAll")
         Log.info("Reset all gamification data")
+    }
+}
+
+extension Notification.Name {
+    static let levelDidChange = Notification.Name("GamificationStore.levelDidChange")
+    static let userProgressDidChange = Notification.Name("GamificationStore.userProgressDidChange")
+    static let userProgressDidChangeMainThread = Notification.Name("GamificationStore.userProgressDidChangeMainThread")
+}
+
+// MARK: - Private Helpers
+private extension GamificationStore {
+    /// Notify listeners that the user's progress changed so UI can refresh
+    /// - Parameter reason: Helpful label for debug logs
+    func notifyProgressChange(reason: String) {
+        Log.info("GamificationStore progress changed due to: \(reason)")
+        NotificationCenter.default.post(name: .userProgressDidChange, object: nil)
+        Task { @MainActor in
+            NotificationCenter.default.post(name: .userProgressDidChangeMainThread, object: nil)
+        }
     }
 }

@@ -31,8 +31,8 @@ struct OnboardingThree: View {
             // Information cards
             VStack(spacing: 12) {
                 InfoCard(
-                    icon: "hourglass",
-                    text: "the average person spends over 4 hours a day on their phone"
+                    icon: "mascot1",
+                    text: "Forward neck syndrome (Neckrot) can affect the way you look when you're older"
                 )
                 .opacity(showCards[0] ? 1 : 0)
                 .offset(y: showCards[0] ? 0 : 20)
@@ -40,15 +40,15 @@ struct OnboardingThree: View {
                 
                 InfoCard(
                     icon: "iphone",
-                    text: "most of us check our phones 58 times per day without realizing"
+                    text: "Most of us check our phones 58 times per day without realizing"
                 )
                 .opacity(showCards[1] ? 1 : 0)
                 .offset(y: showCards[1] ? 0 : 20)
                 .animation(.easeOut(duration: 0.4), value: showCards[1])
                 
                 InfoCard(
-                    icon: "mascot1",
-                    text: "too much screen time messes with your memory, focus, and sleep"
+                    icon: "hourglass",
+                    text: "The main cause for forward neck syndrome is by often phone use"
                 )
                 .opacity(showCards[2] ? 1 : 0)
                 .offset(y: showCards[2] ? 0 : 20)
@@ -56,7 +56,7 @@ struct OnboardingThree: View {
                 
                 InfoCard(
                     icon: "eye",
-                    text: "7 out of 10 people get tired, dry eyes from staring at screens"
+                    text: "Seven out of 10 people find it difficult to correct their neck later in life"
                 )
                 .opacity(showCards[3] ? 1 : 0)
                 .offset(y: showCards[3] ? 0 : 20)

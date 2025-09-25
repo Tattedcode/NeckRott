@@ -20,11 +20,11 @@ struct OnboardingTwo: View {
     private var warningMessage: (text: String, color: Color)? {
         switch selectedOption {
         case 0...1: // 1-2 hours
-            return ("perfectly normal", .green)
+            return ("This is normal for your neck", .green)
         case 2...5: // 3-6 hours
-            return ("this is a significant percentage of your life", .orange)
+            return ("This could affect your neck later in life", .orange)
         case 6...8: // 7-9+ hours
-            return ("Extremely dangerous and unhealthy", .red)
+            return ("Extremely dangerous and unhealthy for your neck", .red)
         default:
             return nil
         }
@@ -32,14 +32,16 @@ struct OnboardingTwo: View {
     
     private var mascotImage: String {
         switch selectedOption {
-        case 0...1: // 1-2 hours
+        case 0, 1:
+            return "mascot4"
+        case 2, 3:
             return "mascot3"
-        case 2...5: // 3-6 hours
+        case 4, 5:
             return "mascot2"
-        case 6...8: // 7-9+ hours
+        case 6, 7, 8:
             return "mascot1"
         default:
-            return "mascot1"
+            return "mascot4"
         }
     }
     

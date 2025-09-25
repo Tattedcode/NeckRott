@@ -23,10 +23,11 @@ struct ProgressTrackingView: View {
         ZStack {
             backgroundGradient.ignoresSafeArea()
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 28) {
+                VStack(alignment: .leading, spacing: 24) {
                     header
                     calendarCard
                     summarySection
+                    dailySummarySection
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 24)
@@ -135,11 +136,7 @@ struct ProgressTrackingView: View {
     }
     
     private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("monthly neck summary")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(textPrimary)
-            
+        VStack(alignment: .leading, spacing: 12) {
             LazyVGrid(columns: summaryColumns, spacing: 12) {
                 SummaryCard(
                     title: "total fixes",
@@ -159,6 +156,34 @@ struct ProgressTrackingView: View {
                     systemIcon: "calendar.badge.exclamationmark",
                     accentColor: Color.pink.opacity(0.8)
                 )
+            }
+        }
+    }
+
+    private var dailySummarySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("daily summary")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(textPrimary)
+
+            if viewModel.dailySummary.isEmpty {
+                Text("No exercise data yet.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(secondaryText)
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: .infinity)
+                    .background(cardColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+            } else {
+                DailySummaryChart(entries: viewModel.dailySummary, goal: viewModel.dailyGoal)
+                    .frame(height: 190)
+                    .background(cardColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color.white.opacity(0.06))
+                    )
+                    .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 10)
             }
         }
     }
@@ -203,14 +228,67 @@ struct ProgressTrackingView: View {
     private func dayBackgroundColor(for day: CalendarDay) -> Color {
         switch day.mascotAssetName {
         case "mascot1":
-            return Color.red.opacity(day.hasActivity ? 0.55 : 0.2)
+            return Color.red.opacity(day.hasActivity ? 0.75 : 0.35)
         case "mascot2":
-            return Color.orange.opacity(day.hasActivity ? 0.55 : 0.2)
+            return Color.orange.opacity(day.hasActivity ? 0.75 : 0.35)
         case "mascot3":
-            return Color.yellow.opacity(day.hasActivity ? 0.55 : 0.2)
+            return Color.yellow.opacity(day.hasActivity ? 0.75 : 0.35)
         default:
-            return Color.green.opacity(day.hasActivity ? 0.55 : 0.2)
+            return Color.green.opacity(day.hasActivity ? 0.75 : 0.35)
         }
+    }
+}
+
+private struct DailySummaryChart: View {
+    let entries: [DailyActivity]
+    let goal: Int
+
+    private var maxValue: Int {
+        max(goal, entries.map { $0.count }.max() ?? 0, 1)
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let totalHeight = geometry.size.height
+            let labelHeight: CGFloat = 20
+            let verticalSpacing: CGFloat = 10
+            let barHeight = max(0, totalHeight - (labelHeight * 2) - (verticalSpacing * 2))
+            let barWidth = max(16, (geometry.size.width - CGFloat(entries.count - 1) * 12) / CGFloat(entries.count))
+
+            HStack(alignment: .bottom, spacing: 12) {
+                ForEach(entries) { entry in
+                    VStack(alignment: .center, spacing: verticalSpacing) {
+                        Text("\(entry.count)")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.85))
+                            .frame(height: labelHeight)
+
+                        ZStack(alignment: .bottom) {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white.opacity(0.12))
+                                .frame(width: barWidth, height: barHeight)
+
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(LinearGradient(
+                                    colors: [Color.purple.opacity(0.9), Color.blue.opacity(0.85)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ))
+                                .frame(width: barWidth, height: max(6, CGFloat(entry.count) / CGFloat(maxValue) * barHeight))
+                        }
+
+                        Text(entry.label)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.8))
+                            .frame(height: labelHeight)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
     }
 }
 

@@ -29,19 +29,6 @@ struct OnboardingScreenTimeMath: View {
         return dailyHours * 365
     }
     
-    private var lifeImpactYears: Double {
-        // Assuming 80 year lifespan, 16 hours awake per day
-        let awakeHoursPerYear = 16 * 365
-        let totalAwakeHours = awakeHoursPerYear * 80
-        let screenTimeHours = Double(yearlyHours) * 80
-        return screenTimeHours / Double(awakeHoursPerYear)
-    }
-    
-    private var lifePercentage: Double {
-        let awakeHoursPerYear = 16 * 365
-        return (Double(yearlyHours) / Double(awakeHoursPerYear)) * 100
-    }
-    
     private var weeklyDays: Int {
         return weeklyHours / 24
     }
@@ -62,19 +49,35 @@ struct OnboardingScreenTimeMath: View {
         return yearlyHours / (24 * 30)
     }
     
+    private var mascotImage: String {
+        switch selectedScreenTime {
+        case 0, 1:
+            return "mascot4"
+        case 2, 3:
+            return "mascot3"
+        case 4, 5:
+            return "mascot2"
+        case 6, 7, 8:
+            return "mascot1"
+        default:
+            return "mascot4"
+        }
+    }
+    
     var body: some View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Brain mascot image
-            Image("mascot1") // Using brain mascot
+            Image(mascotImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+                .animation(.easeInOut(duration: 0.3), value: mascotImage)
             
             // Title underneath image
-            Text("this adds up quickly...")
+            Text("This adds up quickly...")
                 .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
@@ -121,19 +124,10 @@ struct OnboardingScreenTimeMath: View {
                 .offset(y: showCards ? 0 : 20)
                 .animation(.easeOut(duration: 0.6).delay(0.6), value: showCards)
                 
-                // Life impact card (highlighted in red)
-                CalculationCard(
-                    label: "life impact",
-                    value: String(format: "%.1f years lost", lifeImpactYears),
-                    isHighlighted: true
-                )
-                .opacity(showCards ? 1 : 0)
-                .offset(y: showCards ? 0 : 20)
-                .animation(.easeOut(duration: 0.6).delay(0.8), value: showCards)
             }
             
                 // Warning message
-                Text("that's \(String(format: "%.1f", lifePercentage))% of your waking life each year...")
+                Text("That is a big part of your life spent on your phone")
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(.red)
@@ -141,7 +135,7 @@ struct OnboardingScreenTimeMath: View {
                     .opacity(showCards ? 1 : 0)
                     .offset(y: showCards ? 0 : 20)
                     .scaleEffect(bounceText ? 1.05 : 1.0)
-                    .animation(.easeOut(duration: 0.6).delay(1.0), value: showCards)
+                    .animation(.easeOut(duration: 0.6).delay(0.8), value: showCards)
                     .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: bounceText)
             
             Spacer()
@@ -158,7 +152,7 @@ struct OnboardingScreenTimeMath: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
             // Trigger animations with 0.5 second delay between each card (same as Did you know screen)
-            let delays = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5] // 0.5 second intervals for each card
+            let delays = [0.0, 0.5, 1.0, 1.5, 2.0] // 0.5 second intervals for each card
             
             for (index, delay) in delays.enumerated() {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {

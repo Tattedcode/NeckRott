@@ -10,7 +10,7 @@ import SwiftUI
 enum RootTab: String, CaseIterable, Hashable {
     case home = "Home"
     case stats = "Stats"
-    case rewards = "Rewards"
+    case rewards = "Achievements"
     case settings = "Settings"
     
     var id: String { rawValue }
@@ -41,14 +41,14 @@ struct RootTabView: View {
             }
             .tag(RootTab.stats)
 
-            // Rewards Tab - Gamification, levels, and achievements
+            // Achievements Tab - Gamification and progress
             NavigationStack { 
-                RewardsView()
-                    .navigationTitle("Rewards")
+                AchievementsView()
+                    .navigationTitle("Achievements")
                     .navigationBarTitleDisplayMode(.large)
             }
             .tabItem { 
-                Label("Rewards", systemImage: "rosette") 
+                Label("Achievements", systemImage: "rosette") 
             }
             .tag(RootTab.rewards)
 
@@ -106,4 +106,3 @@ struct RootTabView: View {
 #Preview {
     RootTabView()
 }
-

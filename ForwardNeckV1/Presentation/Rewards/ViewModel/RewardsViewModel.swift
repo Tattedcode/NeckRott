@@ -43,6 +43,37 @@ final class RewardsViewModel: ObservableObject {
         
         Log.info("Loaded gamification data: Level \(userProgress.level), XP: \(userProgress.xp), Coins: \(userProgress.coins)")
     }
+
+    /// Start listening for changes from the store so UI stays fresh
+    func startObserving() {
+        NotificationCenter.default.addObserver(
+            forName: .userProgressDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                Log.info("RewardsViewModel received userProgressDidChange notification")
+                self.loadData()
+            }
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: .userProgressDidChangeMainThread,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                Log.info("RewardsViewModel received userProgressDidChangeMainThread notification")
+                self.loadData()
+            }
+        }
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
     /// Purchase a reward
     /// - Parameter rewardId: ID of the reward to purchase

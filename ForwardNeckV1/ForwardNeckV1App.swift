@@ -10,23 +10,18 @@ import SwiftUI
 @main
 struct ForwardNeckV1App: App {
     init() {
-        print("🚀 ForwardNeckV1App starting...")
-        print("🚀 ForwardNeckV1App starting...")
-        print("🚀 ForwardNeckV1App starting...")
-        print("🚀 ForwardNeckV1App starting...")
-        print("🚀 ForwardNeckV1App starting...")
+#if DEBUG
+        // Always start at onboarding during development builds for quick testing.
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "hasCompletedOnboarding")
+        defaults.removeObject(forKey: "hasGrantedScreenTime")
+        defaults.removeObject(forKey: "hasGrantedNotifications")
+#endif
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onAppear {
-                    print("🚀 ContentView appeared")
-                    print("🚀 ContentView appeared")
-                    print("🚀 ContentView appeared")
-                    print("🚀 ContentView appeared")
-                    print("🚀 ContentView appeared")
-                }
         }
     }
 }

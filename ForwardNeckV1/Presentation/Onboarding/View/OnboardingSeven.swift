@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingSeven: View {
     @Binding var triggerValidation: Bool
+    @Binding var hasSelectedAge: Bool // Lets the container know we have a pick
     @State private var selectedAge: String? = nil
     @State private var shakeAgeField = false
     @State private var showCards = Array(repeating: false, count: 6)
@@ -28,7 +29,7 @@ struct OnboardingSeven: View {
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
             
             // Title underneath image
-            Text("what's your age?")
+            Text("What's your age?")
                 .font(.title.bold())
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
@@ -49,6 +50,8 @@ struct OnboardingSeven: View {
                                     // Add haptic feedback for age selection
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     selectedAge = age
+                                    hasSelectedAge = true
+                                    Log.info("OnboardingSeven user picked age=\(age)")
                                 }
                             )
                 }
@@ -86,9 +89,13 @@ struct OnboardingSeven: View {
     private func validateInput() {
         if selectedAge == nil {
             // Just trigger shake animation, no alert
+            hasSelectedAge = false
             triggerAgeFieldShake()
+            Log.info("OnboardingSeven validation failed – no age selected")
         } else {
             // Validation successful - save the data and let navigation continue
+            hasSelectedAge = true
+            Log.info("OnboardingSeven validation succeeded – forwarding age")
             onAgeSelected(selectedAge ?? "")
         }
     }
@@ -140,6 +147,7 @@ struct AgeOption: View {
 #Preview {
     OnboardingSeven(
         triggerValidation: .constant(false),
+        hasSelectedAge: .constant(false),
         onAgeSelected: { age in
             print("Age: \(age)")
         }

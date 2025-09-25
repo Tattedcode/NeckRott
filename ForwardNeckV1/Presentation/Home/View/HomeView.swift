@@ -37,11 +37,14 @@ struct HomeView: View {
                         // Mascot and health score
                         mascotSection
 
-                        // Statistics section
-                        statisticsSection
-                        
                         // Next exercise prompt
                         nextExerciseSection
+
+                        // Statistics section
+                        statisticsSection
+
+                        // History cards for the last few days
+                        previousDatesSection
 
                         // Monthly achievements
                         monthlyAchievementsSection
@@ -111,12 +114,19 @@ struct HomeView: View {
     // MARK: - Mascot Section
     
     private var mascotSection: some View {
-        VStack(spacing: 16) {
-            // Mascot image - made bigger
-            Image(mascotAssetName)
+        let mascotName = viewModel.heroMascotName
+
+        return VStack(spacing: 16) {
+            // Hero mascot image matches the current health percentage so the UI feels alive
+            Image(mascotName)
                 .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 160, height: 160)
+                .scaledToFit()
+                .frame(height: 180)
+                .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 8)
+                .accessibilityHidden(true)
+                .onAppear {
+                    Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
+                }
             
             // Health score
             Text("\(viewModel.healthPercentage)%")
@@ -153,8 +163,6 @@ struct HomeView: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
-
-            neckFixHistorySection
         }
     }
     
@@ -238,10 +246,63 @@ struct HomeView: View {
         }
     }
 
+    /// What each mini card looks like (mascot on left, score on right)
+    private struct PreviousDayCardView: View {
+        let card: PreviousDaySummary
+
+        var body: some View {
+            GeometryReader { geometry in
+                let height = geometry.size.height
+                let mascotSize = height * 0.72
+                let percentageFont = height * 0.3
+                let dateFont = height * 0.11
+
+                HStack(alignment: .center, spacing: 16) {
+                    // Mascot sits on the left and gets as much space as possible
+                    Image(card.mascotAssetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: mascotSize, height: mascotSize)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 3)
+                        .accessibilityHidden(true)
+
+                    Spacer(minLength: 0)
+
+                    // Percentage is huge, with the date tucked underneath
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(card.percentageText)
+                            .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .allowsTightening(true)
+
+                        Text(card.label)
+                            .font(.system(size: dateFont, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .lineLimit(1)
+                    }
+                    .padding(.trailing, 12)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            }
+            .frame(width: 220, height: 96)
+            .background(Color.white.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 4)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(card.label) \(card.percentageText)")
+        }
+    }
+
     // MARK: - Next Exercise Section
 
     private var nextExerciseSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Time To Unrot Your Neck")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
@@ -249,75 +310,10 @@ struct HomeView: View {
             
             Group {
                 if let exercise = viewModel.nextExercise {
-                    HStack(alignment: .top, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(exercise.description)
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.8))
-                                .fixedSize(horizontal: false, vertical: true)
-                            
-                            HStack(spacing: 12) {
-                                Label(exercise.durationLabel, systemImage: "clock")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.8))
-                                
-                                Label(exercise.difficulty.rawValue.capitalized, systemImage: "flame")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(color(for: exercise.difficulty))
-                            }
-                            
-                            DisclosureGroup(isExpanded: $isInstructionsExpanded) {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
-                                        Text("\(index + 1). \(instruction)")
-                                            .font(.system(size: 13))
-                                            .foregroundColor(.white.opacity(0.85))
-                                    }
-                                }
-                                .padding(.top, 6)
-                            } label: {
-                                Label("Instructions", systemImage: "list.bullet")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
-                            .tint(.white)
+                    exerciseCard(for: exercise)
+                        .onChange(of: viewModel.nextExercise?.id) { _ in
+                            isInstructionsExpanded = false
                         }
-                        
-                        Spacer(minLength: 16)
-                        
-                        VStack(spacing: 8) {
-                            Spacer()
-                            Button(action: {
-                                isShowingExerciseTimer = true
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [Color.green, Color.green.opacity(0.8)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(width: 72, height: 72)
-                                    Image(systemName: "play.fill")
-                                        .font(.system(size: 28, weight: .bold))
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Start \(exercise.title)")
-                            
-                            Text("Start")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.white)
-                            Spacer()
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .onChange(of: viewModel.nextExercise?.id) { _ in
-                        isInstructionsExpanded = false
-                    }
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("No exercises available right now")
@@ -330,9 +326,35 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .padding(20)
+            .padding(16)
             .background(Color.white.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 20))
+        }
+    }
+
+    /// Carousel that shows how you did on recent days (mascot left, score right)
+    private var previousDatesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Previous 7 Days")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+                .accessibilityAddTraits(.isHeader)
+
+            if viewModel.previousDayCards.isEmpty {
+                Text("Complete exercises to unlock your history ✨")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.vertical, 12)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 16) {
+                        ForEach(viewModel.previousDayCards) { card in
+                            PreviousDayCardView(card: card)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
         }
     }
 
@@ -379,82 +401,9 @@ struct HomeView: View {
         Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
     }
 
-    private var neckFixHistorySection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(viewModel.neckFixHistory) { summary in
-                    let isSelected = Calendar.current.isDate(summary.date, inSameDayAs: viewModel.selectedNeckFixDate)
-                    let dayNumber = Calendar.current.component(.day, from: summary.date)
-                    let weekday = Calendar.current.isDateInToday(summary.date) ? "Today" : Self.historyWeekdayFormatter.string(from: summary.date)
-
-                    Button {
-                        viewModel.selectNeckFixDate(summary.date)
-                    } label: {
-                        VStack(spacing: 6) {
-                            ZStack {
-                                Circle()
-                                    .fill(isSelected ? Color.purple.opacity(0.65) : Color.white.opacity(0.14))
-                                    .frame(width: 48, height: 48)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(isSelected ? Color.white.opacity(0.9) : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
-                                    )
-
-                                Text("\(dayNumber)")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
-
-                            Text(weekday)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.7))
-                                .textCase(.uppercase)
-                                .lineLimit(1)
-                        }
-                        .frame(width: 60)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private static let historyWeekdayFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        formatter.dateFormat = "EEE"
-        return formatter
-    }()
-
-    private func color(for difficulty: ExerciseDifficulty) -> Color {
-        switch difficulty {
-        case .easy:
-            return .green
-        case .medium:
-            return .orange
-        case .hard:
-            return .red
-        }
-    }
-
     private var barFillRatio: CGFloat {
         let ratio = Double(viewModel.healthPercentage) / 100.0
         return CGFloat(min(max(ratio, 0.0), 1.0))
-    }
-
-    private var mascotAssetName: String {
-        let percentage = viewModel.healthPercentage
-        switch percentage {
-        case ..<25:
-            return "mascot1"
-        case 25..<50:
-            return "mascot2"
-        case 50..<75:
-            return "mascot3"
-        default:
-            return "mascot4"
-        }
     }
 
     private struct ExerciseTimerSheet: View {
@@ -719,6 +668,101 @@ private struct ConfettiPieceView: View {
         let fadeDelay = piece.delay + max(0, piece.duration - 0.6)
         withAnimation(.easeOut(duration: 0.6).delay(fadeDelay)) {
             opacity = 0
+        }
+    }
+}
+
+// MARK: - Helpers
+
+private extension HomeView {
+    @ViewBuilder
+    func exerciseCard(for exercise: Exercise) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(exercise.description)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                exerciseMeta(for: exercise)
+
+                DisclosureGroup(isExpanded: $isInstructionsExpanded) {
+                    instructionList(for: exercise)
+                } label: {
+                    Label("Instructions", systemImage: "list.bullet")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .tint(.white)
+            }
+
+            Spacer(minLength: 16)
+
+            VStack(spacing: 8) {
+                Button(action: {
+                    isShowingExerciseTimer = true
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.green, Color.green.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 72, height: 72)
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Start \(exercise.title)")
+
+                Text("Start")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .frame(width: 90, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    func exerciseMeta(for exercise: Exercise) -> some View {
+        HStack(spacing: 12) {
+            Label(exercise.durationLabel, systemImage: "clock")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.8))
+
+            Label(exercise.difficulty.rawValue.capitalized, systemImage: "flame")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(color(for: exercise.difficulty))
+        }
+    }
+
+    @ViewBuilder
+    func instructionList(for exercise: Exercise) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
+                Text("\(index + 1). \(instruction)")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.85))
+            }
+        }
+        .padding(.top, 6)
+    }
+
+    func color(for difficulty: ExerciseDifficulty) -> Color {
+        switch difficulty {
+        case .easy:
+            return .green
+        case .medium:
+            return .orange
+        case .hard:
+            return .red
         }
     }
 }
