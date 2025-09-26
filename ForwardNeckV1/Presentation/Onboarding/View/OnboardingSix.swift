@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct OnboardingSix: View {
     @Binding var hasAlertBeenDismissed: Bool
@@ -14,7 +15,6 @@ struct OnboardingSix: View {
     let subtitle: String
     
     @State private var showCards = Array(repeating: false, count: 4)
-    @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var isPermissionGranted = false
     
@@ -29,7 +29,7 @@ struct OnboardingSix: View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) { // Reduced spacing
             // Mascot image
-            Image("mascot1")
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
@@ -84,33 +84,53 @@ struct OnboardingSix: View {
                 }
             }
             
-            // Don't automatically show alert - wait for user to press continue
+            // Wait for the user to tap continue before requesting permission
         }
         .onChange(of: triggerPermissionRequest) { shouldTrigger in
             if shouldTrigger {
-                requestNotificationPermission()
                 triggerPermissionRequest = false
+                requestNotificationPermission()
             }
-        }
-        .alert("Notifications Required", isPresented: $showingAlert) {
-            Button("Don't Allow") {
-                isPermissionGranted = false
-                hasAlertBeenDismissed = true
-            }
-            Button("Allow") {
-                isPermissionGranted = true
-                hasAlertBeenDismissed = true
-                onPermissionGranted?()
-            }
-        } message: {
-            Text(alertMessage)
         }
     }
     
     private func requestNotificationPermission() {
-        alertMessage = "Neckrot needs to send you notifications to help you stay on track with your screen time goals and brain health. You can change this setting later in your device settings."
-        showingAlert = true
+        Log.info("OnboardingSix requesting notification authorization")
+
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            if settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional {
+                Log.info("OnboardingSix notifications already authorized: \(settings.authorizationStatus.rawValue)")
+                DispatchQueue.main.async {
+                    isPermissionGranted = true
+                    hasAlertBeenDismissed = true
+                    onPermissionGranted?()
+                }
+                return
+            }
+
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+                DispatchQueue.main.async {
+                    if let error {
+                        Log.error("OnboardingSix notification authorization failed: \(error.localizedDescription)")
+                        alertMessage = error.localizedDescription
+                        isPermissionGranted = false
+                        hasAlertBeenDismissed = true
+                        return
+                    }
+
+                    Log.info("OnboardingSix notification authorization granted=\(granted)")
+                    isPermissionGranted = granted
+                    hasAlertBeenDismissed = true
+                    if granted {
+                        onPermissionGranted?()
+                    } else {
+                        alertMessage = "Notifications are turned off. You can enable them later in Settings > Notifications."
+                    }
+                }
+            }
+        }
     }
+    
 }
 
 // MARK: - Notification Feature Card

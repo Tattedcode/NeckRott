@@ -29,7 +29,9 @@ struct HomeHeroPreview: View {
 
                     Spacer()
 
-                    Image("mascot3")
+                    let baseMascot = "mascot3"
+                    let resolvedMascot = MascotAssetProvider.resolvedMascotName(for: baseMascot)
+                    Image(resolvedMascot)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 70, height: 70)
@@ -39,8 +41,7 @@ struct HomeHeroPreview: View {
                 Divider().background(Color.white.opacity(0.1))
 
                 HStack(spacing: 16) {
-                    summaryTile(title: "streak", value: "12")
-                    summaryTile(title: "coins", value: "240")
+                    summaryTile(title: "xp", value: "2540")
                     summaryTile(title: "level", value: "6")
                 }
             }

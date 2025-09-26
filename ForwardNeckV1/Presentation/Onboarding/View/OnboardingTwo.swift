@@ -49,7 +49,7 @@ struct OnboardingTwo: View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Mascot image
-            Image(mascotImage)
+            Image(MascotAssetProvider.resolvedMascotName(for: mascotImage))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 200, height: 200)

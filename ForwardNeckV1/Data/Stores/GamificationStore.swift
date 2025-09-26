@@ -8,7 +8,7 @@
 import Foundation
 
 /// Store for managing gamification data persistence
-/// Part of D-005: XP points, coins, and level
+/// Part of D-005: XP points and level
 /// Implements MVVM pattern for data management
 @MainActor
 final class GamificationStore: ObservableObject {
@@ -55,7 +55,7 @@ final class GamificationStore: ObservableObject {
         do {
             let data = try Data(contentsOf: progressFileURL)
             userProgress = try JSONDecoder().decode(UserProgress.self, from: data)
-            Log.info("Loaded user progress: Level \(userProgress.level), XP: \(userProgress.xp), Coins: \(userProgress.coins)")
+            Log.info("Loaded user progress: Level \(userProgress.level), XP: \(userProgress.xp)")
             notifyProgressChange(reason: "loadUserProgress_success")
         } catch {
             Log.error("Failed to load user progress: \(error)")
@@ -111,53 +111,29 @@ final class GamificationStore: ObservableObject {
         userProgress.xp += xp
         userProgress.totalXpEarned += xp
         userProgress.lastUpdated = Date()
-        
+
         // Check for level up
         checkForLevelUp()
 
         // Save progress
         saveUserProgress()
         notifyProgressChange(reason: "addXP")
-        
+
         Log.info("Added \(xp) XP from \(source). Total XP: \(userProgress.xp)")
     }
-    
-    /// Add coins to user progress
-    /// - Parameters:
-    ///   - coins: Amount of coins to add
-    ///   - source: Source of the coins (for logging)
-    func addCoins(_ coins: Int, source: String) {
-        userProgress.coins += coins
-        userProgress.totalCoinsEarned += coins
-        userProgress.lastUpdated = Date()
-        
-        // Save progress
-        saveUserProgress()
-        notifyProgressChange(reason: "addCoins")
-        
-        Log.info("Added \(coins) coins from \(source). Total coins: \(userProgress.coins)")
+
+    /// Unlock an achievement (XP rewards disabled during level-based unlock phase)
+    func unlockAchievement(_ achievementId: UUID) -> Bool {
+        Log.info("Achievement unlocking is disabled while level-based rewards are in progress (id=\(achievementId))")
+        return false
     }
-    
-    /// Spend coins (for purchasing rewards)
-    /// - Parameters:
-    ///   - coins: Amount of coins to spend
-    ///   - source: What the coins are being spent on
-    /// - Returns: True if successful, false if insufficient coins
-    func spendCoins(_ coins: Int, source: String) -> Bool {
-        guard userProgress.coins >= coins else {
-            Log.error("Insufficient coins to spend \(coins) on \(source)")
-            return false
-        }
-        
-        userProgress.coins -= coins
-        userProgress.lastUpdated = Date()
-        
-        // Save progress
-        saveUserProgress()
-        notifyProgressChange(reason: "spendCoins")
-        
-        Log.info("Spent \(coins) coins on \(source). Remaining coins: \(userProgress.coins)")
-        return true
+
+    /// Purchase a reward (temporarily disabled during XP-only phase)
+    /// - Parameter rewardId: ID of the reward to open
+    /// - Returns: Always false while XP-only mode is active
+    func purchaseReward(_ rewardId: UUID) -> Bool {
+        Log.info("Reward purchasing is disabled. Attempted rewardId=\(rewardId)")
+        return false
     }
     
     /// Check if user should level up and handle level up
@@ -172,64 +148,6 @@ final class GamificationStore: ObservableObject {
                 userInfo: ["level": userProgress.level]
             )
         }
-    }
-    
-    /// Unlock an achievement
-    /// - Parameter achievementId: ID of the achievement to unlock
-    /// - Returns: True if successful, false if already unlocked
-    func unlockAchievement(_ achievementId: UUID) -> Bool {
-        guard let index = achievements.firstIndex(where: { $0.id == achievementId }) else {
-            Log.error("Achievement with ID \(achievementId) not found")
-            return false
-        }
-        
-        guard !achievements[index].isUnlocked else {
-            Log.info("Achievement \(achievements[index].title) already unlocked")
-            return false
-        }
-        
-        // Unlock the achievement
-        achievements[index].isUnlocked = true
-        achievements[index].unlockedAt = Date()
-        
-        // Add rewards
-        addXP(achievements[index].xpReward, source: "Achievement: \(achievements[index].title)")
-        addCoins(achievements[index].coinsReward, source: "Achievement: \(achievements[index].title)")
-        
-        // Save achievements
-        saveAchievements()
-        
-        Log.info("Unlocked achievement: \(achievements[index].title)")
-        return true
-    }
-    
-    /// Purchase a reward
-    /// - Parameter rewardId: ID of the reward to purchase
-    /// - Returns: True if successful, false if insufficient coins or already purchased
-    func purchaseReward(_ rewardId: UUID) -> Bool {
-        guard let index = rewards.firstIndex(where: { $0.id == rewardId }) else {
-            Log.error("Reward with ID \(rewardId) not found")
-            return false
-        }
-        
-        guard !rewards[index].isPurchased else {
-            Log.info("Reward \(rewards[index].title) already purchased")
-            return false
-        }
-        
-        guard spendCoins(rewards[index].coinsCost, source: "Reward: \(rewards[index].title)") else {
-            return false
-        }
-        
-        // Mark as purchased
-        rewards[index].isPurchased = true
-        rewards[index].purchasedAt = Date()
-        
-        // Save rewards
-        saveRewards()
-        
-        Log.info("Purchased reward: \(rewards[index].title)")
-        return true
     }
     
     /// Get current level information
@@ -311,7 +229,6 @@ final class GamificationStore: ObservableObject {
                     id: levelNumber,
                     number: levelNumber,
                     xpRequired: xpRequired,
-                    coinsReward: 0,
                     title: config.title,
                     description: config.description,
                     iconSystemName: config.icon,
@@ -327,31 +244,31 @@ final class GamificationStore: ObservableObject {
     /// - Returns: Array of default achievements
     private func createDefaultAchievements() -> [Achievement] {
         return [
-            Achievement(title: "First Check", description: "Complete your first posture check", 
-                       xpReward: 10, coinsReward: 5, iconSystemName: "checkmark.circle.fill", colorHex: "#34C759"),
-            Achievement(title: "Daily Streak", description: "Complete 7 days in a row", 
-                       xpReward: 50, coinsReward: 25, iconSystemName: "flame.fill", colorHex: "#FF9500"),
-            Achievement(title: "Exercise Enthusiast", description: "Complete 10 exercises", 
-                       xpReward: 30, coinsReward: 15, iconSystemName: "dumbbell.fill", colorHex: "#007AFF"),
-            Achievement(title: "Week Warrior", description: "Complete 50 posture checks in a week", 
-                       xpReward: 100, coinsReward: 50, iconSystemName: "calendar.badge.clock", colorHex: "#FF2D92"),
-            Achievement(title: "Posture Pro", description: "Reach level 5", 
-                       xpReward: 200, coinsReward: 100, iconSystemName: "star.fill", colorHex: "#FFD700")
+            Achievement(title: "First Check", description: "Complete your first posture check",
+                       xpReward: 0, iconSystemName: "checkmark.circle.fill", colorHex: "#34C759"),
+            Achievement(title: "Daily Streak", description: "Complete 7 days in a row",
+                       xpReward: 0, iconSystemName: "flame.fill", colorHex: "#FF9500"),
+            Achievement(title: "Exercise Enthusiast", description: "Complete 10 exercises",
+                       xpReward: 0, iconSystemName: "dumbbell.fill", colorHex: "#007AFF"),
+            Achievement(title: "Week Warrior", description: "Complete 50 posture checks in a week",
+                       xpReward: 0, iconSystemName: "calendar.badge.clock", colorHex: "#FF2D92"),
+            Achievement(title: "Posture Pro", description: "Reach level 5",
+                       xpReward: 0, iconSystemName: "star.fill", colorHex: "#FFD700")
         ]
     }
-    
+
     /// Create default rewards for the gamification system
     /// - Returns: Array of default rewards
     private func createDefaultRewards() -> [Reward] {
         return [
-            Reward(title: "Custom Theme", description: "Unlock a new app theme", 
-                   coinsCost: 50, iconSystemName: "paintbrush.fill", colorHex: "#34C759"),
-            Reward(title: "Advanced Tips", description: "Unlock advanced posture tips", 
-                   coinsCost: 100, iconSystemName: "lightbulb.fill", colorHex: "#FF9500"),
-            Reward(title: "Exclusive Badge", description: "Get an exclusive achievement badge", 
-                   coinsCost: 200, iconSystemName: "badge.plus.radiowaves.right", colorHex: "#007AFF"),
-            Reward(title: "Premium Features", description: "Unlock premium app features", 
-                   coinsCost: 500, iconSystemName: "crown.fill", colorHex: "#FFD700")
+            Reward(title: "Custom Theme", description: "Unlocked at Level 3",
+                   iconSystemName: "paintbrush.fill", colorHex: "#34C759"),
+            Reward(title: "Advanced Tips", description: "Unlocked at Level 7",
+                   iconSystemName: "lightbulb.fill", colorHex: "#FF9500"),
+            Reward(title: "Exclusive Badge", description: "Unlocked at Level 12",
+                   iconSystemName: "badge.plus.radiowaves.right", colorHex: "#007AFF"),
+            Reward(title: "Premium Features", description: "Unlocked at Level 18",
+                   iconSystemName: "crown.fill", colorHex: "#FFD700")
         ]
     }
     
@@ -405,12 +322,9 @@ final class GamificationStore: ObservableObject {
         userProgress = UserProgress()
         achievements = createDefaultAchievements()
         rewards = createDefaultRewards()
-        // Keep levels as they are static
-        
         saveUserProgress()
         saveAchievements()
         saveRewards()
-        
         notifyProgressChange(reason: "resetAll")
         Log.info("Reset all gamification data")
     }

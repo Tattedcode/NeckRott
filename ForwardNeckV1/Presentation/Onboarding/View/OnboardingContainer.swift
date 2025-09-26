@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingContainer: View {
-    @State private var currentScreen = 0 // Start at first screen
+    @State private var currentScreen: Int
     @StateObject private var userStore = UserStore()
     @State private var triggerScreenTimePermission = false
     @State private var isScreenTimePermissionGranted = false
@@ -16,12 +16,23 @@ struct OnboardingContainer: View {
     @State private var triggerNotificationPermission = false
     @State private var hasScreenTimeAlertBeenDismissed = false
     @State private var hasNotificationsAlertBeenDismissed = false
+    @State private var hasSelectedMascot = false
+    @State private var selectedMascotPrefix: String = MascotThemeState.currentPrefix()
     @State private var hasReasonSelected = false // Track if user selected a reason
     @State private var triggerReasonValidation = false // Fire when user taps continue without a reason selected
     @State private var hasSelectedAge = false // Track if an age has been selected
     @State private var hasScreenTimePermissionResponded = false // Track if user responded to permission
     @State private var selectedScreenTime = 0 // Track selected screen time (0-8 for 1-9+ hours)
     let onComplete: () -> Void
+    
+    init(onComplete: @escaping () -> Void) {
+        self.onComplete = onComplete
+#if targetEnvironment(simulator)
+        _currentScreen = State(initialValue: 0)
+#else
+        _currentScreen = State(initialValue: 0)
+#endif
+    }
     
     private let onboardingScreens = [
         OnboardingScreen(
@@ -33,55 +44,62 @@ struct OnboardingContainer: View {
         ),
         OnboardingScreen(
             id: 1,
-            title: "",
-            subtitle: "",
-            content: .reasonSelection,
+            title: "Choose your mascot",
+            subtitle: "Pick the buddy who will cheer you on",
+            content: .mascotSelection,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 2,
             title: "",
             subtitle: "",
-            content: .ageSelection,
+            content: .reasonSelection,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 3,
             title: "",
             subtitle: "",
-            content: .forwardNeckInfo,
+            content: .ageSelection,
             buttonText: "continue"
         ),
         OnboardingScreen(
             id: 4,
+            title: "",
+            subtitle: "",
+            content: .forwardNeckInfo,
+            buttonText: "continue"
+        ),
+        OnboardingScreen(
+            id: 5,
             title: "How much time do you spend scrolling daily?",
             subtitle: "",
             content: .screenTimeSelection,
             buttonText: "continue"
         ),
         OnboardingScreen(
-            id: 5,
+            id: 6,
             title: "",
             subtitle: "",
             content: .screenTimeMath,
             buttonText: "continue"
         ),
         OnboardingScreen(
-            id: 6,
+            id: 7,
             title: "",
             subtitle: "",
             content: .screenTimePermission,
             buttonText: "continue"
         ),
         OnboardingScreen(
-            id: 7,
+            id: 8,
             title: "",
             subtitle: "",
             content: .notificationsPermission,
             buttonText: "continue"
         ),
         OnboardingScreen(
-            id: 8,
+            id: 9,
             title: "",
             subtitle: "",
             content: .reviews,
@@ -216,7 +234,7 @@ struct OnboardingContainer: View {
     }
     
     private var buttonText: String {
-        if currentScreen == 4 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
+        if currentScreen == 6 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
             return "Permission Required"
         }
         return onboardingScreens[currentScreen].buttonText
@@ -224,11 +242,16 @@ struct OnboardingContainer: View {
     
     private var buttonColors: [Color] {
         // Check if button should be disabled
-        if (currentScreen == 1 && !hasReasonSelected) || (currentScreen == 2 && !hasSelectedAge) {
-            return [Color.gray, Color.gray.opacity(0.8)]
+        if currentScreen == 1 {
+            return [Color.blue, Color.blue.opacity(hasSelectedMascot ? 0.8 : 0.3)]
         }
-        
-        // Always return blue colors - no red button for denied permissions
+        if currentScreen == 2 {
+            return [Color.blue, Color.blue.opacity(hasReasonSelected ? 0.8 : 0.3)]
+        }
+        if currentScreen == 3 {
+            return [Color.blue, Color.blue.opacity(hasSelectedAge ? 0.8 : 0.3)]
+        }
+
         return [Color.blue, Color.blue.opacity(0.8)]
     }
     
@@ -237,6 +260,16 @@ struct OnboardingContainer: View {
     private var currentScreenContent: some View {
         Group {
             switch onboardingScreens[currentScreen].content {
+            case .mascotSelection:
+                OnboardingMascotSelection(
+                    currentSelection: $selectedMascotPrefix,
+                    hasSelectedMascot: $hasSelectedMascot,
+                    onSelectionChanged: { prefix in
+                        selectedMascotPrefix = prefix
+                        hasSelectedMascot = true
+                        Log.info("OnboardingContainer updated mascot prefix -> \(prefix.isEmpty ? "default" : prefix)")
+                    }
+                )
             case .phoneMockup:
                 PhoneMockupView()
             case .forwardNeckInfo:
@@ -314,6 +347,14 @@ struct OnboardingContainer: View {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 
                 if currentScreen == 1 {
+                    guard hasSelectedMascot else {
+                        Log.info("OnboardingContainer mascot not picked yet")
+                        return
+                    }
+                    userStore.saveMascotPrefix(selectedMascotPrefix)
+                }
+
+                if currentScreen == 2 {
                     guard hasReasonSelected else {
                         Log.info("OnboardingContainer detected missing reason selection, triggering shake")
                         triggerReasonValidation = true
@@ -322,7 +363,7 @@ struct OnboardingContainer: View {
                 }
 
                 // Check if we're on the age selection screen and validate input
-                if currentScreen == 2 { // Age selection screen
+                if currentScreen == 3 { // Age selection screen
                     // Trigger validation in the AgeSelectionView
                     triggerAgeValidation = true
                     return
@@ -472,6 +513,7 @@ struct OnboardingScreen {
 }
 
 enum OnboardingContent {
+    case mascotSelection
     case phoneMockup
     case forwardNeckInfo
     case reasonSelection

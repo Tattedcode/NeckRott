@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// Model representing a user's gamification progress
-/// Part of D-005: XP points, coins, and level
+/// Part of D-005: XP points and level
 struct UserProgress: Codable, Identifiable {
     /// Unique identifier for the user progress record
     let id: UUID
@@ -17,17 +17,11 @@ struct UserProgress: Codable, Identifiable {
     /// Current experience points
     var xp: Int
     
-    /// Current coins balance
-    var coins: Int
-    
     /// Current level
     var level: Int
     
     /// Total XP earned (for statistics)
     var totalXpEarned: Int
-    
-    /// Total coins earned (for statistics)
-    var totalCoinsEarned: Int
     
     /// Date when progress was last updated
     var lastUpdated: Date
@@ -36,19 +30,15 @@ struct UserProgress: Codable, Identifiable {
     /// - Parameters:
     ///   - id: Unique identifier (defaults to new UUID)
     ///   - xp: Current experience points (defaults to 0)
-    ///   - coins: Current coins balance (defaults to 0)
     ///   - level: Current level (defaults to 1)
     ///   - totalXpEarned: Total XP earned (defaults to 0)
-    ///   - totalCoinsEarned: Total coins earned (defaults to 0)
     ///   - lastUpdated: Last update date (defaults to now)
-    init(id: UUID = UUID(), xp: Int = 0, coins: Int = 0, level: Int = 1, 
-         totalXpEarned: Int = 0, totalCoinsEarned: Int = 0, lastUpdated: Date = Date()) {
+    init(id: UUID = UUID(), xp: Int = 0, level: Int = 1,
+         totalXpEarned: Int = 0, lastUpdated: Date = Date()) {
         self.id = id
         self.xp = xp
-        self.coins = coins
         self.level = level
         self.totalXpEarned = totalXpEarned
-        self.totalCoinsEarned = totalCoinsEarned
         self.lastUpdated = lastUpdated
     }
 }
@@ -64,9 +54,6 @@ struct Level: Codable, Identifiable {
     
     /// XP required to reach this level
     let xpRequired: Int
-    
-    /// Coins reward for reaching this level
-    let coinsReward: Int
     
     /// Title/name of the level
     let title: String
@@ -85,17 +72,15 @@ struct Level: Codable, Identifiable {
     ///   - id: Unique identifier for the level
     ///   - number: Level number
     ///   - xpRequired: XP required to reach this level
-    ///   - coinsReward: Coins reward for reaching this level
     ///   - title: Title of the level
     ///   - description: Description of the level
     ///   - iconSystemName: Icon system name
     ///   - colorHex: Color as hex string
-    init(id: Int, number: Int, xpRequired: Int, coinsReward: Int, title: String, 
+    init(id: Int, number: Int, xpRequired: Int, title: String,
          description: String, iconSystemName: String, colorHex: String) {
         self.id = id
         self.number = number
         self.xpRequired = xpRequired
-        self.coinsReward = coinsReward
         self.title = title
         self.description = description
         self.iconSystemName = iconSystemName
@@ -123,9 +108,6 @@ struct Achievement: Codable, Identifiable {
     /// XP reward for unlocking this achievement
     let xpReward: Int
     
-    /// Coins reward for unlocking this achievement
-    let coinsReward: Int
-    
     /// Icon system name for the achievement
     let iconSystemName: String
     
@@ -144,19 +126,17 @@ struct Achievement: Codable, Identifiable {
     ///   - title: Title of the achievement
     ///   - description: Description of the achievement
     ///   - xpReward: XP reward for unlocking
-    ///   - coinsReward: Coins reward for unlocking
     ///   - iconSystemName: Icon system name
     ///   - colorHex: Color as hex string
     ///   - isUnlocked: Whether achievement is unlocked (defaults to false)
     ///   - unlockedAt: Date when unlocked (defaults to nil)
-    init(id: UUID = UUID(), title: String, description: String, xpReward: Int, 
-         coinsReward: Int, iconSystemName: String, colorHex: String, 
+    init(id: UUID = UUID(), title: String, description: String, xpReward: Int,
+         iconSystemName: String, colorHex: String,
          isUnlocked: Bool = false, unlockedAt: Date? = nil) {
         self.id = id
         self.title = title
         self.description = description
         self.xpReward = xpReward
-        self.coinsReward = coinsReward
         self.iconSystemName = iconSystemName
         self.colorHex = colorHex
         self.isUnlocked = isUnlocked
@@ -169,59 +149,49 @@ struct Achievement: Codable, Identifiable {
     }
 }
 
-/// Model representing a reward that can be purchased with coins
+/// Model representing a reward unlocked via levels
 /// Part of F-005: Gamification feature
 struct Reward: Codable, Identifiable {
     /// Unique identifier for the reward
     let id: UUID
-    
+
     /// Title of the reward
     let title: String
-    
+
     /// Description of the reward
     let description: String
-    
-    /// Coins cost to purchase this reward
-    let coinsCost: Int
-    
+
     /// Icon system name for the reward
     let iconSystemName: String
-    
+
     /// Color for the reward (as hex string)
     let colorHex: String
-    
-    /// Whether this reward has been purchased
-    var isPurchased: Bool
-    
-    /// Date when reward was purchased (nil if not purchased)
-    var purchasedAt: Date?
-    
+
+    /// Whether this reward has been unlocked
+    var isUnlocked: Bool
+
+    /// Date when reward was unlocked (nil if locked)
+    var unlockedAt: Date?
+
     /// Initialize a reward
     /// - Parameters:
     ///   - id: Unique identifier (defaults to new UUID)
     ///   - title: Title of the reward
     ///   - description: Description of the reward
-    ///   - coinsCost: Coins cost to purchase
     ///   - iconSystemName: Icon system name
     ///   - colorHex: Color as hex string
-    ///   - isPurchased: Whether reward is purchased (defaults to false)
-    ///   - purchasedAt: Date when purchased (defaults to nil)
-    init(id: UUID = UUID(), title: String, description: String, coinsCost: Int, 
-         iconSystemName: String, colorHex: String, isPurchased: Bool = false, 
-         purchasedAt: Date? = nil) {
+    ///   - isUnlocked: Whether reward is unlocked (defaults to false)
+    ///   - unlockedAt: Date when unlocked (defaults to nil)
+    init(id: UUID = UUID(), title: String, description: String,
+         iconSystemName: String, colorHex: String, isUnlocked: Bool = false,
+         unlockedAt: Date? = nil) {
         self.id = id
         self.title = title
         self.description = description
-        self.coinsCost = coinsCost
         self.iconSystemName = iconSystemName
         self.colorHex = colorHex
-        self.isPurchased = isPurchased
-        self.purchasedAt = purchasedAt
-    }
-    
-    /// Get the color from hex string
-    var color: Color {
-        return Color(hex: colorHex) ?? .blue
+        self.isUnlocked = isUnlocked
+        self.unlockedAt = unlockedAt
     }
 }
 

@@ -21,4 +21,5 @@ final class AppResetService {
 
 extension Notification.Name {
     static let appDataDidReset = Notification.Name("appDataDidReset")
+    static let mascotThemeDidChange = Notification.Name("mascotThemeDidChange")
 }

@@ -1,8 +1,6 @@
 import WidgetKit
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#endif
 
 struct ForwardNeckEntry: TimelineEntry {
     let date: Date
@@ -33,7 +31,9 @@ struct ForwardNeckProvider: TimelineProvider {
         let rawPercentage = store?.integer(forKey: WidgetConstants.Keys.percentage) ?? ForwardNeckEntry.placeholder.percentage
         let clamped = max(0, min(rawPercentage, 100))
         let storedMascot = store?.string(forKey: WidgetConstants.Keys.mascot)
-        let mascot = storedMascot ?? mascotFor(percentage: clamped)
+        let storedPrefix = store?.string(forKey: WidgetConstants.Keys.mascotPrefix) ?? ""
+        let baseMascot = storedMascot ?? mascotFor(percentage: clamped)
+        let mascot = resolvedMascotName(for: baseMascot, prefix: storedPrefix)
 
         return ForwardNeckEntry(date: Date(), percentage: clamped, mascot: mascot)
     }
@@ -50,6 +50,11 @@ struct ForwardNeckProvider: TimelineProvider {
         default:
             return "mascot4"
         }
+    }
+
+    private func resolvedMascotName(for base: String, prefix: String) -> String {
+        guard base.hasPrefix("mascot"), !prefix.isEmpty else { return base }
+        return "\(prefix)\(base)"
     }
 }
 
@@ -120,6 +125,7 @@ enum WidgetConstants {
     enum Keys {
         static let percentage = "neckHealthPercent"
         static let mascot = "neckMascot"
+        static let mascotPrefix = "neckMascotPrefix"
     }
 }
 
@@ -150,9 +156,13 @@ private struct MascotImage: View {
                 fallback
             }
 #else
-            Image(name)
-                .resizable()
-                .scaledToFit()
+            if let uiImage = UIImage(named: name) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                fallback
+            }
 #endif
         }
         .frame(height: height)

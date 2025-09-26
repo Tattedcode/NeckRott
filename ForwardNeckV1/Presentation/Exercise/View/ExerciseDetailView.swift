@@ -179,12 +179,7 @@ struct ExerciseDetailView: View {
             // Update streaks after exercise completion
             await updateStreaks()
             
-            // Add gamification rewards for exercise completion
-            let gamificationStore = GamificationStore.shared
-            gamificationStore.addXP(15, source: "Exercise: \(exercise.title)")
-            gamificationStore.addCoins(8, source: "Exercise: \(exercise.title)")
-            
-            // Update custom goals progress
+            // Update custom goals progress so everything stays in sync
             let goalsStore = GoalsStore.shared
             goalsStore.updateAllGoalProgress()
             

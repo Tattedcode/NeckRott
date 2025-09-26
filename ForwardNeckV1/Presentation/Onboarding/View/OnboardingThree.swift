@@ -15,7 +15,7 @@ struct OnboardingThree: View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Mascot image
-            Image("mascot1")
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
@@ -114,7 +114,7 @@ struct InfoCard: View {
         HStack(spacing: 12) {
             // Check if it's a system icon or asset image
             if icon.hasPrefix("mascot") {
-                Image(icon)
+                Image(MascotAssetProvider.resolvedMascotName(for: icon))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 24, height: 24)

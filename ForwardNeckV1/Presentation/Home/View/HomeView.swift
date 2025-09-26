@@ -125,7 +125,7 @@ struct HomeView: View {
                 .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 8)
                 .accessibilityHidden(true)
                 .onAppear {
-                    Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
+        Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
                 }
             
             // Health score
@@ -262,6 +262,7 @@ struct HomeView: View {
                     Image(card.mascotAssetName)
                         .resizable()
                         .scaledToFit()
+                        .scaleEffect(x: -1, y: 1)
                         .frame(width: mascotSize, height: mascotSize)
                         .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 3)
                         .accessibilityHidden(true)

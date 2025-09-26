@@ -150,7 +150,7 @@ final class ProgressTrackingViewModel: ObservableObject {
                     day: nil,
                     isToday: false,
                     completionCount: 0,
-                    mascotAssetName: "mascot1",
+                    mascotAssetName: MascotAssetProvider.resolvedMascotName(for: "mascot1"),
                     didReachGoal: false
                 )
             )
@@ -169,7 +169,9 @@ final class ProgressTrackingViewModel: ObservableObject {
                 count = dayNumber % (baseline + 1)
             }
 
-            let mascot = mascotAssetName(for: count)
+            let baseMascot = mascotAssetName(for: count)
+            let resolvedMascot = MascotAssetProvider.resolvedMascotName(for: baseMascot)
+            Log.info("ProgressTrackingViewModel calendar mascot base=\(baseMascot) resolved=\(resolvedMascot) for day=\(day)")
             let didReachGoal = count >= dailyGoal
             cells.append(
                 CalendarDay(
@@ -177,7 +179,7 @@ final class ProgressTrackingViewModel: ObservableObject {
                     day: day,
                     isToday: calendar.isDateInToday(date),
                     completionCount: count,
-                    mascotAssetName: mascot,
+                    mascotAssetName: resolvedMascot,
                     didReachGoal: didReachGoal
                 )
             )
@@ -191,7 +193,7 @@ final class ProgressTrackingViewModel: ObservableObject {
                         day: nil,
                         isToday: false,
                         completionCount: 0,
-                        mascotAssetName: "mascot1",
+                    mascotAssetName: MascotAssetProvider.resolvedMascotName(for: "mascot1"),
                         didReachGoal: false
                     )
                 )

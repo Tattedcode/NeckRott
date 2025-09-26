@@ -11,8 +11,8 @@ struct OnboardingOne: View {
     var body: some View {
         VStack(spacing: 8) {
             // Title with typewriter animation
-            TypewriterTextView(
-                text: "Welcome To Neckrot",
+        TypewriterTextView(
+            text: "Welcome To Neckrot",
                 onComplete: {
                     // Start showing subtitle after title completes
                     withAnimation(.easeInOut(duration: 0.5)) {
@@ -127,7 +127,7 @@ struct FirstScreenTypewriterView: View {
 
 struct PhoneMockupView: View {
     var body: some View {
-        Image("mascot1")
+        Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 200, height: 200)

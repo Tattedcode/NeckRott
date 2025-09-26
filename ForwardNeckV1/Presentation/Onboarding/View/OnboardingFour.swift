@@ -27,7 +27,7 @@ struct OnboardingFour: View {
         // Group the image, title, and options into a single content stack
         let content = VStack(spacing: 20) {
             // Mascot image
-            Image("mascot1")
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)

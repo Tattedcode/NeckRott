@@ -22,17 +22,11 @@ final class LevelProgressManager {
 
         if dailyGoal > 0 {
             handleDailyGoal(date: date, dailyGoal: dailyGoal, completions: completions)
-            handleExtraExercises(date: date, dailyGoal: dailyGoal, completions: completions)
         }
-
-        handleStreakProgress(currentStreak: currentStreak)
     }
 
     func resetTracking() {
         defaults.removeObject(forKey: Keys.lastGoalAwardDate)
-        defaults.removeObject(forKey: Keys.lastExtraAwardDate)
-        defaults.removeObject(forKey: Keys.extraAwardCount)
-        defaults.removeObject(forKey: Keys.highestStreakAwarded)
     }
 
     // MARK: - Private Helpers

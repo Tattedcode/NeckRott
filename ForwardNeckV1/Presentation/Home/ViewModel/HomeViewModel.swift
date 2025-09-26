@@ -24,7 +24,10 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var healthPercentage: Int = 100
     /// Expose the hero mascot that lines up with the current health percent so the view stays in sync
     var heroMascotName: String {
-        mascotAssetName(for: healthPercentage)
+        let baseName = mascotAssetName(for: healthPercentage)
+        let themedName = MascotAssetProvider.resolvedMascotName(for: baseName)
+        Log.info("HomeViewModel hero mascot base=\(baseName) themed=\(themedName)")
+        return themedName
     }
     @Published private(set) var selectedNeckFixDate: Date = Date()
     @Published var activitySelection: FamilyActivitySelection = .init() {
@@ -137,6 +140,16 @@ final class HomeViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.updateNeckFixes(for: self.selectedNeckFixDate)
+            }
+            .store(in: &cancellables)
+
+        userStore.$mascotPrefix
+            .receive(on: RunLoop.main)
+            .sink { [weak self] newPrefix in
+                guard let self else { return }
+                Log.info("HomeViewModel detected mascot prefix change -> \(newPrefix.isEmpty ? "default" : newPrefix)")
+                // Rebuild cards and hero mascot when the theme changes
+                self.updatePreviousDayCards(goal: self.userStore.dailyGoal)
             }
             .store(in: &cancellables)
     }
@@ -449,7 +462,7 @@ extension MonthlyAchievementKind {
         }
     }
 
-    var lockedImageName: String {
+    private var baseAssetName: String {
         switch self {
         case .extraExercises:
             return "extraexercises"
@@ -468,23 +481,12 @@ extension MonthlyAchievementKind {
         }
     }
 
+    var lockedImageName: String {
+        MascotAssetProvider.resolvedMascotName(for: baseAssetName)
+    }
+
     var unlockedImageName: String {
-        switch self {
-        case .extraExercises:
-            return "extraexercises"
-        case .dailyStreakStarted:
-            return "dailystreakstarted"
-        case .fifteenDayStreak:
-            return "fifteendaystreak"
-        case .firstExercise:
-            return "firstexcersise"
-        case .fullMonthStreak:
-            return "fullmonthstreak"
-        case .tenCompleted:
-            return "tencompleted"
-        case .twentyCompleted:
-            return "twentycompleted"
-        }
+        MascotAssetProvider.resolvedMascotName(for: baseAssetName)
     }
 
     var usesSystemImage: Bool { false }
@@ -517,14 +519,16 @@ private extension HomeViewModel {
 
         let cards = recentDays.map { summary -> PreviousDaySummary in
             let percentage = calculatePercentage(for: summary.count, goal: normalizedGoal)
-            let mascot = mascotAssetName(for: percentage)
+            let baseMascot = mascotAssetName(for: percentage)
+            let resolvedMascot = MascotAssetProvider.resolvedMascotName(for: baseMascot)
+            Log.info("HomeViewModel previous card mascot base=\(baseMascot) resolved=\(resolvedMascot)")
             return PreviousDaySummary(
                 date: summary.date,
                 label: summary.label,
                 completionCount: summary.count,
                 goal: normalizedGoal,
                 percentage: percentage,
-                mascotAssetName: mascot
+                mascotAssetName: resolvedMascot
             )
         }
 

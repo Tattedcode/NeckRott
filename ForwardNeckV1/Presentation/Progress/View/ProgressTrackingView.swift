@@ -226,12 +226,13 @@ struct ProgressTrackingView: View {
     }
 
     private func dayBackgroundColor(for day: CalendarDay) -> Color {
-        switch day.mascotAssetName {
-        case "mascot1":
+        let mascotName = day.mascotAssetName
+        switch true {
+        case mascotName.contains("mascot1"):
             return Color.red.opacity(day.hasActivity ? 0.75 : 0.35)
-        case "mascot2":
+        case mascotName.contains("mascot2"):
             return Color.orange.opacity(day.hasActivity ? 0.75 : 0.35)
-        case "mascot3":
+        case mascotName.contains("mascot3"):
             return Color.yellow.opacity(day.hasActivity ? 0.75 : 0.35)
         default:
             return Color.green.opacity(day.hasActivity ? 0.75 : 0.35)

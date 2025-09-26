@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct OnboardingFive: View {
     @Binding var triggerPermissionRequest: Bool
@@ -16,8 +17,8 @@ struct OnboardingFive: View {
     let onPermissionGranted: (() -> Void)? // Callback for when permission is granted
     
     @State private var showCards = Array(repeating: false, count: 4)
-    @State private var showingAlert = false
     @State private var showingRetryAlert = false
+    @State private var showingPrePrompt = false
     @State private var alertMessage = ""
     
     private let permissionFeatures = [
@@ -31,7 +32,7 @@ struct OnboardingFive: View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Mascot image
-            Image("mascot1")
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
@@ -89,33 +90,28 @@ struct OnboardingFive: View {
         }
         .onChange(of: triggerPermissionRequest) { shouldTrigger in
             if shouldTrigger {
-                requestScreenTimePermission()
                 triggerPermissionRequest = false
+                showingPrePrompt = true
             }
         }
-        .alert("Screen Time Access Required", isPresented: $showingAlert) {
-            Button("Don't Allow") {
-                isScreenTimePermissionGranted = false
-                hasAlertBeenDismissed = true
-                hasScreenTimePermissionResponded = true
-                // Show retry alert
-                showingRetryAlert = true
+        .alert("Screen Time Access", isPresented: $showingPrePrompt) {
+            Button("Don't Allow", role: .cancel) {
+                Log.info("OnboardingFive pre-prompt declined")
+                Task { await handleAuthorizationStatus(.denied, error: nil) }
             }
+
             Button("Allow") {
-                isScreenTimePermissionGranted = true
-                hasAlertBeenDismissed = true
-                hasScreenTimePermissionResponded = true
-                // Automatically proceed to next screen when permission is granted
-                onPermissionGranted?()
+                Log.info("OnboardingFive pre-prompt accepted")
+                showingPrePrompt = false
+                requestScreenTimePermission()
             }
         } message: {
-            Text(alertMessage)
+            Text("Neckrot needs Screen Time access so we can track your progress. You can change this later in Settings.")
         }
         .alert("Permission Required", isPresented: $showingRetryAlert) {
             Button("Try Again") {
                 showingRetryAlert = false
-                // Show the permission alert again
-                requestScreenTimePermission()
+                showingPrePrompt = true
             }
         } message: {
             Text("We need access for the app to work. Please grant screen time permission to continue.")
@@ -123,8 +119,67 @@ struct OnboardingFive: View {
     }
     
     private func requestScreenTimePermission() {
-        alertMessage = "Neckrot needs access to your screen time data to function. You can change this setting later in your device settings."
-        showingAlert = true
+        Log.info("OnboardingFive starting Screen Time authorization flow")
+
+        Task {
+            let statusBeforeRequest = AuthorizationCenter.shared.authorizationStatus
+            if statusBeforeRequest == .approved {
+                Log.info("OnboardingFive detected existing Screen Time approval")
+                await handleAuthorizationStatus(.approved, error: nil)
+                return
+            }
+
+            do {
+                try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+                let updatedStatus = AuthorizationCenter.shared.authorizationStatus
+                Log.info("OnboardingFive authorization completed with status=\(updatedStatus.rawValue)")
+                await handleAuthorizationStatus(updatedStatus, error: nil)
+            } catch {
+                let fallbackStatus = AuthorizationCenter.shared.authorizationStatus
+                Log.error("OnboardingFive Screen Time authorization threw error: \(error.localizedDescription) (status=\(fallbackStatus.rawValue))")
+                await handleAuthorizationStatus(fallbackStatus, error: error)
+            }
+        }
+    }
+
+    @MainActor
+    private func handleAuthorizationStatus(_ status: AuthorizationStatus, error: Error?) {
+        hasAlertBeenDismissed = true
+        hasScreenTimePermissionResponded = true
+
+        switch status {
+        case .approved:
+            isScreenTimePermissionGranted = true
+            showingRetryAlert = false
+            Log.info("Screen Time permission approved")
+            onPermissionGranted?()
+
+#if targetEnvironment(simulator)
+        case .notDetermined:
+            isScreenTimePermissionGranted = true
+            showingRetryAlert = false
+            Log.info("Screen Time status notDetermined on simulator; treating as approved for testing")
+            onPermissionGranted?()
+#endif
+
+        case .notDetermined:
+            isScreenTimePermissionGranted = false
+            alertMessage = "Screen Time isn’t fully set up. Turn on Screen Time in Settings, then come back and tap Continue."
+            showingRetryAlert = true
+            Log.info("Screen Time status notDetermined after request; guiding user to Settings")
+
+        case .denied:
+            isScreenTimePermissionGranted = false
+            alertMessage = "We couldn’t get Screen Time access. Double-check Screen Time is enabled in Settings > Screen Time and try again."
+            showingRetryAlert = true
+            Log.error("Screen Time permission denied or restricted")
+
+        @unknown default:
+            isScreenTimePermissionGranted = false
+            alertMessage = error?.localizedDescription ?? "We couldn’t confirm Screen Time access. Please try again."
+            showingRetryAlert = true
+            Log.error("Screen Time permission returned unknown status=\(status.rawValue)")
+        }
     }
 }
 

@@ -21,6 +21,28 @@ struct AchievementsView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     currentLevelSection
                     monthlyAchievementsSection
+
+                    Button {
+                        Log.info("Testing button tapped -> adding 25 XP for previewing level flow")
+                        viewModel.addXP(25, source: "Testing button")
+                    } label: {
+                        Text("Add 25 XP (Test)")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue.opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.top, 12)
+                    .accessibilityIdentifier("testAddXpButton")
+                    .overlay(
+                        Text("Temporary testing button for XP flow")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.6))
+                            .padding(.top, 4), alignment: .bottom
+                    )
+
                 }
                 .padding(16)
             }

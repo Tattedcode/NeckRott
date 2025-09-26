@@ -61,7 +61,7 @@ struct OnboardingGoalSetting: View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
             // Brain mascot image
-            Image("mascot1")
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
