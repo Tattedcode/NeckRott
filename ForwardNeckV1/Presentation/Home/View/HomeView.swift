@@ -123,7 +123,7 @@ struct HomeView: View {
                 .scaledToFit()
                 .frame(height: 180)
                 // Darker, deeper shadow so the hero image pops on the gradient
-                .shadow(color: .black.opacity(0.5), radius: 18, x: 0, y: 12)
+                
                 .accessibilityHidden(true)
                 .onAppear {
         Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
@@ -266,7 +266,7 @@ struct HomeView: View {
                         .scaleEffect(x: -1, y: 1)
                         .frame(width: mascotSize, height: mascotSize)
                         // Darker shadow under mini mascot thumbnails
-                        .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 5)
+                        
                         .accessibilityHidden(true)
 
                     Spacer(minLength: 0)
@@ -297,7 +297,7 @@ struct HomeView: View {
                     .stroke(Color.white.opacity(0.12), lineWidth: 1)
             )
             // Dual shadows to create a soft 3D effect on the gradient background
-            .shadow(color: .black.opacity(0.4), radius: 12, x: 0, y: 8)
+            
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(card.label) \(card.percentageText)")
             .onAppear {
@@ -319,8 +319,7 @@ struct HomeView: View {
                 if let exercise = viewModel.nextExercise {
                     exerciseCard(for: exercise)
                     // Lift the entire exercise card block with multi-layered shadows for a 3D pop
-                    .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 16)
-                    .shadow(color: .white.opacity(0.12), radius: 3, x: 0, y: 1)
+                    
                     .onAppear {
                         Log.debug("HomeView next exercise card elevated for \(exercise.title)")
                     }
@@ -343,8 +342,7 @@ struct HomeView: View {
             .background(Color.white.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 20))
             // Outer shadows make the timer/instructions card feel layered above the gradient
-            .shadow(color: .black.opacity(0.45), radius: 18, x: 0, y: 14)
-            .shadow(color: .white.opacity(0.12), radius: 6, x: 0, y: -2)
+            
             .onAppear {
                 Log.debug("HomeView nextExerciseSection card applied 3D shadow stack")
             }
@@ -509,7 +507,7 @@ private struct AchievementUnlockedSheet: View {
                 ZStack {
                     achievementArtwork
                         .frame(width: 190, height: 190)
-                        .shadow(color: Color.black.opacity(0.35), radius: 20, x: 0, y: 18)
+                        
 
                     Circle()
                         .stroke(Color.white.opacity(0.55), lineWidth: 3)
@@ -549,7 +547,7 @@ private struct AchievementUnlockedSheet: View {
                         .padding(.vertical, 14)
                         .background(buttonGradient)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .shadow(color: Color.purple.opacity(0.18), radius: 16, x: 0, y: 10)
+                        
                 }
             }
             .padding(.horizontal, 28)
@@ -748,12 +746,21 @@ private extension HomeView {
                 Button(action: {
                     isShowingExerciseTimer = true
                 }) {
-                    Text("▶ Start")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.green)
+                    ZStack {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 72, height: 72)
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
                 .buttonStyle(PlainButtonStyle())
                 .accessibilityLabel("Start \(exercise.title)")
+
+                Text("Start")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
             }
             .frame(width: 90, alignment: .top)
             .frame(maxHeight: .infinity, alignment: .top)
