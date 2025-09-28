@@ -79,7 +79,7 @@ struct OnboardingScreenTimeMath: View {
             // Title underneath image
             Text("This adds up quickly...")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primaryText)
                 .multilineTextAlignment(.center)
             
             // Calculation cards
@@ -127,7 +127,7 @@ struct OnboardingScreenTimeMath: View {
             }
             
                 // Warning message
-                Text("That is a big part of your life spent on your phone")
+            Text("That is a big part of your life spent on your phone")
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(.red)

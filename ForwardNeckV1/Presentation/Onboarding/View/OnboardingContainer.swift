@@ -109,7 +109,7 @@ struct OnboardingContainer: View {
     
     var body: some View {
         ZStack {
-            Theme.backgroundGradient
+            AnimatedGradientBackground()
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -131,7 +131,7 @@ struct OnboardingContainer: View {
                         }) {
                             Image(systemName: "chevron.left")
                                 .font(.title2)
-                                .foregroundColor(.white)
+                                .foregroundColor(Theme.primaryText)
                                 .frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain)
@@ -183,13 +183,13 @@ struct OnboardingContainer: View {
                                 // Regular text for other screens (only show if title is not empty)
                                 Text(onboardingScreens[currentScreen].title)
                                     .font(currentScreen == 4 ? .title.bold() : .largeTitle.bold()) // Smaller font for screen time selection
-                                    .foregroundColor(.white)
+                                    .foregroundColor(Theme.primaryText)
                                     .multilineTextAlignment(.center) // Center align the text
                                 
                                 if (currentScreen != 4 || !hasScreenTimeAlertBeenDismissed) && (currentScreen != 5 || !hasNotificationsAlertBeenDismissed) {
                                     Text(onboardingScreens[currentScreen].subtitle)
                                         .font(.title2)
-                                        .foregroundColor(.white.opacity(0.8))
+                                        .foregroundColor(Theme.secondaryText)
                                 }
                             }
                         }

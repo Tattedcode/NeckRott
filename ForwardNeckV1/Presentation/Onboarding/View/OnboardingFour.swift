@@ -37,13 +37,13 @@ struct OnboardingFour: View {
             // Title underneath image
             Text("You're here for a reason")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primaryText)
                 .multilineTextAlignment(.center)
             
             // Subtitle explaining the purpose
             Text("How can we help you?")
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(Theme.secondaryText)
                 .multilineTextAlignment(.center)
             
             // Reason options with animation
@@ -124,7 +124,7 @@ struct ReasonOption: View {
             HStack {
                 Text(text)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.primaryText)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 

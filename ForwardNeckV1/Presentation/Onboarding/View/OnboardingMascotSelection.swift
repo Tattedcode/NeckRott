@@ -24,7 +24,7 @@ struct OnboardingMascotSelection: View {
         VStack(spacing: 24) {
             Text("Pick the buddy who helps you stay on track")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(Theme.primaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
 
@@ -42,7 +42,7 @@ struct OnboardingMascotSelection: View {
             if showFeedback {
                 Text(feedbackText)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(Theme.secondaryText)
                     .multilineTextAlignment(.center)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -114,11 +114,11 @@ private struct MascotSelectionCard: View {
                 VStack(spacing: 4) {
                     Text(choice.title)
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.primaryText)
 
                     Text(choice.subtitle)
                         .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(Theme.secondaryText)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 160)
                 }

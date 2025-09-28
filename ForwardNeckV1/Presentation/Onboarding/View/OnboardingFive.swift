@@ -42,13 +42,13 @@ struct OnboardingFive: View {
             // Title
             Text("Screen Time Access")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primaryText)
                 .multilineTextAlignment(.center)
             
             // Subtitle
             Text("Neckrott needs access to your screen time data to function")
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
             
@@ -200,11 +200,11 @@ struct PermissionFeatureCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.primaryText)
                 
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.secondaryText)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }

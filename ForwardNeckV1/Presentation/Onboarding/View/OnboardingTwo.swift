@@ -61,7 +61,7 @@ struct OnboardingTwo: View {
             Text(screenTimeText)
                 .font(.largeTitle)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primaryText)
             
             // Slider with 3 discrete options
             VStack(spacing: 8) {

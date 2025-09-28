@@ -21,7 +21,7 @@ struct OnboardingOne: View {
                 }
             )
             .font(.largeTitle.bold())
-            .foregroundColor(.white)
+            .foregroundColor(Theme.primaryText)
             .multilineTextAlignment(.center)
         }
     }
@@ -100,7 +100,7 @@ struct FirstScreenTypewriterView: View {
                 }
             )
             .font(.largeTitle.bold())
-            .foregroundColor(.white)
+            .foregroundColor(Theme.primaryText)
             .multilineTextAlignment(.center)
             
             // Subtitle that appears after title completes
@@ -113,7 +113,7 @@ struct FirstScreenTypewriterView: View {
                     }
                 )
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .lineSpacing(10)
                 .padding(.top, 8)

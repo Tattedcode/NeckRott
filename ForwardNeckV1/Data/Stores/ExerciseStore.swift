@@ -52,6 +52,11 @@ final class ExerciseStore: ObservableObject {
         await save()
     }
     
+    func completionCount(on date: Date) -> Int {
+        let calendar = Calendar.current
+        return completions.filter { calendar.isDate($0.completedAt, inSameDayAs: date) }.count
+    }
+    
     // MARK: - Private
     
     private func load() async {

@@ -122,7 +122,8 @@ struct HomeView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 180)
-                .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 8)
+                // Darker, deeper shadow so the hero image pops on the gradient
+                .shadow(color: .black.opacity(0.5), radius: 18, x: 0, y: 12)
                 .accessibilityHidden(true)
                 .onAppear {
         Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
@@ -264,7 +265,8 @@ struct HomeView: View {
                         .scaledToFit()
                         .scaleEffect(x: -1, y: 1)
                         .frame(width: mascotSize, height: mascotSize)
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 3)
+                        // Darker shadow under mini mascot thumbnails
+                        .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 5)
                         .accessibilityHidden(true)
 
                     Spacer(minLength: 0)
@@ -294,9 +296,13 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .stroke(Color.white.opacity(0.12), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.25), radius: 6, x: 0, y: 4)
+            // Dual shadows to create a soft 3D effect on the gradient background
+            .shadow(color: .black.opacity(0.4), radius: 12, x: 0, y: 8)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(card.label) \(card.percentageText)")
+            .onAppear {
+                Log.debug("HomeView previous day card 3D shadow applied for \(card.label)")
+            }
         }
     }
 
@@ -312,6 +318,12 @@ struct HomeView: View {
             Group {
                 if let exercise = viewModel.nextExercise {
                     exerciseCard(for: exercise)
+                    // Lift the entire exercise card block with multi-layered shadows for a 3D pop
+                    .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 16)
+                    .shadow(color: .white.opacity(0.12), radius: 3, x: 0, y: 1)
+                    .onAppear {
+                        Log.debug("HomeView next exercise card elevated for \(exercise.title)")
+                    }
                         .onChange(of: viewModel.nextExercise?.id) { _ in
                             isInstructionsExpanded = false
                         }
@@ -330,6 +342,12 @@ struct HomeView: View {
             .padding(16)
             .background(Color.white.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 20))
+            // Outer shadows make the timer/instructions card feel layered above the gradient
+            .shadow(color: .black.opacity(0.45), radius: 18, x: 0, y: 14)
+            .shadow(color: .white.opacity(0.12), radius: 6, x: 0, y: -2)
+            .onAppear {
+                Log.debug("HomeView nextExerciseSection card applied 3D shadow stack")
+            }
         }
     }
 
@@ -457,9 +475,25 @@ private struct AchievementUnlockedSheet: View {
     @State private var animateOverlay = false
     @State private var confettiActive = false
 
-    private var gradient: LinearGradient {
+    // Brighter gradient for the action button so the sheet feels celebratory and light
+    private var buttonGradient: LinearGradient {
         LinearGradient(
-            colors: [Color.purple.opacity(0.9), Color.blue.opacity(0.9)],
+            colors: [
+                Color(red: 0.98, green: 0.62, blue: 0.98),
+                Color(red: 0.72, green: 0.52, blue: 1.0)
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    // Soft pastel background to brighten the unlocked-sheet overlay without blinding the eyes
+    private var sheetGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.97, green: 0.75, blue: 0.98),
+                Color(red: 0.56, green: 0.47, blue: 0.99)
+            ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -467,7 +501,9 @@ private struct AchievementUnlockedSheet: View {
 
     var body: some View {
         ZStack {
-            Theme.backgroundGradient.ignoresSafeArea()
+            // Use a brighter gradient backdrop so the celebration sheet pops and feels uplifting
+            sheetGradient
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 ZStack {
@@ -476,16 +512,16 @@ private struct AchievementUnlockedSheet: View {
                         .shadow(color: Color.black.opacity(0.35), radius: 20, x: 0, y: 18)
 
                     Circle()
-                        .stroke(Color.white.opacity(0.35), lineWidth: 3)
+                        .stroke(Color.white.opacity(0.55), lineWidth: 3)
                         .frame(width: 210, height: 210)
                         .scaleEffect(animateOverlay ? 1.08 : 0.92)
-                        .opacity(animateOverlay ? 0.1 : 0.28)
+                        .opacity(animateOverlay ? 0.25 : 0.4)
 
                     Circle()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 2)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 2)
                         .frame(width: 230, height: 230)
                         .scaleEffect(animateOverlay ? 1.15 : 0.85)
-                        .opacity(animateOverlay ? 0.05 : 0.16)
+                        .opacity(animateOverlay ? 0.12 : 0.26)
                 }
                 .frame(height: 210)
                 .onAppear {
@@ -511,22 +547,31 @@ private struct AchievementUnlockedSheet: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(gradient)
+                        .background(buttonGradient)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .shadow(color: Color.purple.opacity(0.3), radius: 12, x: 0, y: 8)
+                        .shadow(color: Color.purple.opacity(0.18), radius: 16, x: 0, y: 10)
                 }
             }
             .padding(.horizontal, 28)
             .padding(.top, 32)
             .padding(.bottom, 36)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.white.opacity(0.12))
+            .background(
+                // Brighter frosted glass effect for the content card
+                Color.white.opacity(0.32)
+                    .blur(radius: 0)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 32)
+                    .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+            )
         }
         .overlay(
             ConfettiOverlay(isActive: $confettiActive)
         )
         .ignoresSafeArea()
         .onAppear {
+            Log.debug("AchievementUnlockedSheet bright styling applied for \(achievement.title)")
             if isCelebrating {
                 confettiActive = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
@@ -703,27 +748,12 @@ private extension HomeView {
                 Button(action: {
                     isShowingExerciseTimer = true
                 }) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.green, Color.green.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 72, height: 72)
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                    Text("▶ Start")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.green)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PlainButtonStyle())
                 .accessibilityLabel("Start \(exercise.title)")
-
-                Text("Start")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
             }
             .frame(width: 90, alignment: .top)
             .frame(maxHeight: .infinity, alignment: .top)

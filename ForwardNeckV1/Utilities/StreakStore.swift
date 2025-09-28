@@ -3,6 +3,7 @@
 //  ForwardNeckV1
 //
 //  Created by Liam Brown on 10/9/2568 BE.
+//  Moved to Utilities for shared access and to avoid duplicate target inclusion.
 //
 
 import Foundation
@@ -60,7 +61,7 @@ final class StreakStore: ObservableObject {
     /// - Parameter type: The type of streaks to retrieve
     /// - Returns: Array of streak records for the specified type
     func streaks(for type: StreakType) -> [Streak] {
-        return streaks.filter { $0.type == type }
+        streaks.filter { $0.type == type }
     }
     
     /// Get streak records for a specific date range
@@ -70,7 +71,7 @@ final class StreakStore: ObservableObject {
     ///   - type: The type of streaks to retrieve
     /// - Returns: Array of streak records within the date range
     func streaks(from startDate: Date, to endDate: Date, type: StreakType) -> [Streak] {
-        return streaks.filter { streak in
+        streaks.filter { streak in
             streak.type == type &&
             streak.date >= startDate &&
             streak.date <= endDate
@@ -88,18 +89,14 @@ final class StreakStore: ObservableObject {
         let today = Date()
         
         // Start from today and work backwards
-        for i in 0..<typeStreaks.count {
-            let streak = typeStreaks[i]
+        for streak in typeStreaks {
             let daysDifference = calendar.dateComponents([.day], from: streak.date, to: today).day ?? 0
             
-            // If this is today or yesterday and completed, count it
             if daysDifference <= 1 && streak.completed {
                 currentStreak += 1
             } else if daysDifference == 1 && !streak.completed {
-                // If yesterday wasn't completed, streak is broken
                 break
             } else if daysDifference > 1 {
-                // If there's a gap of more than 1 day, streak is broken
                 break
             }
         }
@@ -115,11 +112,8 @@ final class StreakStore: ObservableObject {
         
         var longestStreak = 0
         var currentStreak = 0
-        let calendar = Calendar.current
         
-        for i in 0..<typeStreaks.count {
-            let streak = typeStreaks[i]
-            
+        for streak in typeStreaks {
             if streak.completed {
                 currentStreak += 1
                 longestStreak = max(longestStreak, currentStreak)
@@ -132,8 +126,6 @@ final class StreakStore: ObservableObject {
     }
     
     /// Get comprehensive streak statistics for a specific type
-    /// - Parameter type: The type of streak to analyze
-    /// - Returns: StreakStats object with all relevant statistics
     func getStats(for type: StreakType) -> StreakStats {
         let typeStreaks = streaks(for: type)
         let completedStreaks = typeStreaks.filter { $0.completed }
@@ -142,44 +134,28 @@ final class StreakStore: ObservableObject {
             currentStreak: currentStreak(for: type),
             longestStreak: longestStreak(for: type),
             totalCompletedDays: completedStreaks.count,
-            totalPostureChecks: 0, // Will be populated by integration with CheckInStore
-            totalExercises: 0,     // Will be populated by integration with ExerciseStore
+            totalPostureChecks: 0,
+            totalExercises: 0,
             type: type
         )
     }
     
     /// Update daily streaks based on check-ins and exercise completions
-    /// This method should be called daily to update streak data
-    /// - Parameters:
-    ///   - checkIns: Array of check-in dates
-    ///   - exerciseCompletions: Array of exercise completion dates
     func updateDailyStreaks(checkIns: [Date], exerciseCompletions: [Date]) {
         let calendar = Calendar.current
-        let today = Date()
-        
-        // Get all unique dates from check-ins and exercise completions
         let allDates = Set(checkIns + exerciseCompletions).sorted()
         
         for date in allDates {
-            // Check if there were check-ins on this date
             let hadCheckIns = checkIns.contains { calendar.isDate($0, inSameDayAs: date) }
-            
-            // Check if there were exercise completions on this date
             let hadExercises = exerciseCompletions.contains { calendar.isDate($0, inSameDayAs: date) }
             
-            // Update posture check streak
             addStreak(for: date, completed: hadCheckIns, type: .postureChecks)
-            
-            // Update exercise streak
             addStreak(for: date, completed: hadExercises, type: .exercises)
-            
-            // Update combined streak (both check-ins and exercises)
             addStreak(for: date, completed: hadCheckIns && hadExercises, type: .combined)
         }
     }
     
     /// Load streak data from disk
-    /// Called during initialization and when data needs to be refreshed
     private func load() {
         do {
             let data = try Data(contentsOf: fileURL)
@@ -192,7 +168,6 @@ final class StreakStore: ObservableObject {
     }
     
     /// Save streak data to disk
-    /// Called whenever streak data is modified
     private func save() {
         do {
             let data = try JSONEncoder().encode(streaks)
@@ -204,7 +179,6 @@ final class StreakStore: ObservableObject {
     }
     
     /// Reset all streak data
-    /// Useful for testing and fresh start
     func resetAll() {
         streaks = []
         save()

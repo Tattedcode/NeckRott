@@ -229,6 +229,7 @@ final class HomeViewModel: ObservableObject {
         neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 7)
         updatePreviousDayCards(goal: neckFixesTarget)
         updateMonthlyAchievements(skipCelebration: !celebrationsEnabled)
+        updateDailyStreakIfNeeded(for: date, goal: neckFixesTarget)
 
         if Calendar.current.isDateInToday(date) {
             levelProgressManager.processDailyProgress(
@@ -259,6 +260,22 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func updateDailyStreakIfNeeded(for date: Date, goal: Int) {
+        guard goal > 0 else { return }
+
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        let completions = exerciseStore.completionCount(on: normalizedDate)
+        let goalMet = completions >= goal
+
+        let streakType: StreakType = .postureChecks
+        streakStore.addStreak(for: normalizedDate, completed: goalMet, type: streakType)
+
+        currentStreak = streakStore.currentStreak(for: streakType)
+        recordStreak = streakStore.longestStreak(for: streakType)
+
+        Log.info("HomeViewModel streak check: date=\(normalizedDate) completions=\(completions) goal=\(goal) goalMet=\(goalMet) current=\(currentStreak) record=\(recordStreak)")
+    }
 }
 
 private extension HomeViewModel {

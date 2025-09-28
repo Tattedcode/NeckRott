@@ -39,13 +39,13 @@ struct OnboardingSix: View {
             // Title
             Text("Notifications")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primaryText)
                 .multilineTextAlignment(.center)
             
             // Subtitle
             Text("Allow us to remind you of your neck")
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
             
@@ -150,11 +150,11 @@ struct NotificationFeatureCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.primaryText)
                 
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.secondaryText)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }

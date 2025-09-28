@@ -99,17 +99,22 @@ final class ThemeManager: ObservableObject {
     /// Get current background gradient based on theme
     var backgroundGradient: LinearGradient {
         if isDarkMode {
+            // Dark mode stays darker but less heavy than before
             return LinearGradient(
-                colors: [Color.black, Color.gray.opacity(0.3)],
+                colors: [
+                    Color(red: 0.08, green: 0.09, blue: 0.12),
+                    Color(red: 0.12, green: 0.13, blue: 0.18)
+                ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         } else {
+            // Match Theme.backgroundGradient (pink→purple)
             return LinearGradient(
                 colors: [
-                    Color(red: 0.05, green: 0.05, blue: 0.15),  // Very dark blue-purple
-                    Color(red: 0.1, green: 0.05, blue: 0.2),    // Dark purple
-                    Color(red: 0.05, green: 0.1, blue: 0.25)    // Dark blue
+                    Color(red: 0.478, green: 0.118, blue: 0.361),
+                    Color(red: 0.341, green: 0.102, blue: 0.376),
+                    Color(red: 0.176, green: 0.039, blue: 0.290)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing

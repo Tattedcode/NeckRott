@@ -155,7 +155,6 @@ struct NextExerciseView: View {
                 .padding(16)
                 .background(Theme.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
                 .onAppear {
                     // Start the subtle animation
                     isAnimating = true
