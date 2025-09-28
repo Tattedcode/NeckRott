@@ -49,15 +49,23 @@ enum MascotAssetProvider {
 
     /// Turn a base mascot name like "mascot4" into the right themed name.
     static func resolvedMascotName(for baseName: String) -> String {
-        let prefix = currentPrefix
+        let rawPrefix = currentPrefix
 
-        guard !prefix.isEmpty else {
+        guard !rawPrefix.isEmpty else {
             // No special prefix? Just give the original name back.
             return baseName
         }
 
+        let effectivePrefix: String
+        if baseName.hasPrefix("mascot") && rawPrefix == "hero" {
+            // The superhero mascot images are still stored with the "super" prefix.
+            effectivePrefix = "super"
+        } else {
+            effectivePrefix = rawPrefix
+        }
+
         if baseName.hasPrefix("mascot") {
-            let themedName = "\(prefix)\(baseName)"
+            let themedName = "\(effectivePrefix)\(baseName)"
             Log.info("MascotAssetProvider resolved mascot asset \(baseName) -> \(themedName)")
             return themedName
         }
@@ -69,7 +77,7 @@ enum MascotAssetProvider {
             || baseName.hasPrefix("full")
             || baseName.hasPrefix("ten")
             || baseName.hasPrefix("twenty") {
-            let themedName = "\(prefix)\(baseName)"
+            let themedName = "\(effectivePrefix)\(baseName)"
             Log.info("MascotAssetProvider resolved achievement asset \(baseName) -> \(themedName)")
             return themedName
         }
