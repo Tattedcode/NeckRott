@@ -56,9 +56,16 @@ struct ProgressTrackingView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .background(cardColor)
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .shadow(color: Color.black.opacity(0.35), radius: 12, x: 0, y: 6)
+        .clipShape(RoundedRectangle(cornerRadius: 28)) // clip the content only
+        .background(
+            // Draw the card background without glow
+            RoundedRectangle(cornerRadius: 28)
+                .fill(cardColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+        )
     }
     
     private var monthSelector: some View {
@@ -181,9 +188,8 @@ struct ProgressTrackingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
-                            .stroke(Color.white.opacity(0.06))
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
                     )
-                    .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 10)
             }
         }
     }
@@ -198,30 +204,24 @@ struct ProgressTrackingView: View {
         private var secondaryText: Color { Color.white.opacity(0.7) }
 
         var body: some View {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 100)
-                .overlay(
-                    VStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(accentColor.opacity(0.35))
-                            .frame(width: 28, height: 28)
-                            .overlay(
-                                Image(systemName: systemIcon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color.white)
-                            )
-                        Text(title)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(secondaryText)
-                        Text(value)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(textPrimary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(16)
-                )
-                .shadow(color: accentColor.opacity(0.25), radius: 10, x: 0, y: 8)
+            VStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(accentColor.opacity(0.35))
+                    .frame(width: 28, height: 28)
+                    .overlay(
+                        Image(systemName: systemIcon)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color.white)
+                    )
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(secondaryText)
+                Text(value)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(textPrimary)
+            }
+            .frame(maxWidth: .infinity, minHeight: 100)
+            .background(Color.clear)
         }
     }
 

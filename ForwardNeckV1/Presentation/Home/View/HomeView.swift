@@ -237,7 +237,7 @@ struct HomeView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-
+ 
                 // Middle left column - Neck fixes progress
                 VStack(alignment: .center, spacing: 4) {
                     Text("neck fixes")
@@ -248,7 +248,7 @@ struct HomeView: View {
                         .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity)
-
+ 
                 // Middle column - Record Streak (longest)
                 VStack(alignment: .center, spacing: 4) {
                     Text("record streak")
@@ -259,7 +259,7 @@ struct HomeView: View {
                         .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity)
-
+ 
                 // Right column - Daily Streak (current)
                 VStack(alignment: .center, spacing: 4) {
                     Text("daily streak")
