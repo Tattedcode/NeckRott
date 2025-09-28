@@ -9,6 +9,23 @@
 import SwiftUI
 import FamilyControls
 
+// Toggle to show colored debug outlines around major views
+private let debugOutlines: Bool = false
+
+private extension View {
+    @ViewBuilder
+    func debugOutline(_ color: Color, enabled: Bool) -> some View {
+        if enabled {
+            self.overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(color, lineWidth: 2)
+            )
+        } else {
+            self
+        }
+    }
+}
+
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @State private var isShowingExerciseTimer = false
@@ -17,6 +34,7 @@ struct HomeView: View {
     @State private var presentedAchievement: MonthlyAchievement?
     @State private var shouldCelebrate = false
     @State private var lastPresentedAchievement: MonthlyAchievement?
+    @State private var flamePulse = false
     
     var body: some View {
         ZStack {
@@ -54,6 +72,13 @@ struct HomeView: View {
                     .padding(.horizontal, 20)
                 }
 
+            }
+
+            // Dim the home content slightly when the achievement sheet is visible
+            if presentedAchievement != nil {
+                Color.black.opacity(0.22)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
             }
         }
         .onAppear {
@@ -122,7 +147,8 @@ struct HomeView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(height: 180)
-                // Darker, deeper shadow so the hero image pops on the gradient
+                // Subtle bottom shadow so the hero mascot lifts off the background
+                .shadow(color: Color.black.opacity(0.35), radius: 14, x: 0, y: 10)
                 
                 .accessibilityHidden(true)
                 .onAppear {
@@ -165,6 +191,7 @@ struct HomeView: View {
                 }
             }
         }
+        .debugOutline(.red, enabled: debugOutlines)
     }
     
     // MARK: - Statistics Section
@@ -238,13 +265,23 @@ struct HomeView: View {
                     Text("daily streak")
                         .font(.system(size: 12))
                         .foregroundColor(.white.opacity(0.7))
-                    Text("\(viewModel.currentStreak)")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                    HStack(spacing: 6) {
+                        Text("\(viewModel.currentStreak)")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                        if viewModel.currentStreak >= 1 {
+                            Image(systemName: "flame.fill")
+                                .foregroundColor(.orange)
+                                .scaleEffect(flamePulse ? 1.15 : 0.9)
+                                .opacity(flamePulse ? 1.0 : 0.75)
+                                .onAppear { withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { flamePulse = true } }
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
             }
         }
+        .debugOutline(.yellow, enabled: debugOutlines)
     }
 
     /// What each mini card looks like (mascot on left, score on right)
@@ -289,12 +326,12 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .frame(width: 220, height: 96)
+            .frame(width: 180, height: 96)
             .background(Color.white.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .overlay(
                 RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
             )
             // Dual shadows to create a soft 3D effect on the gradient background
             
@@ -339,14 +376,23 @@ struct HomeView: View {
                 }
             }
             .padding(16)
-            .background(Color.white.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white.opacity(0.08))
+                    // Shadow sits on the background shape only, not on inner content/buttons
+                    
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+            )
             // Outer shadows make the timer/instructions card feel layered above the gradient
             
             .onAppear {
                 Log.debug("HomeView nextExerciseSection card applied 3D shadow stack")
             }
         }
+        .debugOutline(.green, enabled: debugOutlines)
     }
 
     /// Carousel that shows how you did on recent days (mascot left, score right)
@@ -373,6 +419,7 @@ struct HomeView: View {
                 }
             }
         }
+        .debugOutline(.blue, enabled: debugOutlines)
     }
 
     private var monthlyAchievementsSection: some View {
@@ -412,6 +459,7 @@ struct HomeView: View {
                 }
             }
         }
+        .debugOutline(.purple, enabled: debugOutlines)
     }
 
     private var achievementColumns: [GridItem] {
@@ -485,21 +533,12 @@ private struct AchievementUnlockedSheet: View {
         )
     }
 
-    // Soft pastel background to brighten the unlocked-sheet overlay without blinding the eyes
-    private var sheetGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.97, green: 0.75, blue: 0.98),
-                Color(red: 0.56, green: 0.47, blue: 0.99)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+    // Light purplish gradient so the sheet feels bright but readable
+    private var sheetGradient: LinearGradient { Theme.backgroundGradient }
 
     var body: some View {
         ZStack {
-            // Use a brighter gradient backdrop so the celebration sheet pops and feels uplifting
+            // Light purplish gradient (brighter than HomeView's background)
             sheetGradient
                 .ignoresSafeArea()
 
@@ -554,15 +593,7 @@ private struct AchievementUnlockedSheet: View {
             .padding(.top, 32)
             .padding(.bottom, 36)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                // Brighter frosted glass effect for the content card
-                Color.white.opacity(0.32)
-                    .blur(radius: 0)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 32)
-                    .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
-            )
+            
         }
         .overlay(
             ConfettiOverlay(isActive: $confettiActive)

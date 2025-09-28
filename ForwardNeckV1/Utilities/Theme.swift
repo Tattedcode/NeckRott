@@ -22,6 +22,9 @@ enum Theme {
         )
     }
 
+    // Brightest stop from the background gradient (exposed for places that need a solid color match)
+    static let gradientBrightPink: Color = Color(red: 0.478, green: 0.118, blue: 0.361)
+
     // Semi-transparent card background used across the app
     // Slightly increased opacity for readability on the lighter background
     static let cardBackground: Color = Color.white.opacity(0.12)
