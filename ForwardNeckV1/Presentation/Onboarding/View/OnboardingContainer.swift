@@ -16,8 +16,8 @@ struct OnboardingContainer: View {
     @State private var triggerNotificationPermission = false
     @State private var hasScreenTimeAlertBeenDismissed = false
     @State private var hasNotificationsAlertBeenDismissed = false
-    @State private var hasSelectedMascot = false
-    @State private var selectedMascotPrefix: String = MascotThemeState.currentPrefix()
+    @State private var hasSelectedMascot = true // Default to true since original mascot is pre-selected
+    @State private var selectedMascotPrefix: String = "" // Default to original mascot (Gradient Guy)
     @State private var hasReasonSelected = false // Track if user selected a reason
     @State private var triggerReasonValidation = false // Fire when user taps continue without a reason selected
     @State private var hasSelectedAge = false // Track if an age has been selected

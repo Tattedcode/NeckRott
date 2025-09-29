@@ -762,9 +762,16 @@ private extension HomeView {
                 DisclosureGroup(isExpanded: $isInstructionsExpanded) {
                     instructionList(for: exercise)
                 } label: {
-                    Label("Instructions", systemImage: "list.bullet")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                    HStack(spacing: 6) {
+                        Text("Instructions")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white)
+                            .rotationEffect(.degrees(isInstructionsExpanded ? 90 : 0))
+                            .animation(.easeInOut(duration: 0.2), value: isInstructionsExpanded)
+                    }
                 }
                 .tint(.white)
             }

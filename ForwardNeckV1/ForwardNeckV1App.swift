@@ -12,7 +12,7 @@ struct ForwardNeckV1App: App {
     init() {
 #if DEBUG
         // Toggle this flag while testing so we can jump straight to the home screen without redoing onboarding every time.
-        let skipOnboardingForDebug = true
+        let skipOnboardingForDebug = false
         let defaults = UserDefaults.standard
 
         if skipOnboardingForDebug {

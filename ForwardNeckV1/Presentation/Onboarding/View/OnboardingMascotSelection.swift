@@ -14,7 +14,7 @@ struct OnboardingMascotSelection: View {
     @State private var showFeedback = false
 
     private let choices: [MascotChoice] = [
-        MascotChoice(prefix: "", imageName: "mascot4", title: "Original", subtitle: "Bright & friendly coach"),
+        MascotChoice(prefix: "", imageName: "mascot4", title: "Gradient Guy", subtitle: "Bright & friendly coach"),
         MascotChoice(prefix: "skele", imageName: "skelemascot4", title: "Skeleton", subtitle: "Edgy spooky motivator"),
         MascotChoice(prefix: "girl", imageName: "girlmascot4", title: "Girl Power", subtitle: "Confident queen energy"),
         MascotChoice(prefix: "hero", imageName: "supermascot4", title: "Superhero", subtitle: "Heroic and inspiring") // hero = shared prefix for themed assets
@@ -50,7 +50,7 @@ struct OnboardingMascotSelection: View {
         .frame(maxWidth: .infinity)
         .onAppear {
             Log.info("OnboardingMascotSelection appeared with selection=\(currentSelection.isEmpty ? "default" : currentSelection)")
-            hasSelectedMascot = !currentSelection.isEmpty
+            hasSelectedMascot = true // Always true since we have a default selection
         }
     }
 
@@ -74,7 +74,7 @@ struct OnboardingMascotSelection: View {
     private var feedbackText: String {
         switch currentSelection {
         case "":
-            return "Sticking with the bright mascot. Let's keep things cheerful!"
+            return "Sticking with Gradient Guy. Let's keep things cheerful!"
         case "skele":
             return "Skeleton buddy locked in. Lets fix that neck"
         case "girl":
@@ -146,7 +146,7 @@ private struct MascotSelectionCard: View {
     private var accessibilityLabel: String {
         switch choice.prefix {
         case "":
-            return isSelected ? "Original mascot selected" : "Pick original mascot"
+            return isSelected ? "Gradient Guy mascot selected" : "Pick Gradient Guy mascot"
         case "skele":
             return isSelected ? "Skeleton mascot selected" : "Pick skeleton mascot"
         case "girl":

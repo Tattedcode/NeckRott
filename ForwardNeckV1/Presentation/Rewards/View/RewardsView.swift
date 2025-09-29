@@ -13,6 +13,7 @@ struct AchievementsView: View {
     /// ViewModel for managing rewards data
     @StateObject private var viewModel: RewardsViewModel = RewardsViewModel()
     @StateObject private var homeViewModel = HomeViewModel()
+    @State private var showingLevelSheet = false
     
     var body: some View {
         ZStack {
@@ -54,22 +55,30 @@ struct AchievementsView: View {
             viewModel.startObserving()
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingLevelSheet) {
+            LevelDetailSheet(currentLevel: viewModel.currentLevel, userProgress: viewModel.userProgress)
+        }
     }
     
     /// Current level section showing level progress
     private var currentLevelSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
-                // Level icon
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(colors: [Color.blue, Color.pink], startPoint: .topLeading, endPoint: .bottomTrailing))
+                // Level icon - clickable placeholder image
+                Button(action: {
+                    showingLevelSheet = true
+                }) {
+                    Image("mascot1") // Placeholder image
+                        .resizable()
+                        .scaledToFit()
                         .frame(width: 80, height: 80)
-                    
-                    Text("\(viewModel.userProgress.level)")
-                        .font(.title.bold())
-                        .foregroundColor(.white)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 2)
+                        )
                 }
+                .buttonStyle(.plain)
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.currentLevel?.title ?? "Unknown")
@@ -138,6 +147,87 @@ private extension AchievementsView {
                 }
             }
         }
+    }
+}
+
+/// Sheet showing detailed level information
+struct LevelDetailSheet: View {
+    let currentLevel: Level?
+    let userProgress: UserProgress
+    
+    var body: some View {
+        ZStack {
+            Theme.backgroundGradient.ignoresSafeArea()
+            
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 16) {
+                    Image("mascot1") // Same placeholder image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 3)
+                        )
+                    
+                    VStack(spacing: 8) {
+                        Text(currentLevel?.title ?? "Unknown Level")
+                            .font(.largeTitle.bold())
+                            .foregroundColor(.white)
+                        
+                        Text(currentLevel?.description ?? "")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                
+                // Level details
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Current Level")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        Spacer()
+                        Text("\(userProgress.level)")
+                            .font(.title.bold())
+                            .foregroundColor(.white)
+                    }
+                    
+                    HStack {
+                        Text("Total XP")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        Spacer()
+                        Text("\(userProgress.xp)")
+                            .font(.title.bold())
+                            .foregroundColor(.white)
+                    }
+                    
+                    if let level = currentLevel {
+                        HStack {
+                            Text("XP Required")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("\(level.xpRequired)")
+                                .font(.title.bold())
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+                .padding(20)
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                Spacer()
+            }
+            .padding(24)
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

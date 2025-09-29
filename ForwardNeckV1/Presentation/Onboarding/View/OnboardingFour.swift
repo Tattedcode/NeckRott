@@ -26,13 +26,14 @@ struct OnboardingFour: View {
     var body: some View {
         // Group the image, title, and options into a single content stack
         let content = VStack(spacing: 20) {
-            // Mascot image
+            // Mascot image - moved up to fill gap above
             Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 120, height: 120)
+                .frame(width: 200, height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+                .padding(.top, -40) // Move image up to fill gap above
             
             // Title underneath image
             Text("You're here for a reason")
