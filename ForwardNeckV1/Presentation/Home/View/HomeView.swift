@@ -183,10 +183,10 @@ struct HomeView: View {
                 // Health label
                 HStack(spacing: 4) {
                     Text("health")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
                     Image(systemName: "info.circle")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
@@ -197,52 +197,37 @@ struct HomeView: View {
     // MARK: - Statistics Section
     
     private var statisticsSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             // Divider line
             Rectangle()
                 .fill(Color.white.opacity(0.3))
                 .frame(height: 1)
             
+            // Consistent spacing from divider to labels
+            Spacer()
+                .frame(height: 16)
+            
             // Four column stats
             HStack(spacing: 30) {
                 // Left column - App time
-                VStack(alignment: .center, spacing: 6) {
+                VStack(alignment: .center, spacing: 4) {
                     Text(viewModel.hasMonitoredApps ? "tracked app time" : "app time")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(.bottom, 2)
 
-                    if viewModel.hasMonitoredApps {
-                        Button {
-                            isAppPickerPresented = true
-                        } label: {
-                            Text(viewModel.trackedUsageDisplay)
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.white)
-                                .accessibilityLabel("Tracked app time \(viewModel.trackedUsageDisplay)")
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Button {
-                            isAppPickerPresented = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(width: 36, height: 36)
-                                .background(Color.white.opacity(0.12))
-                                .clipShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Add apps to track usage")
-                    }
+                    Text(viewModel.hasMonitoredApps ? viewModel.trackedUsageDisplay : "0m")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity)
  
                 // Middle left column - Neck fixes progress
                 VStack(alignment: .center, spacing: 4) {
                     Text("neck fixes")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(.top, 2)
                     Text("\(viewModel.neckFixesCompleted)/\(viewModel.neckFixesTarget)")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
@@ -251,9 +236,10 @@ struct HomeView: View {
  
                 // Middle column - Record Streak (longest)
                 VStack(alignment: .center, spacing: 4) {
-                    Text("record streak")
-                        .font(.system(size: 12))
+                    Text("record")
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(.top, 2)
                     Text("\(viewModel.recordStreak)")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
@@ -263,8 +249,9 @@ struct HomeView: View {
                 // Right column - Daily Streak (current)
                 VStack(alignment: .center, spacing: 4) {
                     Text("daily streak")
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
+                        .padding(.top, 2)
                     HStack(spacing: 6) {
                         Text("\(viewModel.currentStreak)")
                             .font(.system(size: 24, weight: .bold))
@@ -294,8 +281,9 @@ struct HomeView: View {
                 let mascotSize = height * 0.72
                 let percentageFont = height * 0.3
                 let dateFont = height * 0.11
+                let valueOnly = card.percentageText.replacingOccurrences(of: "%", with: "")
 
-                HStack(alignment: .center, spacing: 16) {
+                HStack(alignment: .center, spacing: 8) {
                     // Mascot sits on the left and gets as much space as possible
                     Image(card.mascotAssetName)
                         .resizable()
@@ -306,23 +294,33 @@ struct HomeView: View {
                         
                         .accessibilityHidden(true)
 
-                    Spacer(minLength: 0)
-
                     // Percentage is huge, with the date tucked underneath
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text(card.percentageText)
-                            .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
-                            .allowsTightening(true)
+                        ZStack(alignment: .trailing) {
+                            Text("%")
+                                .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                                .foregroundColor(.white)
+                                .opacity(0)
+                            
+                            HStack(spacing: 0) {
+                                Spacer()
+                                Text(valueOnly)
+                                    .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundColor(.white)
+                                    .lineLimit(1)
+                                Text("%")
+                                    .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                                    .foregroundColor(.white)
+                            }
+                        }
 
                         Text(card.label)
                             .font(.system(size: dateFont, weight: .medium))
                             .foregroundColor(.white.opacity(0.7))
                             .lineLimit(1)
                     }
-                    .padding(.trailing, 12)
+                    .padding(.trailing, 8)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
@@ -369,7 +367,7 @@ struct HomeView: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                         Text("Check back later for a new move to keep your posture sharp.")
-                            .font(.system(size: 14))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white.opacity(0.7))
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -405,7 +403,7 @@ struct HomeView: View {
 
             if viewModel.previousDayCards.isEmpty {
                 Text("Complete exercises to unlock your history ✨")
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white.opacity(0.6))
                     .padding(.vertical, 12)
             } else {
@@ -484,13 +482,13 @@ struct HomeView: View {
                             .font(.title2.bold())
                             .foregroundColor(.white)
                         Text(exercise.description)
-                            .font(.body)
+                            .font(.body.bold())
                             .foregroundColor(.white.opacity(0.8))
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Steps")
-                            .font(.headline)
+                            .font(.headline.bold())
                             .foregroundColor(.white)
                         ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
                             Text("\(index + 1). \(instruction)")
@@ -755,7 +753,7 @@ private extension HomeView {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(exercise.description)
-                    .font(.system(size: 14))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white.opacity(0.8))
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -803,11 +801,11 @@ private extension HomeView {
     func exerciseMeta(for exercise: Exercise) -> some View {
         HStack(spacing: 12) {
             Label(exercise.durationLabel, systemImage: "clock")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(.white.opacity(0.8))
 
             Label(exercise.difficulty.rawValue.capitalized, systemImage: "flame")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(color(for: exercise.difficulty))
         }
     }
@@ -817,7 +815,7 @@ private extension HomeView {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
                 Text("\(index + 1). \(instruction)")
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white.opacity(0.85))
             }
         }

@@ -144,6 +144,10 @@ struct ProgressTrackingView: View {
     
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
+            Text("This Months Summary")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(textPrimary)
+            
             LazyVGrid(columns: summaryColumns, spacing: 12) {
                 SummaryCard(
                     title: "total fixes",
@@ -169,7 +173,7 @@ struct ProgressTrackingView: View {
 
     private var dailySummarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("daily summary")
+            Text("Last 7 Days Summary")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(textPrimary)
 
