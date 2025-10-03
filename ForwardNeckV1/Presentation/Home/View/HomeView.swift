@@ -511,241 +511,21 @@ struct HomeView: View {
 
 }
 
-private struct AchievementUnlockedSheet: View {
-    let achievement: MonthlyAchievement
-    let isCelebrating: Bool
-    let onDismiss: () -> Void
-
-    @State private var animateOverlay = false
-    @State private var confettiActive = false
-
-    // Brighter gradient for the action button so the sheet feels celebratory and light
-    private var buttonGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.98, green: 0.62, blue: 0.98),
-                Color(red: 0.72, green: 0.52, blue: 1.0)
-            ],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
-    }
-
-    // Light purplish gradient so the sheet feels bright but readable
-    private var sheetGradient: LinearGradient { Theme.backgroundGradient }
-
-    var body: some View {
-        ZStack {
-            // Light purplish gradient (brighter than HomeView's background)
-            sheetGradient
-                .ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                ZStack {
-                    achievementArtwork
-                        .frame(width: 190, height: 190)
-                        
-
-                    Circle()
-                        .stroke(Color.white.opacity(0.55), lineWidth: 3)
-                        .frame(width: 210, height: 210)
-                        .scaleEffect(animateOverlay ? 1.08 : 0.92)
-                        .opacity(animateOverlay ? 0.25 : 0.4)
-
-                    Circle()
-                        .stroke(Color.white.opacity(0.3), lineWidth: 2)
-                        .frame(width: 230, height: 230)
-                        .scaleEffect(animateOverlay ? 1.15 : 0.85)
-                        .opacity(animateOverlay ? 0.12 : 0.26)
-                }
-                .frame(height: 210)
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
-                        animateOverlay = true
-                    }
-                }
-
-                VStack(spacing: 8) {
-                    Text(achievement.isUnlocked ? "Achievement Unlocked!" : "Achievement Goal")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.white)
-
-                    Text(achievement.title)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
-
-                Button(action: onDismiss) {
-                    Text(achievement.isUnlocked ? "Good Job!" : "Got it")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(buttonGradient)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        
-                }
-            }
-            .padding(.horizontal, 28)
-            .padding(.top, 32)
-            .padding(.bottom, 36)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-        }
-        .overlay(
-            ConfettiOverlay(isActive: $confettiActive)
-        )
-        .ignoresSafeArea()
-        .onAppear {
-            Log.debug("AchievementUnlockedSheet bright styling applied for \(achievement.title)")
-            if isCelebrating {
-                confettiActive = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                    confettiActive = false
-                }
-            }
-        }
-        .onDisappear {
-            confettiActive = false
-        }
-    }
-
-    @ViewBuilder
-    private var achievementArtwork: some View {
-        Group {
-            if achievement.kind.usesSystemImage {
-                Image(systemName: achievement.kind.unlockedImageName)
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundStyle(Color.white)
-            } else {
-                Image(achievement.kind.unlockedImageName)
-                    .resizable()
-                    .scaledToFit()
-            }
-        }
-        .opacity(achievement.isUnlocked ? 1 : 0.35)
-        .grayscale(achievement.isUnlocked ? 0 : 1)
-    }
-}
-
-private struct ConfettiOverlay: View {
-    @Binding var isActive: Bool
-    @State private var pieces: [ConfettiPiece] = []
-
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                ForEach(pieces) { piece in
-                    ConfettiPieceView(
-                        piece: piece,
-                        containerSize: proxy.size,
-                        isActive: $isActive
-                    )
-                }
-            }
-            .onChange(of: isActive) { active in
-                if active {
-                    pieces = ConfettiPiece.generate(count: 36, height: proxy.size.height)
-                } else {
-                    pieces.removeAll()
-                }
-            }
-            .onAppear {
-                if isActive {
-                    pieces = ConfettiPiece.generate(count: 36, height: proxy.size.height)
-                }
-            }
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-private struct ConfettiPiece: Identifiable {
-    let id = UUID()
-    let isLeft: Bool
-    let startY: CGFloat
-    let delay: Double
-    let duration: Double
-    let size: CGFloat
-    let color: Color
-
-    static func generate(count: Int, height: CGFloat) -> [ConfettiPiece] {
-        let colors: [Color] = [.pink, .purple, .blue, .yellow, .orange, .green]
-        return (0..<count).map { index in
-            let isLeft = index.isMultiple(of: 2)
-            return ConfettiPiece(
-                isLeft: isLeft,
-                startY: CGFloat.random(in: 20...(height * 0.5).clamped(to: 20...height)),
-                delay: Double.random(in: 0...0.8),
-                duration: Double.random(in: 2.6...4.2),
-                size: CGFloat.random(in: 8...16),
-                color: colors.randomElement() ?? .white
-            )
-        }
-    }
-}
-
-private extension CGFloat {
-    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
-        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
-    }
-}
-
-private struct ConfettiPieceView: View {
-    let piece: ConfettiPiece
-    let containerSize: CGSize
-    @Binding var isActive: Bool
-    @State private var position: CGPoint = .zero
-    @State private var rotation: Double = 0
-    @State private var opacity: Double = 0
-
-    var body: some View {
-        Rectangle()
-            .fill(piece.color)
-            .frame(width: piece.size, height: piece.size * 0.35)
-            .rotationEffect(.degrees(rotation))
-            .position(position)
-            .opacity(opacity)
-            .onAppear { startAnimation() }
-            .onChange(of: isActive) { newValue in
-                if newValue {
-                    startAnimation()
-                } else {
-                    opacity = 0
-                }
-            }
-    }
-
-    private func startAnimation() {
-        guard isActive else { return }
-        let startX = piece.isLeft ? -60.0 : containerSize.width + 60.0
-        let endX = piece.isLeft ? containerSize.width + 60.0 : -60.0
-        position = CGPoint(x: startX, y: piece.startY)
-        rotation = 0
-        opacity = 0
-
-        withAnimation(.easeOut(duration: piece.duration).delay(piece.delay)) {
-            position = CGPoint(x: endX, y: piece.startY + containerSize.height * 0.85)
-        }
-
-        withAnimation(.linear(duration: piece.duration).repeatForever(autoreverses: false).delay(piece.delay)) {
-            rotation = piece.isLeft ? 720 : -720
-        }
-
-        withAnimation(.easeIn(duration: 0.2).delay(piece.delay)) {
-            opacity = 1
-        }
-
-        let fadeDelay = piece.delay + max(0, piece.duration - 0.6)
-        withAnimation(.easeOut(duration: 0.6).delay(fadeDelay)) {
-            opacity = 0
-        }
-    }
-}
+// NOTE: Duplicate local definitions of AchievementUnlockedSheet and ConfettiOverlay
+// were removed because reusable versions live in Components/.
 
 // MARK: - Helpers
+
+// NOTE: Removed duplicated Helpers extension (exerciseCard/instructionList/color)
+// because these helpers are already defined earlier in this file.
+
+// MARK: - Preview
+
+#Preview {
+    HomeView()
+}
+
+// MARK: - Helpers (restored)
 
 private extension HomeView {
     @ViewBuilder
@@ -839,10 +619,4 @@ private extension HomeView {
             return .red
         }
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    HomeView()
 }
