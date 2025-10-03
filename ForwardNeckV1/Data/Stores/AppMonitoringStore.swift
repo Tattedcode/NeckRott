@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Observation
 import FamilyControls
 
 @Observable

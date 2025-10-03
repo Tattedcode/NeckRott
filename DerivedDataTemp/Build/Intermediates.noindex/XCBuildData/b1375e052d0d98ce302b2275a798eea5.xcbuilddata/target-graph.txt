@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'ForwardNeckV1' in project 'ForwardNeckV1'
+➜ Implicit dependency on target 'ForwardNeckWidget' in project 'ForwardNeckV1' via file 'ForwardNeckWidget.appex' in build phase 'Copy Files'
+Target 'ForwardNeckWidget' in project 'ForwardNeckV1' (no dependencies)
