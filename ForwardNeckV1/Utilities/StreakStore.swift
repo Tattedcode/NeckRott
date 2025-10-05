@@ -106,22 +106,51 @@ final class StreakStore: ObservableObject {
     
     /// Calculate longest streak for a specific type
     /// - Parameter type: The type of streak to calculate
-    /// - Returns: Longest streak ever achieved
+    /// - Returns: Longest streak ever achieved (consecutive days only)
     func longestStreak(for type: StreakType) -> Int {
         let typeStreaks = streaks(for: type).sorted { $0.date < $1.date }
         
+        guard !typeStreaks.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
         var longestStreak = 0
         var currentStreak = 0
+        var previousDate: Date?
+        
+        // Debug: Log to help understand streak calculation
+        Log.debug("StreakStore calculating longest streak for \(type.rawValue) with \(typeStreaks.count) records")
         
         for streak in typeStreaks {
-            if streak.completed {
-                currentStreak += 1
-                longestStreak = max(longestStreak, currentStreak)
-            } else {
+            // Only count completed days
+            guard streak.completed else {
+                // Reset streak on incomplete day
                 currentStreak = 0
+                previousDate = nil
+                continue
             }
+            
+            if let prevDate = previousDate {
+                // Check if this date is exactly 1 day after the previous date
+                let daysDifference = calendar.dateComponents([.day], from: prevDate, to: streak.date).day ?? 0
+                
+                if daysDifference == 1 {
+                    // Consecutive day - increment streak
+                    currentStreak += 1
+                } else {
+                    // Gap in streak - start new streak
+                    currentStreak = 1
+                }
+            } else {
+                // First completed day
+                currentStreak = 1
+            }
+            
+            // Update longest if current is higher
+            longestStreak = max(longestStreak, currentStreak)
+            previousDate = streak.date
         }
         
+        Log.debug("StreakStore longest streak for \(type.rawValue): \(longestStreak)")
         return longestStreak
     }
     
