@@ -8,6 +8,7 @@
 import Combine
 import FamilyControls
 import Foundation
+import SwiftUI
 #if canImport(DeviceActivity)
 import DeviceActivity
 #endif

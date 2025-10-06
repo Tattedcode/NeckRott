@@ -10,16 +10,16 @@ import SwiftUI
 struct OnboardingContainer: View {
     @StateObject var viewModel: OnboardingFlowViewModel
     let onComplete: () -> Void
-
+    
     init(onComplete: @escaping () -> Void) {
         self.onComplete = onComplete
         _viewModel = StateObject(wrappedValue: OnboardingFlowViewModel())
     }
-
+    
     var body: some View {
         ZStack {
             AnimatedGradientBackground().ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
                 headerBar
                 scrollableContent

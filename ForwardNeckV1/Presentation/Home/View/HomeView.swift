@@ -17,12 +17,12 @@ struct HomeView: View {
     @State var shouldCelebrate = false
     @State var lastPresentedAchievement: MonthlyAchievement?
     @State var flamePulse = false
-
+    
     var body: some View {
         ZStack {
             Theme.backgroundGradient
                 .ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 24) {
@@ -104,11 +104,11 @@ struct HomeView: View {
     }
 
     private func handleAchievementDismissal() {
-        if shouldCelebrate, let last = lastPresentedAchievement {
-            viewModel.markAchievementCelebrated(last)
-        }
-        shouldCelebrate = false
-        lastPresentedAchievement = nil
+            if shouldCelebrate, let last = lastPresentedAchievement {
+                viewModel.markAchievementCelebrated(last)
+            }
+            shouldCelebrate = false
+            lastPresentedAchievement = nil
     }
 }
 
