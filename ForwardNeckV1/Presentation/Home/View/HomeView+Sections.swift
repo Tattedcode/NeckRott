@@ -210,51 +210,6 @@ extension HomeView {
         .debugOutline(.blue, enabled: debugOutlines)
     }
 
-    // MARK: - Achievements
-
-    var monthlyAchievementsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Monthly Achievements")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.white)
-
-            LazyVGrid(columns: achievementColumns, spacing: 14) {
-                ForEach(viewModel.monthlyAchievements) { achievement in
-                    let imageName = achievement.isUnlocked ? achievement.kind.unlockedImageName : achievement.kind.lockedImageName
-
-                    VStack {
-                        Group {
-                            if achievement.kind.usesSystemImage {
-                                Image(systemName: imageName)
-                                    .resizable()
-                            } else {
-                                Image(imageName)
-                                    .resizable()
-                            }
-                        }
-                        .scaledToFit()
-                        .frame(width: 96, height: 96)
-                        .padding(4)
-                        .opacity(achievement.isUnlocked ? 1 : 0.3)
-                        .grayscale(achievement.isUnlocked ? 0 : 1)
-                        .animation(.easeInOut(duration: 0.2), value: achievement.isUnlocked)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 120)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        presentedAchievement = achievement
-                        lastPresentedAchievement = achievement
-                        shouldCelebrate = false
-                    }
-                }
-            }
-        }
-        .debugOutline(.purple, enabled: debugOutlines)
-    }
-
-    var achievementColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
-    }
 
     var barFillRatio: CGFloat {
         let ratio = Double(viewModel.healthPercentage) / 100.0

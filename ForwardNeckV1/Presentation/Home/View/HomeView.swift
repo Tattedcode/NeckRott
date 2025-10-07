@@ -31,7 +31,6 @@ struct HomeView: View {
                         nextExerciseSection
                         statisticsSection
                         previousDatesSection
-                        monthlyAchievementsSection
                         Spacer(minLength: 60)
                     }
                     .padding(.horizontal, 20)
