@@ -26,8 +26,8 @@ extension ChartsStore {
 
     func calculateMonthlyAnalytics(monthStart: Date, monthEnd: Date) async -> MonthlyAnalytics {
         let calendar = Calendar.current
-        let allCheckIns = await checkInStore.all()
-        let allExercises = await exerciseStore.completions
+        let allCheckIns = checkInStore.all()
+        let allExercises = exerciseStore.completions
 
         let monthCheckIns = allCheckIns.filter { checkIn in
             checkIn.timestamp >= monthStart && checkIn.timestamp <= monthEnd

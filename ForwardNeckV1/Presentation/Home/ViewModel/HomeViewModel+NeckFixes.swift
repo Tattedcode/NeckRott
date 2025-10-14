@@ -9,20 +9,16 @@ import Foundation
 
 extension HomeViewModel {
     func updateNeckFixes(for date: Date) {
-        neckFixesTarget = max(0, userStore.dailyGoal)
+        // Daily goal is always 3 (one per time slot)
+        neckFixesTarget = 3
 
-        let calendar = Calendar.current
-        let completionsForDate = exerciseStore.completions.filter { completion in
-            calendar.isDate(completion.completedAt, inSameDayAs: date)
-        }
-        neckFixesCompleted = completionsForDate.count
+        // Count completed time slots for today
+        let completedSlots = exerciseStore.completedTimeSlots(for: date)
+        neckFixesCompleted = completedSlots.count
 
-        if neckFixesTarget > 0 {
-            let progress = Double(neckFixesCompleted) / Double(neckFixesTarget)
-            healthPercentage = Int((min(1.0, max(0.0, progress))) * 100)
-        } else {
-            healthPercentage = 0
-        }
+        // Health percentage based on slots completed: 0%, 33%, 66%, 100%
+        let progress = Double(neckFixesCompleted) / 3.0
+        healthPercentage = Int((min(1.0, max(0.0, progress))) * 100)
 
         let referenceDate = max(date, Date())
         neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 7)

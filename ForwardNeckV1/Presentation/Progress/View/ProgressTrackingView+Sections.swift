@@ -48,13 +48,18 @@ extension ProgressTrackingView {
 
     var summarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("This Months Summary")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(textPrimary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(viewModel.monthTitle) Summary")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(textPrimary)
+                Text("Stats reset at the start of each month")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(secondaryText)
+            }
 
             LazyVGrid(columns: summaryColumns, spacing: 12) {
                 SummaryCard(
-                    title: "total fixes",
+                    title: "total fixed",
                     value: viewModel.summary.totalLabel,
                     systemIcon: "chart.bar.fill",
                     accentColor: Color.blue.opacity(0.8)

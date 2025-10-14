@@ -11,14 +11,6 @@ extension OnboardingContainer {
     @ViewBuilder
     var currentScreenContent: some View {
         switch viewModel.screens[viewModel.currentScreen].content {
-        case .mascotSelection:
-            OnboardingMascotSelection(
-                currentSelection: viewModel.binding(\.selectedMascotPrefix),
-                hasSelectedMascot: viewModel.binding(\.hasSelectedMascot)
-            ) { prefix in
-                viewModel.updateMascotSelection(prefix: prefix)
-            }
-
         case .phoneMockup:
             PhoneMockupView()
 

@@ -9,27 +9,15 @@ import SwiftUI
 
 @main
 struct ForwardNeckV1App: App {
-    init() {
-#if DEBUG
-        // Toggle this flag while testing so we can jump straight to the home screen without redoing onboarding every time.
-        let skipOnboardingForDebug = false
-        let defaults = UserDefaults.standard
-
-        if skipOnboardingForDebug {
-            defaults.set(true, forKey: "hasCompletedOnboarding")
-            Log.debug("ForwardNeckV1App debug launch: skipping onboarding and opening home screen")
-        } else {
-            defaults.removeObject(forKey: "hasCompletedOnboarding")
-            defaults.removeObject(forKey: "hasGrantedScreenTime")
-            defaults.removeObject(forKey: "hasGrantedNotifications")
-            Log.debug("ForwardNeckV1App debug launch: resetting onboarding flow")
-        }
-#endif
-    }
-
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    // Schedule exercise reminders on app launch
+                    Task {
+                        await NotificationManager.shared.scheduleExerciseReminders()
+                    }
+                }
         }
     }
 }

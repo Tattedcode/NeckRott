@@ -8,6 +8,165 @@
 import SwiftUI
 
 extension HomeView {
+    // MARK: - Compact Exercise Card (for side-by-side layout)
+    
+    /// Compact exercise card with time slot status support
+    @ViewBuilder
+    func compactExerciseCard(title: String, subtitle: String = "", exercise: Exercise?, status: SlotStatus, slot: ExerciseTimeSlot, onStart: @escaping () -> Void) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(statusTextColor(for: status))
+                    
+                    statusIcon(for: status)
+                }
+                
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(statusTextColor(for: status).opacity(0.7))
+                }
+                
+                if status == .locked, let timeUntil = slot.timeUntilAvailable() {
+                    Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.orange)
+                        .padding(.top, 4)
+                }
+                
+                if let exercise = exercise, status != .locked {
+                    Text(exercise.description)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(statusTextColor(for: status).opacity(0.7))
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Button(action: onStart) {
+                ZStack {
+                    Circle()
+                        .fill(buttonGradient(for: status))
+                        .frame(width: 60, height: 60)
+                    
+                    Image(systemName: buttonIcon(for: status))
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(status != .available)
+            .opacity(status == .available ? 1.0 : 0.5)
+            .accessibilityLabel(accessibilityLabel(for: status, slot: slot))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(cardBackground(for: status))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(cardBorder(for: status), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Status Helpers
+    
+    private func statusIcon(for status: SlotStatus) -> some View {
+        Group {
+            switch status {
+            case .locked:
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.orange)
+            case .available:
+                Image(systemName: "clock.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.green)
+            case .completed:
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.green)
+            }
+        }
+    }
+    
+    private func statusTextColor(for status: SlotStatus) -> Color {
+        switch status {
+        case .locked, .completed:
+            return .white.opacity(0.5)
+        case .available:
+            return .white
+        }
+    }
+    
+    private func buttonGradient(for status: SlotStatus) -> LinearGradient {
+        switch status {
+        case .available:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.2, green: 0.5, blue: 1.0),
+                    Color(red: 0.1, green: 0.3, blue: 0.8)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        default:
+            return LinearGradient(
+                colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.3)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        }
+    }
+    
+    private func buttonIcon(for status: SlotStatus) -> String {
+        switch status {
+        case .locked:
+            return "lock.fill"
+        case .available:
+            return "play.fill"
+        case .completed:
+            return "checkmark"
+        }
+    }
+    
+    private func cardBackground(for status: SlotStatus) -> Color {
+        switch status {
+        case .locked, .completed:
+            return Color.white.opacity(0.05)
+        case .available:
+            return Color.white.opacity(0.08)
+        }
+    }
+    
+    private func cardBorder(for status: SlotStatus) -> Color {
+        switch status {
+        case .locked:
+            return Color.orange.opacity(0.3)
+        case .available:
+            return Color.green.opacity(0.4)
+        case .completed:
+            return Color.green.opacity(0.3)
+        }
+    }
+    
+    private func accessibilityLabel(for status: SlotStatus, slot: ExerciseTimeSlot) -> String {
+        switch status {
+        case .locked:
+            return "\(slot.rawValue) exercise locked"
+        case .available:
+            return "Start \(slot.rawValue) exercise"
+        case .completed:
+            return "\(slot.rawValue) exercise completed"
+        }
+    }
+    
+    // MARK: - Original Exercise Card (legacy)
+    
     @ViewBuilder
     func exerciseCard(for exercise: Exercise) -> some View {
         HStack(alignment: .top, spacing: 16) {
@@ -42,7 +201,16 @@ extension HomeView {
                 Button(action: { isShowingExerciseTimer = true }) {
                     ZStack {
                         Circle()
-                            .fill(Color.green)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.2, green: 0.5, blue: 1.0),   // bright blue
+                                        Color(red: 0.1, green: 0.3, blue: 0.8)    // deeper blue
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .frame(width: 72, height: 72)
                         Image(systemName: "play.fill")
                             .font(.system(size: 28, weight: .bold))

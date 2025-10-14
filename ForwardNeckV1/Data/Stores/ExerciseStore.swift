@@ -45,16 +45,71 @@ final class ExerciseStore: ObservableObject {
         }
     }
     
-    func recordCompletion(exerciseId: UUID, durationSeconds: Int) async {
-        let completion = ExerciseCompletion(exerciseId: exerciseId, durationSeconds: durationSeconds)
+    func recordCompletion(exerciseId: UUID, durationSeconds: Int, timeSlot: ExerciseTimeSlot) async {
+        let completion = ExerciseCompletion(exerciseId: exerciseId, durationSeconds: durationSeconds, timeSlot: timeSlot)
         completions.append(completion)
-        Log.info("Recorded completion for exercise \(exerciseId) - \(durationSeconds)s")
+        Log.info("Recorded completion for exercise \(exerciseId) - \(durationSeconds)s in \(timeSlot.rawValue) slot")
         await save()
     }
     
     func completionCount(on date: Date) -> Int {
         let calendar = Calendar.current
         return completions.filter { calendar.isDate($0.completedAt, inSameDayAs: date) }.count
+    }
+    
+    // MARK: - Time Slot Methods
+    
+    /// Check if a specific time slot is currently available (within time range)
+    func isTimeSlotAvailable(_ slot: ExerciseTimeSlot, for date: Date = Date()) -> Bool {
+        // Check if current time is within the slot's time range
+        return slot.isActive(at: date)
+    }
+    
+    /// Check if a specific time slot has been completed today
+    func isTimeSlotCompleted(_ slot: ExerciseTimeSlot, for date: Date = Date()) -> Bool {
+        let calendar = Calendar.current
+        return completions.contains { completion in
+            calendar.isDate(completion.completedAt, inSameDayAs: date) && completion.timeSlot == slot
+        }
+    }
+    
+    /// Get all completed time slots for a specific date
+    func completedTimeSlots(for date: Date = Date()) -> Set<ExerciseTimeSlot> {
+        let calendar = Calendar.current
+        let completedSlots = completions
+            .filter { calendar.isDate($0.completedAt, inSameDayAs: date) }
+            .map { $0.timeSlot }
+        return Set(completedSlots)
+    }
+    
+    /// Find the next available time slot that hasn't been completed
+    func nextAvailableSlot(for date: Date = Date()) -> (slot: ExerciseTimeSlot, availableAt: Date)? {
+        let completed = completedTimeSlots(for: date)
+        let calendar = Calendar.current
+        
+        // Find first incomplete slot
+        for slot in ExerciseTimeSlot.allCases {
+            if !completed.contains(slot) {
+                // Calculate when this slot becomes available
+                if let interval = slot.timeUntilAvailable(from: date), interval >= 0 {
+                    let availableDate = date.addingTimeInterval(interval)
+                    return (slot, availableDate)
+                }
+            }
+        }
+        
+        // All slots completed today, next is tomorrow morning
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+        components.day! += 1
+        components.hour = ExerciseTimeSlot.morning.timeRange.start
+        components.minute = 0
+        components.second = 0
+        
+        if let tomorrowMorning = calendar.date(from: components) {
+            return (.morning, tomorrowMorning)
+        }
+        
+        return nil
     }
     
     // MARK: - Private

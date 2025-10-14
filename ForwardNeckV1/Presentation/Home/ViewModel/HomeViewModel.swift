@@ -19,7 +19,9 @@ final class HomeViewModel: ObservableObject {
 
     @Published var currentStreak: Int = 0
     @Published var recordStreak: Int = 0
-    @Published var nextExercise: Exercise?
+    @Published var nextExercise: Exercise? // Legacy - keeping for compatibility
+    @Published var dailyUnrotExercise: Exercise? // First exercise for Daily Unrot card
+    @Published var dailyPostureFixExercise: Exercise? // Second exercise for Daily Posture Fix card
     @Published var neckFixesCompleted: Int = 0
     @Published var neckFixesTarget: Int = 0
     @Published var healthPercentage: Int = 100
@@ -36,6 +38,15 @@ final class HomeViewModel: ObservableObject {
     @Published var recentlyUnlockedAchievement: MonthlyAchievement?
     @Published var neckFixHistory: [NeckFixDaySummary] = []
     @Published var previousDayCards: [PreviousDaySummary] = []
+    
+    // MARK: - Time Slot State
+    
+    @Published var morningSlotStatus: SlotStatus = .locked
+    @Published var afternoonSlotStatus: SlotStatus = .locked
+    @Published var eveningSlotStatus: SlotStatus = .locked
+    @Published var showTimeSlotLockedAlert = false
+    @Published var lockedAlertMessage = ""
+    @Published var currentTimeSlot: ExerciseTimeSlot?
 
     var heroMascotName: String {
         let baseName = mascotAssetName(for: healthPercentage)
@@ -112,6 +123,7 @@ final class HomeViewModel: ObservableObject {
         updateStreaks()
         updateNextExercise()
         updateNeckFixes(for: selectedNeckFixDate)
+        updateTimeSlotStatuses()
         refreshTrackedAppUsage()
         celebrationsEnabled = true
     }
@@ -120,9 +132,14 @@ final class HomeViewModel: ObservableObject {
 
     func completeCurrentExercise() async {
         guard let exercise = nextExercise else { return }
-        await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: exercise.durationSeconds)
+        
+        // Determine which time slot this exercise is for
+        let timeSlot = currentTimeSlot ?? ExerciseTimeSlot.currentTimeSlot() ?? .morning
+        
+        await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: exercise.durationSeconds, timeSlot: timeSlot)
         updateNextExercise()
         updateNeckFixes(for: selectedNeckFixDate)
+        updateTimeSlotStatuses()
     }
 
     func selectNeckFixDate(_ date: Date) {
@@ -141,4 +158,93 @@ final class HomeViewModel: ObservableObject {
     func clearRecentlyUnlockedAchievement() {
         recentlyUnlockedAchievement = nil
     }
+    
+    // MARK: - Time Slot Methods
+    
+    /// Update all time slot statuses based on current time and completions
+    func updateTimeSlotStatuses() {
+        let now = Date()
+        let statuses: [(ExerciseTimeSlot, SlotStatus)] = [
+            (.morning, resolveStatus(for: .morning, at: now)),
+            (.afternoon, resolveStatus(for: .afternoon, at: now)),
+            (.evening, resolveStatus(for: .evening, at: now))
+        ]
+
+        morningSlotStatus = statuses[0].1
+        afternoonSlotStatus = statuses[1].1
+        eveningSlotStatus = statuses[2].1
+
+        // Determine current slot preference: use actual current slot if available, otherwise first available slot
+        if let activeSlot = ExerciseTimeSlot.currentTimeSlot(at: now), statusForSlot(activeSlot) == .available {
+            currentTimeSlot = activeSlot
+        } else if let availableSlot = statuses.first(where: { $0.1 == .available })?.0 {
+            currentTimeSlot = availableSlot
+        } else {
+            currentTimeSlot = nil
+        }
+
+        Log.info("Updated time slots - Morning: \(morningSlotStatus), Afternoon: \(afternoonSlotStatus), Evening: \(eveningSlotStatus)")
+    }
+    
+    /// Check if user can start an exercise for a given time slot
+    /// Returns true if allowed, false if locked (and shows alert)
+    func checkCanStartExercise(for slot: ExerciseTimeSlot) -> Bool {
+        let status = statusForSlot(slot)
+        
+        if status == .completed {
+            lockedAlertMessage = "You've already completed the \(slot.rawValue.lowercased()) exercise today! ✅"
+            showTimeSlotLockedAlert = true
+            return false
+        }
+        
+        if status == .locked {
+            if let timeUntil = slot.timeUntilAvailable() {
+                let countdown = ExerciseTimeSlot.formatTimeInterval(timeUntil)
+                lockedAlertMessage = "This exercise will be available in \(countdown)\n\n\(slot.timeRangeString)"
+            } else {
+                lockedAlertMessage = "This exercise is not available yet.\n\n\(slot.timeRangeString)"
+            }
+            showTimeSlotLockedAlert = true
+            return false
+        }
+        
+        return true
+    }
+    
+    /// Helper to get status for a specific slot
+    private func statusForSlot(_ slot: ExerciseTimeSlot) -> SlotStatus {
+        switch slot {
+        case .morning:
+            return morningSlotStatus
+        case .afternoon:
+            return afternoonSlotStatus
+        case .evening:
+            return eveningSlotStatus
+        }
+    }
+
+    private func resolveStatus(for slot: ExerciseTimeSlot, at date: Date) -> SlotStatus {
+        if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+            return .completed
+        }
+
+        if exerciseStore.isTimeSlotAvailable(slot, for: date) {
+            return .available
+        }
+
+        // If the slot time has already passed today and we didn't complete it, don't lock—leave as available
+        if slot.timeSlotHasPassed(on: date) {
+            return .available
+        }
+
+        return .locked
+    }
+}
+
+// MARK: - Slot Status Enum
+
+enum SlotStatus {
+    case locked      // Time slot not yet available
+    case available   // Time slot active and can be completed
+    case completed   // Time slot already completed today
 }

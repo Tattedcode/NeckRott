@@ -33,7 +33,7 @@ extension HomeView {
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(Color.gray.opacity(0.3))
-                            .frame(height: 6)
+                            .frame(height: 8)
 
                         RoundedRectangle(cornerRadius: 3)
                             .fill(
@@ -43,10 +43,10 @@ extension HomeView {
                                     endPoint: .trailing
                                 )
                             )
-                            .frame(width: max(0, geometry.size.width * barFillRatio), height: 6)
+                            .frame(width: max(0, geometry.size.width * barFillRatio), height: 8)
                     }
                 }
-                .frame(height: 6)
+                .frame(height: 8)
 
                 HStack(spacing: 4) {
                     Text("health")
@@ -139,47 +139,55 @@ extension HomeView {
     // MARK: - Next Exercise
 
     var nextExerciseSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Time To Unrot Your Neck")
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Today's Exercises")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
-                .accessibilityAddTraits(.isHeader)
-
-            Group {
-                if let exercise = viewModel.nextExercise {
-                    exerciseCard(for: exercise)
-                        .onAppear {
-                            Log.debug("HomeView next exercise card elevated for \(exercise.title)")
-                        }
-                        .onChange(of: viewModel.nextExercise?.id) { _ in
-                            isInstructionsExpanded = false
-                        }
-                } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("No exercises available right now")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                        Text("Check back later for a new move to keep your posture sharp.")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white.opacity(0.08))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
-            )
-            .onAppear {
-                Log.debug("HomeView nextExerciseSection card applied 3D shadow stack")
+            
+            VStack(spacing: 12) {
+                // Morning Exercise Card
+                timeSlotExerciseCard(
+                    slot: .morning,
+                    status: viewModel.morningSlotStatus,
+                    exercise: viewModel.dailyUnrotExercise
+                )
+                
+                // Afternoon Exercise Card
+                timeSlotExerciseCard(
+                    slot: .afternoon,
+                    status: viewModel.afternoonSlotStatus,
+                    exercise: viewModel.dailyUnrotExercise
+                )
+                
+                // Evening Exercise Card
+                timeSlotExerciseCard(
+                    slot: .evening,
+                    status: viewModel.eveningSlotStatus,
+                    exercise: viewModel.dailyUnrotExercise
+                )
             }
         }
         .debugOutline(.green, enabled: debugOutlines)
+    }
+    
+    @ViewBuilder
+    func timeSlotExerciseCard(slot: ExerciseTimeSlot, status: SlotStatus, exercise: Exercise?) -> some View {
+        compactExerciseCard(
+            title: slot.rawValue,
+            subtitle: slot.timeRangeString,
+            exercise: exercise,
+            status: status,
+            slot: slot
+        ) {
+            // Check if user can start this exercise
+            guard viewModel.checkCanStartExercise(for: slot) else { return }
+            
+            // Store which exercise to start and show timer
+            viewModel.currentTimeSlot = slot
+            viewModel.nextExercise = exercise
+            isShowingExerciseTimer = true
+            Log.debug("HomeView starting \(slot.rawValue) exercise: \(exercise?.title ?? "nil")")
+        }
     }
 
     // MARK: - History
@@ -207,6 +215,7 @@ extension HomeView {
                 }
             }
         }
+        .padding(.bottom, 20) // Add bottom padding to create gap from tab bar
         .debugOutline(.blue, enabled: debugOutlines)
     }
 

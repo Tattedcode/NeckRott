@@ -26,8 +26,8 @@ extension ChartsStore {
 
     func calculateWeeklyAnalytics(weekStart: Date, weekEnd: Date) async -> WeeklyAnalytics {
         let calendar = Calendar.current
-        let allCheckIns = await checkInStore.all()
-        let allExercises = await exerciseStore.completions
+        let allCheckIns = checkInStore.all()
+        let allExercises = exerciseStore.completions
 
         let weekCheckIns = allCheckIns.filter { checkIn in
             calendar.isDate(checkIn.timestamp, inSameDayAs: weekStart) ||

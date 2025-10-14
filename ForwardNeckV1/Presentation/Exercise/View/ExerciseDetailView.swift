@@ -174,7 +174,10 @@ struct ExerciseDetailView: View {
     
     private func completeExercise() {
         Task { @MainActor in
-            await ExerciseStore.shared.recordCompletion(exerciseId: exercise.id, durationSeconds: timer.elapsedSeconds)
+            // Determine current time slot for this completion
+            let timeSlot = ExerciseTimeSlot.currentTimeSlot() ?? .morning
+            
+            await ExerciseStore.shared.recordCompletion(exerciseId: exercise.id, durationSeconds: timer.elapsedSeconds, timeSlot: timeSlot)
             
             // Update streaks after exercise completion
             await updateStreaks()

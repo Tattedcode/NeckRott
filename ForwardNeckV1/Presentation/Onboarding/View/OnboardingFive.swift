@@ -89,7 +89,7 @@ struct OnboardingFive: View {
                 }
             }
         }
-        .onChange(of: triggerPermissionRequest) { shouldTrigger in
+        .onChange(of: triggerPermissionRequest) { _, shouldTrigger in
             if shouldTrigger {
                 triggerPermissionRequest = false
                 showingPrePrompt = true
@@ -98,7 +98,7 @@ struct OnboardingFive: View {
         .alert("Screen Time Access", isPresented: $showingPrePrompt) {
             Button("Don't Allow", role: .cancel) {
                 Log.info("OnboardingFive pre-prompt declined")
-                Task { await handleAuthorizationStatus(.denied, error: nil) }
+                handleAuthorizationStatus(.denied, error: nil)
             }
 
             Button("Allow") {
@@ -119,27 +119,32 @@ struct OnboardingFive: View {
         }
     }
     
+    @MainActor
     private func requestScreenTimePermission() {
         Log.info("OnboardingFive starting Screen Time authorization flow")
 
         Task {
-            let statusBeforeRequest = AuthorizationCenter.shared.authorizationStatus
-            if statusBeforeRequest == .approved {
-                Log.info("OnboardingFive detected existing Screen Time approval")
-                await handleAuthorizationStatus(.approved, error: nil)
-                return
-            }
+            await performScreenTimeAuthorization()
+        }
+    }
 
-            do {
-                try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
-                let updatedStatus = AuthorizationCenter.shared.authorizationStatus
-                Log.info("OnboardingFive authorization completed with status=\(updatedStatus.rawValue)")
-                await handleAuthorizationStatus(updatedStatus, error: nil)
-            } catch {
-                let fallbackStatus = AuthorizationCenter.shared.authorizationStatus
-                Log.error("OnboardingFive Screen Time authorization threw error: \(error.localizedDescription) (status=\(fallbackStatus.rawValue))")
-                await handleAuthorizationStatus(fallbackStatus, error: error)
-            }
+    private func performScreenTimeAuthorization() async {
+        let statusBeforeRequest = AuthorizationCenter.shared.authorizationStatus
+        if statusBeforeRequest == .approved {
+            Log.info("OnboardingFive detected existing Screen Time approval")
+            await MainActor.run { handleAuthorizationStatus(.approved, error: nil) }
+            return
+        }
+
+        do {
+            try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+            let updatedStatus = AuthorizationCenter.shared.authorizationStatus
+            Log.info("OnboardingFive authorization completed with status=\(updatedStatus.rawValue)")
+            await MainActor.run { handleAuthorizationStatus(updatedStatus, error: nil) }
+        } catch {
+            let fallbackStatus = AuthorizationCenter.shared.authorizationStatus
+            Log.error("OnboardingFive Screen Time authorization threw error: \(error.localizedDescription) (status=\(fallbackStatus.rawValue))")
+            await MainActor.run { handleAuthorizationStatus(fallbackStatus, error: error) }
         }
     }
 

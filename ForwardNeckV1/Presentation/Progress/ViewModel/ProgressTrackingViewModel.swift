@@ -55,7 +55,7 @@ final class ProgressTrackingViewModel: ObservableObject {
     private let monthFormatter: DateFormatter
     private let dayLabelFormatter: DateFormatter
     private let startOfMonthComponents: Set<Calendar.Component> = [.year, .month]
-    private let enableDummyDataForPastDays = true // Preview helper to make the calendar feel populated
+    private let enableDummyDataForPastDays = false // Only show real user data
     
     init() {
         let components = Calendar.current.dateComponents(startOfMonthComponents, from: Date())
@@ -172,7 +172,9 @@ final class ProgressTrackingViewModel: ObservableObject {
             let baseMascot = mascotAssetName(for: count)
             let resolvedMascot = MascotAssetProvider.resolvedMascotName(for: baseMascot)
             Log.info("ProgressTrackingViewModel calendar mascot base=\(baseMascot) resolved=\(resolvedMascot) for day=\(day)")
-            let didReachGoal = count >= dailyGoal
+            
+            // Check if all 3 time slots are completed (goal = 3 exercises)
+            let didReachGoal = count >= 3
             cells.append(
                 CalendarDay(
                     date: date,
@@ -203,18 +205,24 @@ final class ProgressTrackingViewModel: ObservableObject {
     }
 
     private func buildSummary(from calendarDays: [CalendarDay]) -> MonthlySummary {
-        let total = calendarDays.reduce(into: 0) { partialResult, calendarDay in
-            guard calendarDay.date != nil else { return }
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: Date())
+
+        // Only count days that actually have data (no placeholders)
+        let actualDays = calendarDays.filter { $0.date != nil }
+
+        let total = actualDays.reduce(into: 0) { partialResult, calendarDay in
             partialResult += calendarDay.completionCount
         }
-        let todayStart = calendar.startOfDay(for: Date())
-        let completedDays = calendarDays.filter { calendarDay in
+
+        let completedDays = actualDays.filter { calendarDay in
             guard let date = calendarDay.date else { return false }
             let dayStart = calendar.startOfDay(for: date)
             guard dayStart <= todayStart else { return false }
             return calendarDay.didReachGoal
         }.count
-        let missedDays = calendarDays.filter { calendarDay in
+
+        let missedDays = actualDays.filter { calendarDay in
             guard let date = calendarDay.date else { return false }
             let dayStart = calendar.startOfDay(for: date)
             guard dayStart < todayStart else { return false }

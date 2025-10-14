@@ -59,11 +59,39 @@ struct ExerciseCompletion: Codable, Identifiable {
     let exerciseId: UUID
     let completedAt: Date
     let durationSeconds: Int // Actual time spent
+    let timeSlot: ExerciseTimeSlot // Which time slot this completion was for
     
-    init(id: UUID = UUID(), exerciseId: UUID, completedAt: Date = Date(), durationSeconds: Int) {
+    init(id: UUID = UUID(), exerciseId: UUID, completedAt: Date = Date(), durationSeconds: Int, timeSlot: ExerciseTimeSlot) {
         self.id = id
         self.exerciseId = exerciseId
         self.completedAt = completedAt
         self.durationSeconds = durationSeconds
+        self.timeSlot = timeSlot
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case exerciseId
+        case completedAt
+        case durationSeconds
+        case timeSlot
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        exerciseId = try container.decode(UUID.self, forKey: .exerciseId)
+        completedAt = try container.decode(Date.self, forKey: .completedAt)
+        durationSeconds = try container.decode(Int.self, forKey: .durationSeconds)
+        timeSlot = try container.decodeIfPresent(ExerciseTimeSlot.self, forKey: .timeSlot) ?? .morning
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(exerciseId, forKey: .exerciseId)
+        try container.encode(completedAt, forKey: .completedAt)
+        try container.encode(durationSeconds, forKey: .durationSeconds)
+        try container.encode(timeSlot, forKey: .timeSlot)
     }
 }

@@ -28,8 +28,8 @@ struct HomeView: View {
                     VStack(spacing: 24) {
                         headerTitle
                         mascotSection
-                        nextExerciseSection
                         statisticsSection
+                        nextExerciseSection
                         previousDatesSection
                         Spacer(minLength: 60)
                     }
@@ -43,14 +43,12 @@ struct HomeView: View {
                     .transition(.opacity)
             }
         }
-        .onAppear {
-            Task { await viewModel.onAppear() }
-        }
+        .task { await viewModel.onAppear() }
         .fullScreenCover(isPresented: $isShowingExerciseTimer) {
             exerciseTimerSheet
         }
         .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
-        .onChange(of: viewModel.recentlyUnlockedAchievement) { achievement in
+        .onChange(of: viewModel.recentlyUnlockedAchievement) { _, achievement in
             guard let achievement else { return }
             presentedAchievement = achievement
             lastPresentedAchievement = achievement
@@ -66,6 +64,13 @@ struct HomeView: View {
             }
             .presentationDetents([.fraction(0.5)])
             .presentationDragIndicator(.hidden)
+        }
+        .alert("Exercise Locked", isPresented: $viewModel.showTimeSlotLockedAlert) {
+            Button("OK", role: .cancel) {
+                viewModel.showTimeSlotLockedAlert = false
+            }
+        } message: {
+            Text(viewModel.lockedAlertMessage)
         }
     }
 

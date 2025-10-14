@@ -7,13 +7,11 @@ struct OnboardingReviewsView: View {
         Review(
             id: "aaron",
             name: "aaron",
-            avatar: "aaron_avatar",
             quote: "the amount of time i've saved by brainrotting less is insane. i reduced my screen time by 40%!"
         ),
         Review(
             id: "karina",
             name: "karina",
-            avatar: "karina_avatar",
             quote: "i've been sleeping better since i started using brainrot to limit my scrolling! i block apps that i don't want to use in the evenings."
         )
     ]
@@ -98,13 +96,16 @@ struct OnboardingReviewsView: View {
                 .foregroundColor(.white)
 
             HStack(spacing: -16) {
-                // Use mascots to represent smiling users.
-                ForEach(["community_avatar_1", "community_avatar_2", "community_avatar_3"], id: \.self) { avatar in
-                    Image(avatar)
-                        .resizable()
-                        .scaledToFill()
+                // Use placeholder circles for community avatars
+                ForEach(0..<3) { index in
+                    Circle()
+                        .fill(Color.white.opacity(0.3))
                         .frame(width: 52, height: 52)
-                        .clipShape(Circle())
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.white.opacity(0.6))
+                        )
                         .overlay(Circle().stroke(Color.white, lineWidth: 2))
                         .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                 }
@@ -125,7 +126,6 @@ private extension OnboardingReviewsView {
     struct Review: Identifiable {
         let id: String
         let name: String
-        let avatar: String
         let quote: String
     }
 
@@ -135,11 +135,15 @@ private extension OnboardingReviewsView {
 
         var body: some View {
             HStack(alignment: .top, spacing: 14) {
-                Image(review.avatar)
-                    .resizable()
-                    .scaledToFill()
+                // Placeholder avatar circle
+                Circle()
+                    .fill(Color.white.opacity(0.2))
                     .frame(width: 48, height: 48)
-                    .clipShape(Circle())
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.5))
+                    )
                     .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
                     .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                     .accessibilityHidden(true)

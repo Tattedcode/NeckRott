@@ -26,17 +26,17 @@ final class ExerciseListViewModel {
     
     // MARK: - Public Methods
     func loadExercises() async {
-        isLoading = true
-        errorMessage = nil
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+        }
         
-        do {
-            exercises = exerciseStore.allExercises()
+        let loadedExercises = exerciseStore.allExercises()
+        
+        await MainActor.run {
+            exercises = loadedExercises
             isLoading = false
             Log.info("Loaded \(exercises.count) exercises")
-        } catch {
-            errorMessage = "Failed to load exercises"
-            isLoading = false
-            Log.error("Failed to load exercises: \(error)")
         }
     }
     

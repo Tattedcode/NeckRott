@@ -9,6 +9,7 @@ import SwiftUI
 
 enum RootTab: String, CaseIterable, Hashable {
     case home = "Home"
+    case plan = "Plan"
     case stats = "Stats"
     case rewards = "Achievements"
     case settings = "Settings"
@@ -30,6 +31,16 @@ struct RootTabView: View {
                 Label("Home", systemImage: "house.fill") 
             }
             .tag(RootTab.home)
+
+            // Plan Tab - Daily neck workout circuit
+            NavigationStack { 
+                PlanView()
+                    .navigationBarHidden(true) 
+            }
+            .tabItem { 
+                Label("Plan", systemImage: "dumbbell.fill") 
+            }
+            .tag(RootTab.plan)
 
             // Stats Tab - Calendar-based progress tracking
             NavigationStack { 

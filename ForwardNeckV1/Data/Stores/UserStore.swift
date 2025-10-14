@@ -12,7 +12,6 @@ import Foundation
 class UserStore: ObservableObject {
     @Published var userName: String = ""
     @Published var dailyGoal: Int = 3 // Default to 3 hours
-    @Published var mascotPrefix: String = MascotThemeState.currentPrefix() // Empty prefix means normal mascots
     
     private let userDefaults = UserDefaults.standard
     private let userNameKey = "userName"
@@ -27,7 +26,6 @@ class UserStore: ObservableObject {
         userName = userDefaults.string(forKey: userNameKey) ?? ""
         dailyGoal = userDefaults.integer(forKey: dailyGoalKey)
         if dailyGoal == 0 { dailyGoal = 3 } // Default to 3 hours if not set
-        mascotPrefix = MascotThemeState.currentPrefix()
         Log.info("Loaded user name: \(userName), daily goal: \(dailyGoal)")
     }
     
@@ -44,14 +42,6 @@ class UserStore: ObservableObject {
         userDefaults.set(goal, forKey: dailyGoalKey)
         Log.info("Saved daily goal: \(goal) hours")
     }
-
-    /// Save the mascot theme prefix ("" for default, "skele" for skeleton mascots)
-    func saveMascotPrefix(_ prefix: String) {
-        mascotPrefix = prefix
-        MascotThemeState.save(prefix: prefix)
-        NotificationCenter.default.post(name: .mascotThemeDidChange, object: prefix)
-        Log.info("Saved mascot prefix: \(prefix.isEmpty ? "default" : prefix)")
-    }
     
     /// Clear all user data
     func clearUserData() {
@@ -59,8 +49,6 @@ class UserStore: ObservableObject {
         dailyGoal = 3 // Reset to default
         userDefaults.removeObject(forKey: userNameKey)
         userDefaults.removeObject(forKey: dailyGoalKey)
-        MascotThemeState.save(prefix: "")
-        mascotPrefix = ""
         Log.info("Cleared user data")
     }
 }

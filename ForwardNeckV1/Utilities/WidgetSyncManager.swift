@@ -8,13 +8,11 @@ enum WidgetSyncManager {
     private enum Keys {
         static let percentage = "neckHealthPercent"
         static let mascot = "neckMascot"
-        static let mascotPrefix = "neckMascotPrefix"
     }
 
     static func updateWidget(percentage: Int, mascot: String) {
         defaults?.set(percentage, forKey: Keys.percentage)
         defaults?.set(mascot, forKey: Keys.mascot)
-        defaults?.set(MascotThemeState.currentPrefix(), forKey: Keys.mascotPrefix)
         WidgetCenter.shared.reloadTimelines(ofKind: WidgetConstants.kind)
     }
 

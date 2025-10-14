@@ -73,7 +73,7 @@ class ScreenTimeService: ObservableObject {
         
         let currentMinutes = hour * 60 + minute
         let totalMinutesInDay = 24 * 60
-        let dayProgress = Double(currentMinutes) / Double(totalMinutesInDay)
+        _ = Double(currentMinutes) / Double(totalMinutesInDay)
         
         // Realistic screen time patterns:
         // - Morning (6-9 AM): Light usage (0.5-1.5 hours)

@@ -13,13 +13,25 @@ enum Theme {
         Log.info("Theme.backgroundGradient applied (pink→purple)")
         return LinearGradient(
             colors: [
-                Color(red: 0.478, green: 0.118, blue: 0.361), // dark pink
-                Color(red: 0.341, green: 0.102, blue: 0.376), // plum
-                Color(red: 0.176, green: 0.039, blue: 0.290)  // dark purple
+                Color(red: 0.578, green: 0.218, blue: 0.461), // brighter dark pink
+                Color(red: 0.441, green: 0.202, blue: 0.476), // brighter plum
+                Color(red: 0.276, green: 0.139, blue: 0.390)  // brighter dark purple
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+        
+        // ALTERNATE: Light blue gradient (comment out above and uncomment below to use)
+//        Log.info("Theme.backgroundGradient applied (light blue)")
+//        return LinearGradient(
+//            colors: [
+//                Color(red: 0.4, green: 0.7, blue: 1.0),   // light sky blue
+//                Color(red: 0.3, green: 0.5, blue: 0.9),   // medium blue
+//                Color(red: 0.2, green: 0.4, blue: 0.8)    // deeper blue
+//            ],
+//            startPoint: .topLeading,
+//            endPoint: .bottomTrailing
+//        )
     }
 
     // Brightest stop from the background gradient (exposed for places that need a solid color match)
@@ -33,7 +45,7 @@ enum Theme {
     static let pillSelected: Color = Color.blue.opacity(0.9)
     static let pillUnselected: Color = Color.white.opacity(0.16)
 
-    // Text colors - revert to white for consistency on our gradient
+    // Text colors - white for dark gradient
     static let primaryText: Color = .white
     static let secondaryText: Color = Color.white.opacity(0.8)
 }

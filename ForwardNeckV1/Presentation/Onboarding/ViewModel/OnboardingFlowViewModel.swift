@@ -19,8 +19,6 @@ final class OnboardingFlowViewModel: ObservableObject {
     @Published var triggerNotificationPermission = false
     @Published var hasScreenTimeAlertBeenDismissed = false
     @Published var hasNotificationsAlertBeenDismissed = false
-    @Published var hasSelectedMascot = true
-    @Published var selectedMascotPrefix: String = ""
     @Published var hasReasonSelected = false
     @Published var triggerReasonValidation = false
     @Published var hasSelectedAge = false
@@ -54,10 +52,8 @@ final class OnboardingFlowViewModel: ObservableObject {
     var continueButtonColors: [Color] {
         switch currentScreen {
         case 1:
-            return [Color.blue, Color.blue.opacity(hasSelectedMascot ? 0.8 : 0.3)]
-        case 2:
             return [Color.blue, Color.blue.opacity(hasReasonSelected ? 0.8 : 0.3)]
-        case 3:
+        case 2:
             return [Color.blue, Color.blue.opacity(hasSelectedAge ? 0.8 : 0.3)]
         default:
             return [Color.blue, Color.blue.opacity(0.8)]
@@ -84,30 +80,23 @@ final class OnboardingFlowViewModel: ObservableObject {
     func completeAgeSelection(_ ageLabel: String) {
         hasSelectedAge = true
         Log.info("OnboardingFlow selected age=\(ageLabel)")
-        if currentScreen == 3 {
+        if currentScreen == 2 {
             currentScreen += 1
         }
-    }
-
-    func updateMascotSelection(prefix: String) {
-        selectedMascotPrefix = prefix
-        hasSelectedMascot = true
-        userStore.saveMascotPrefix(prefix)
-        Log.info("OnboardingFlow updated mascot prefix -> \(prefix.isEmpty ? "default" : prefix)")
     }
 
     func markScreenTimePermissionGranted() {
         isScreenTimePermissionGranted = true
         hasScreenTimeAlertBeenDismissed = true
         hasScreenTimePermissionResponded = true
-        if currentScreen == 7 {
+        if currentScreen == 6 {
             currentScreen += 1
         }
     }
 
     func markNotificationStepComplete() {
         hasNotificationsAlertBeenDismissed = true
-        if currentScreen == 8 {
+        if currentScreen == 7 {
             currentScreen += 1
         }
     }
@@ -124,13 +113,6 @@ final class OnboardingFlowViewModel: ObservableObject {
     private func handlePreconditions() -> Bool {
         switch currentScreen {
         case 1:
-            guard hasSelectedMascot else {
-                Log.info("OnboardingFlow continue blocked – mascot not selected")
-                return false
-            }
-            return true
-
-        case 2:
             guard hasReasonSelected else {
                 triggerReasonValidation = true
                 Log.info("OnboardingFlow continue blocked – reason not selected")
@@ -138,12 +120,12 @@ final class OnboardingFlowViewModel: ObservableObject {
             }
             return true
 
-        case 3:
+        case 2:
             triggerAgeValidation = true
             Log.info("OnboardingFlow requesting age validation")
             return false
 
-        case 7:
+        case 6:
             if !hasScreenTimeAlertBeenDismissed {
                 triggerScreenTimePermission = true
                 Log.info("OnboardingFlow triggering Screen Time permission")
@@ -155,7 +137,7 @@ final class OnboardingFlowViewModel: ObservableObject {
             }
             return true
 
-        case 8:
+        case 7:
             if !hasNotificationsAlertBeenDismissed {
                 triggerNotificationPermission = true
                 Log.info("OnboardingFlow triggering notifications permission")

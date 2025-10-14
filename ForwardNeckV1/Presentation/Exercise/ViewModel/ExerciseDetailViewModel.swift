@@ -97,7 +97,8 @@ final class ExerciseDetailViewModel {
     }
     
     func completeExercise() async {
-        await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: elapsedSeconds)
+        let slot = ExerciseTimeSlot.currentTimeSlot() ?? .morning
+        await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: elapsedSeconds, timeSlot: slot)
         
         // Update streaks after exercise completion
         await updateStreaks()
