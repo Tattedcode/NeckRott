@@ -64,19 +64,14 @@ struct AchievementsView: View {
     private var currentLevelSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
-                // Level icon - clickable placeholder image
+                // Level icon - clickable level image
                 Button(action: {
                     showingLevelSheet = true
                 }) {
-                    Image("mascot1") // Placeholder image
+                    Image(levelImageName(for: viewModel.userProgress.level))
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 2)
-                        )
                 }
                 .buttonStyle(.plain)
                 
@@ -159,76 +154,72 @@ struct LevelDetailSheet: View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
             
-            VStack(spacing: 24) {
-                // Header
+            ScrollView {
                 VStack(spacing: 16) {
-                    Image("mascot1") // Same placeholder image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 120, height: 120)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.3), lineWidth: 3)
-                        )
-                    
+                    // Header - reduced spacing
                     VStack(spacing: 8) {
                         Text(currentLevel?.title ?? "Unknown Level")
-                            .font(.largeTitle.bold())
+                            .font(.title.bold()) // Reduced from largeTitle
                             .foregroundColor(.white)
                         
                         Text(currentLevel?.description ?? "")
-                            .font(.title3)
+                            .font(.body) // Reduced from title3
                             .foregroundColor(.white.opacity(0.8))
                             .multilineTextAlignment(.center)
                     }
-                }
-                
-                // Level details
-                VStack(spacing: 16) {
-                    HStack {
-                        Text("Current Level")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        Spacer()
-                        Text("\(userProgress.level)")
-                            .font(.title.bold())
-                            .foregroundColor(.white)
-                    }
                     
-                    HStack {
-                        Text("Total XP")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        Spacer()
-                        Text("\(userProgress.xp)")
-                            .font(.title.bold())
-                            .foregroundColor(.white)
-                    }
+                    Spacer().frame(height: 8) // Reduced from 20
                     
-                    if let level = currentLevel {
+                    Image(levelImageName(for: userProgress.level))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 160, height: 160) // Reduced from 180
+                    
+                    Spacer().frame(height: 8) // Added small spacer
+                    
+                    // Level details
+                    VStack(spacing: 12) {
                         HStack {
-                            Text("XP Required")
+                            Text("Current Level")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             Spacer()
-                            Text("\(level.xpRequired)")
+                            Text("\(userProgress.level)")
+                                .font(.title.bold())
+                                .foregroundColor(.white)
+                        }
+                        
+                        HStack {
+                            Text("Total XP")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Text("\(userProgress.xp)")
                                 .font(.title.bold())
                                 .foregroundColor(.white)
                         }
                     }
+                    .padding(16) // Reduced from 20
+                    .background(Theme.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
-                .padding(20)
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                
-                Spacer()
+                .padding(.horizontal, 20) // Reduced horizontal padding
+                .padding(.top, 16) // Reduced top padding
+                .padding(.bottom, 20)
             }
-            .padding(24)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
+}
+
+// MARK: - Helper Functions
+
+/// Generate level image name based on level number
+private func levelImageName(for level: Int) -> String {
+    // Ensure level is within valid range (1-20)
+    let clampedLevel = max(1, min(level, 20))
+    return "level\(clampedLevel)"
 }
 
 #Preview {

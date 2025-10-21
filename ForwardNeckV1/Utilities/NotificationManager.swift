@@ -39,51 +39,37 @@ final class NotificationManager {
     func scheduleExerciseReminders() async {
         let center = UNUserNotificationCenter.current()
         
-        // Morning reminder - 6:00 AM
+        // Quick Workout reminder - 6:00 AM
         var morningDate = DateComponents()
         morningDate.hour = 6
         morningDate.minute = 0
         
         let morningTrigger = UNCalendarNotificationTrigger(dateMatching: morningDate, repeats: true)
         let morningContent = UNMutableNotificationContent()
-        morningContent.title = "Morning Stretch Time! ☀️"
-        morningContent.body = "Complete your first neck fix to start your day right"
+        morningContent.title = "Quick Workout Time! ☀️"
+        morningContent.body = "Complete your quick workout to start your day right"
         morningContent.sound = .default
         
         let morningRequest = UNNotificationRequest(identifier: "exercise.morning", content: morningContent, trigger: morningTrigger)
         
-        // Afternoon reminder - 12:00 PM
+        // Full Daily Workout reminder - 12:00 PM
         var afternoonDate = DateComponents()
         afternoonDate.hour = 12
         afternoonDate.minute = 0
         
         let afternoonTrigger = UNCalendarNotificationTrigger(dateMatching: afternoonDate, repeats: true)
         let afternoonContent = UNMutableNotificationContent()
-        afternoonContent.title = "Afternoon Break! ☕️"
-        afternoonContent.body = "Time for your second neck fix of the day"
+        afternoonContent.title = "Full Daily Workout Time! 💪"
+        afternoonContent.body = "Time for your full daily workout"
         afternoonContent.sound = .default
         
         let afternoonRequest = UNNotificationRequest(identifier: "exercise.afternoon", content: afternoonContent, trigger: afternoonTrigger)
-        
-        // Evening reminder - 6:00 PM
-        var eveningDate = DateComponents()
-        eveningDate.hour = 18
-        eveningDate.minute = 0
-        
-        let eveningTrigger = UNCalendarNotificationTrigger(dateMatching: eveningDate, repeats: true)
-        let eveningContent = UNMutableNotificationContent()
-        eveningContent.title = "Evening Unwind! 🌙"
-        eveningContent.body = "Complete your final neck fix to finish strong"
-        eveningContent.sound = .default
-        
-        let eveningRequest = UNNotificationRequest(identifier: "exercise.evening", content: eveningContent, trigger: eveningTrigger)
         
         // Add all requests
         do {
             try await center.add(morningRequest)
             try await center.add(afternoonRequest)
-            try await center.add(eveningRequest)
-            Log.info("Scheduled exercise reminders for morning, afternoon, and evening")
+            Log.info("Scheduled exercise reminders for Quick Workout and Full Daily Workout")
         } catch {
             Log.error("Failed to schedule exercise reminders: \(error.localizedDescription)")
         }

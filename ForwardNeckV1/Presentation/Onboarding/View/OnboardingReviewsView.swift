@@ -96,18 +96,32 @@ struct OnboardingReviewsView: View {
                 .foregroundColor(.white)
 
             HStack(spacing: -16) {
-                // Use placeholder circles for community avatars
+                // Use real portraits from assets for community avatars
                 ForEach(0..<3) { index in
-                    Circle()
-                        .fill(Color.white.opacity(0.3))
-                        .frame(width: 52, height: 52)
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.6))
-                        )
-                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                    let imageName: String = {
+                        switch index {
+                        case 0: return "portrait1"
+                        case 1: return "portrait2"
+                        default: return "portrait3"
+                        }
+                    }()
+
+                    ZStack {
+                        // Fallback placeholder background
+                        Circle()
+                            .fill(Color.white.opacity(0.2))
+
+                        // Portrait image clipped to circle
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 52, height: 52)
+                            .clipShape(Circle())
+                            .accessibilityHidden(true)
+                    }
+                    .frame(width: 52, height: 52)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                 }
             }
             .padding(.top, 4)
@@ -133,20 +147,32 @@ private extension OnboardingReviewsView {
     struct ReviewCard: View {
         let review: Review
 
+        private var portraitName: String {
+            switch review.id {
+            case "aaron": return "portrait1"
+            case "karina": return "portrait2"
+            default: return "portrait4" // spare portrait if more reviews are added
+            }
+        }
+
         var body: some View {
             HStack(alignment: .top, spacing: 14) {
-                // Placeholder avatar circle
-                Circle()
-                    .fill(Color.white.opacity(0.2))
-                    .frame(width: 48, height: 48)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.white.opacity(0.5))
-                    )
-                    .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
-                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                    .accessibilityHidden(true)
+                // Avatar circle with portrait image
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.2))
+
+                    Image(portraitName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 48, height: 48)
+                        .clipShape(Circle())
+                        .accessibilityHidden(true)
+                }
+                .frame(width: 48, height: 48)
+                .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
@@ -187,5 +213,3 @@ private extension OnboardingReviewsView {
         OnboardingReviewsView()
     }
 }
-
-

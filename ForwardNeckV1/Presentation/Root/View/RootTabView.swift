@@ -24,7 +24,7 @@ struct RootTabView: View {
         TabView(selection: $selection) {
             // Home Tab - Main dashboard
             NavigationStack { 
-                HomeView()
+                HomeView(selectedTab: $selection)
                     .navigationBarHidden(true) 
             }
             .tabItem { 

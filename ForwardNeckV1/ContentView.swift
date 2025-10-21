@@ -25,6 +25,10 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: hasCompletedOnboarding)
+        .onAppear {
+            // Reset onboarding for testing - remove this line when done
+            hasCompletedOnboarding = false
+        }
     }
 }
 

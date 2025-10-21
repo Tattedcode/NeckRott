@@ -43,7 +43,6 @@ final class HomeViewModel: ObservableObject {
     
     @Published var morningSlotStatus: SlotStatus = .locked
     @Published var afternoonSlotStatus: SlotStatus = .locked
-    @Published var eveningSlotStatus: SlotStatus = .locked
     @Published var showTimeSlotLockedAlert = false
     @Published var lockedAlertMessage = ""
     @Published var currentTimeSlot: ExerciseTimeSlot?
@@ -166,13 +165,11 @@ final class HomeViewModel: ObservableObject {
         let now = Date()
         let statuses: [(ExerciseTimeSlot, SlotStatus)] = [
             (.morning, resolveStatus(for: .morning, at: now)),
-            (.afternoon, resolveStatus(for: .afternoon, at: now)),
-            (.evening, resolveStatus(for: .evening, at: now))
+            (.afternoon, resolveStatus(for: .afternoon, at: now))
         ]
 
         morningSlotStatus = statuses[0].1
         afternoonSlotStatus = statuses[1].1
-        eveningSlotStatus = statuses[2].1
 
         // Determine current slot preference: use actual current slot if available, otherwise first available slot
         if let activeSlot = ExerciseTimeSlot.currentTimeSlot(at: now), statusForSlot(activeSlot) == .available {
@@ -183,7 +180,7 @@ final class HomeViewModel: ObservableObject {
             currentTimeSlot = nil
         }
 
-        Log.info("Updated time slots - Morning: \(morningSlotStatus), Afternoon: \(afternoonSlotStatus), Evening: \(eveningSlotStatus)")
+        Log.info("Updated time slots - Quick Workout: \(morningSlotStatus), Full Daily Workout: \(afternoonSlotStatus)")
     }
     
     /// Check if user can start an exercise for a given time slot
@@ -218,8 +215,6 @@ final class HomeViewModel: ObservableObject {
             return morningSlotStatus
         case .afternoon:
             return afternoonSlotStatus
-        case .evening:
-            return eveningSlotStatus
         }
     }
 

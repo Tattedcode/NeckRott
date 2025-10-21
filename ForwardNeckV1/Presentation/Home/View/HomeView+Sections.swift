@@ -73,18 +73,6 @@ extension HomeView {
 
             HStack(spacing: 30) {
                 VStack(spacing: 4) {
-                    Text(viewModel.hasMonitoredApps ? "tracked app time" : "app time")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
-                        .padding(.bottom, 2)
-
-                    Text(viewModel.hasMonitoredApps ? viewModel.trackedUsageDisplay : "0m")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-
-                VStack(spacing: 4) {
                     Text("neck fixes")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.7))
@@ -145,26 +133,21 @@ extension HomeView {
                 .foregroundColor(.white)
             
             VStack(spacing: 12) {
-                // Morning Exercise Card
+                // Quick Workout Exercise Card
                 timeSlotExerciseCard(
                     slot: .morning,
                     status: viewModel.morningSlotStatus,
                     exercise: viewModel.dailyUnrotExercise
                 )
                 
-                // Afternoon Exercise Card
-                timeSlotExerciseCard(
-                    slot: .afternoon,
-                    status: viewModel.afternoonSlotStatus,
-                    exercise: viewModel.dailyUnrotExercise
-                )
-                
-                // Evening Exercise Card
-                timeSlotExerciseCard(
-                    slot: .evening,
-                    status: viewModel.eveningSlotStatus,
-                    exercise: viewModel.dailyUnrotExercise
-                )
+                // Full Daily Workout Exercise Card - only show if not completed today
+                if viewModel.afternoonSlotStatus != .completed {
+                    timeSlotExerciseCard(
+                        slot: .afternoon,
+                        status: viewModel.afternoonSlotStatus,
+                        exercise: viewModel.dailyUnrotExercise
+                    )
+                }
             }
         }
         .debugOutline(.green, enabled: debugOutlines)
@@ -182,11 +165,17 @@ extension HomeView {
             // Check if user can start this exercise
             guard viewModel.checkCanStartExercise(for: slot) else { return }
             
-            // Store which exercise to start and show timer
-            viewModel.currentTimeSlot = slot
-            viewModel.nextExercise = exercise
-            isShowingExerciseTimer = true
-            Log.debug("HomeView starting \(slot.rawValue) exercise: \(exercise?.title ?? "nil")")
+            // For Full Daily Workout (afternoon), navigate to Plan tab instead of showing timer
+            if slot == .afternoon {
+                selectedTab = .plan
+                Log.debug("HomeView navigating to Plan tab for Full Daily Workout")
+            } else {
+                // For Quick Workout (morning), show timer as before
+                viewModel.currentTimeSlot = slot
+                viewModel.nextExercise = exercise
+                isShowingExerciseTimer = true
+                Log.debug("HomeView starting \(slot.rawValue) exercise: \(exercise?.title ?? "nil")")
+            }
         }
     }
 

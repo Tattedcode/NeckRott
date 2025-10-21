@@ -7,21 +7,18 @@
 
 import Foundation
 
-/// Represents the three daily exercise time slots
+/// Represents the two daily exercise time slots
 enum ExerciseTimeSlot: String, Codable, CaseIterable {
-    case morning = "Morning"
-    case afternoon = "Afternoon"
-    case evening = "Evening"
+    case morning = "Quick Workout"
+    case afternoon = "Full Daily Workout"
     
     /// Time range for this slot (hour range in 24-hour format)
     var timeRange: (start: Int, end: Int) {
         switch self {
         case .morning:
-            return (6, 11) // 6:00 AM - 11:59 AM
+            return (0, 23) // Available all day (with 1-hour cooldown after completion)
         case .afternoon:
-            return (12, 17) // 12:00 PM - 5:59 PM
-        case .evening:
-            return (18, 23) // 6:00 PM - 11:59 PM
+            return (6, 23) // 6:00 AM - 11:59 PM
         }
     }
     
@@ -29,11 +26,9 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
     var timeRangeString: String {
         switch self {
         case .morning:
-            return "6:00 AM - 11:59 AM"
+            return "Available anytime (1 hour cooldown)"
         case .afternoon:
-            return "12:00 PM - 5:59 PM"
-        case .evening:
-            return "6:00 PM - 11:59 PM"
+            return "6:00 AM - 11:59 PM"
         }
     }
     
@@ -44,8 +39,6 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
             return 6 // 6:00 AM
         case .afternoon:
             return 12 // 12:00 PM
-        case .evening:
-            return 18 // 6:00 PM
         }
     }
     
@@ -78,12 +71,7 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
             return .afternoon
         }
         
-        // During or after afternoon, before evening
-        if hour < 18 {
-            return .evening
-        }
-        
-        // After evening - next is tomorrow morning
+        // During or after afternoon - next is tomorrow morning
         return .morning
     }
     
@@ -117,7 +105,7 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
             }
         }
         
-        // Slot is tomorrow (or for morning slot after evening)
+        // Slot is tomorrow (or for morning slot after afternoon)
         var components = calendar.dateComponents([.year, .month, .day], from: date)
         components.day! += 1
         components.hour = startHour

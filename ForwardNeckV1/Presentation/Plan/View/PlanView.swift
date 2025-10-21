@@ -11,10 +11,13 @@ struct PlanView: View {
     // MARK: - Properties
     
     /// View model managing workout circuit data
-    let viewModel = PlanViewModel()
+    @StateObject var viewModel = PlanViewModel()
     
     /// State for showing full description
     @State private var isDescriptionExpanded = false
+    
+    /// State for showing workout flow
+    @State private var isShowingWorkoutFlow = false
     
     // MARK: - Body
     
@@ -42,6 +45,29 @@ struct PlanView: View {
         }
         .onAppear {
             Task { await viewModel.onAppear() }
+        }
+        .fullScreenCover(isPresented: $isShowingWorkoutFlow) {
+            WorkoutFlowView(
+                exercises: viewModel.exercises,
+                onComplete: {
+                    isShowingWorkoutFlow = false
+                    // Record completion for Full Daily Workout slot
+                    Task {
+                        await ExerciseStore.shared.recordCompletion(
+                            exerciseId: UUID(), // Workout session ID
+                            durationSeconds: viewModel.totalDuration,
+                            timeSlot: .afternoon
+                        )
+                        Log.info("Full Daily Workout completed and recorded")
+                        
+                        // Refresh completion status to update button
+                        viewModel.refreshCompletionStatus()
+                    }
+                },
+                onCancel: {
+                    isShowingWorkoutFlow = false
+                }
+            )
         }
     }
     
@@ -89,7 +115,7 @@ struct PlanView: View {
     
     // MARK: - Day Selector
     
-    /// Horizontal day selector with dots below each day
+    /// Horizontal day selector with status ticks below each day
     private var daySelector: some View {
         HStack(spacing: 0) {
             ForEach(0..<7, id: \.self) { dayIndex in
@@ -116,10 +142,13 @@ struct PlanView: View {
                         .fill(isSelected ? Color.white.opacity(0.3) : Color.clear)
                 )
             
-            // Dot indicator below
-            Circle()
-                .fill(isSelected ? Color.white : Color.white.opacity(0.4))
-                .frame(width: 6, height: 6)
+            // Status tick below (green if completed, gray if missed)
+            let date = viewModel.dateForDayIndex(dayIndex)
+            let completed = viewModel.fullWorkoutCompleted(on: date)
+            Image(systemName: "checkmark")
+                .font(.system(size: 8, weight: .bold))
+                .foregroundColor(completed ? Color.green : Color.white.opacity(0.5))
+                .frame(height: 6)
         }
     }
     
@@ -178,16 +207,14 @@ struct PlanView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // Start Workout button with blue gradient
-                Button(action: {
-                    Log.info("Start Workout button tapped")
-                    // TODO: Implement workout start functionality
-                }) {
+                // Start Workout button (blue) or Completed button (green)
+                if viewModel.isWorkoutCompletedToday {
+                    // Completed state - Green button (non-interactive)
                     HStack(spacing: 10) {
-                        Image(systemName: "play.fill")
+                        Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 16, weight: .bold))
                         
-                        Text("Start Workout")
+                        Text("Today Workout Completed")
                             .font(.system(size: 18, weight: .bold))
                     }
                     .foregroundColor(.white)
@@ -198,14 +225,44 @@ struct PlanView: View {
                             .fill(
                                 LinearGradient(
                                     colors: [
-                                        Color(red: 0.2, green: 0.5, blue: 1.0),   // bright blue
-                                        Color(red: 0.1, green: 0.3, blue: 0.8)    // deeper blue
+                                        Color(red: 0.2, green: 0.8, blue: 0.4),   // bright green
+                                        Color(red: 0.1, green: 0.6, blue: 0.3)    // deeper green
                                     ],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
                     )
+                } else {
+                    // Available state - Blue button (interactive)
+                    Button(action: {
+                        Log.info("Start Workout button tapped")
+                        isShowingWorkoutFlow = true
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 16, weight: .bold))
+                            
+                            Text("Start Workout")
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 30)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(red: 0.2, green: 0.5, blue: 1.0),   // bright blue
+                                            Color(red: 0.1, green: 0.3, blue: 0.8)    // deeper blue
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        )
+                    }
                 }
             }
             .padding(24)

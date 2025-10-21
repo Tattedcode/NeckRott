@@ -9,6 +9,7 @@ import FamilyControls
 import SwiftUI
 
 struct HomeView: View {
+    @Binding var selectedTab: RootTab
     @StateObject var viewModel = HomeViewModel()
     @State var isShowingExerciseTimer = false
     @State var isInstructionsExpanded = false
@@ -17,6 +18,9 @@ struct HomeView: View {
     @State var shouldCelebrate = false
     @State var lastPresentedAchievement: MonthlyAchievement?
     @State var flamePulse = false
+    
+    // Timer to update countdown display every 10 seconds
+    let timer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -72,6 +76,10 @@ struct HomeView: View {
         } message: {
             Text(viewModel.lockedAlertMessage)
         }
+        .onReceive(timer) { _ in
+            // Update time slot statuses to refresh countdown timer display
+            viewModel.updateTimeSlotStatuses()
+        }
     }
 
     private var headerTitle: some View {
@@ -117,5 +125,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    HomeView(selectedTab: .constant(.home))
 }

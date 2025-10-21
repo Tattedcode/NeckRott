@@ -73,6 +73,35 @@ final class ExerciseStore: ObservableObject {
         }
     }
     
+    /// Get the most recent completion time for a specific time slot today
+    func lastCompletionTime(for slot: ExerciseTimeSlot, on date: Date = Date()) -> Date? {
+        let calendar = Calendar.current
+        return completions
+            .filter { calendar.isDate($0.completedAt, inSameDayAs: date) && $0.timeSlot == slot }
+            .map { $0.completedAt }
+            .max()
+    }
+    
+    /// Check if enough time has passed since last completion (for cooldown periods)
+    func canStartSlot(_ slot: ExerciseTimeSlot, cooldownMinutes: Int = 60, on date: Date = Date()) -> (canStart: Bool, timeRemaining: TimeInterval?) {
+        guard let lastCompletion = lastCompletionTime(for: slot, on: date) else {
+            // No completion yet today, can start
+            return (true, nil)
+        }
+        
+        let cooldownSeconds = TimeInterval(cooldownMinutes * 60)
+        let timeSinceLastCompletion = date.timeIntervalSince(lastCompletion)
+        
+        if timeSinceLastCompletion >= cooldownSeconds {
+            // Cooldown period has passed
+            return (true, nil)
+        } else {
+            // Still in cooldown
+            let timeRemaining = cooldownSeconds - timeSinceLastCompletion
+            return (false, timeRemaining)
+        }
+    }
+    
     /// Get all completed time slots for a specific date
     func completedTimeSlots(for date: Date = Date()) -> Set<ExerciseTimeSlot> {
         let calendar = Calendar.current
