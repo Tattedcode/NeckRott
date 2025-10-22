@@ -13,8 +13,8 @@ struct SummaryCard: View {
     let systemIcon: String
     let accentColor: Color
 
-    private var textPrimary: Color { .white }
-    private var secondaryText: Color { .white.opacity(0.7) }
+    private var textPrimary: Color { .black }
+    private var secondaryText: Color { .black.opacity(0.7) }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -24,7 +24,7 @@ struct SummaryCard: View {
                 .overlay(
                     Image(systemName: systemIcon)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 )
             Text(title)
                 .font(.system(size: 12, weight: .semibold))

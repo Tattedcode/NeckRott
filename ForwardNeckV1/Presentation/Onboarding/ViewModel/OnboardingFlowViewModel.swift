@@ -13,16 +13,12 @@ final class OnboardingFlowViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var currentScreen: Int
-    @Published var triggerScreenTimePermission = false
-    @Published var isScreenTimePermissionGranted = false
     @Published var triggerAgeValidation = false
     @Published var triggerNotificationPermission = false
-    @Published var hasScreenTimeAlertBeenDismissed = false
     @Published var hasNotificationsAlertBeenDismissed = false
     @Published var hasReasonSelected = false
     @Published var triggerReasonValidation = false
     @Published var hasSelectedAge = false
-    @Published var hasScreenTimePermissionResponded = false
     @Published var selectedScreenTime = 0
 
     // MARK: - Dependencies
@@ -43,9 +39,6 @@ final class OnboardingFlowViewModel: ObservableObject {
     var shouldShowBackButton: Bool { currentScreen > 0 }
 
     var buttonText: String {
-        if currentScreen == 6 && hasScreenTimeAlertBeenDismissed && !isScreenTimePermissionGranted {
-            return "Permission Required"
-        }
         return screens[currentScreen].buttonText
     }
 
@@ -85,18 +78,9 @@ final class OnboardingFlowViewModel: ObservableObject {
         }
     }
 
-    func markScreenTimePermissionGranted() {
-        isScreenTimePermissionGranted = true
-        hasScreenTimeAlertBeenDismissed = true
-        hasScreenTimePermissionResponded = true
-        if currentScreen == 6 {
-            currentScreen += 1
-        }
-    }
-
     func markNotificationStepComplete() {
         hasNotificationsAlertBeenDismissed = true
-        if currentScreen == 7 {
+        if currentScreen == 5 {
             currentScreen += 1
         }
     }
@@ -125,19 +109,11 @@ final class OnboardingFlowViewModel: ObservableObject {
             Log.info("OnboardingFlow requesting age validation")
             return false
 
-        case 6:
-            if !hasScreenTimeAlertBeenDismissed {
-                triggerScreenTimePermission = true
-                Log.info("OnboardingFlow triggering Screen Time permission")
-                return false
-            }
-            if !isScreenTimePermissionGranted {
-                Log.info("OnboardingFlow continue blocked – Screen Time denied")
-                return false
-            }
+        case 4:
+            // Screen time selection - no special preconditions needed
             return true
 
-        case 7:
+        case 5:
             if !hasNotificationsAlertBeenDismissed {
                 triggerNotificationPermission = true
                 Log.info("OnboardingFlow triggering notifications permission")

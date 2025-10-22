@@ -29,7 +29,7 @@ struct AchievementsView: View {
                     } label: {
                         Text("Add 25 XP (Test)")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.blue.opacity(0.8))
@@ -40,7 +40,7 @@ struct AchievementsView: View {
                     .overlay(
                         Text("Temporary testing button for XP flow")
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(.black.opacity(0.6))
                             .padding(.top, 4), alignment: .bottom
                     )
 
@@ -78,18 +78,18 @@ struct AchievementsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.currentLevel?.title ?? "Unknown")
                         .font(.title2.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                     
                     Text(viewModel.currentLevel?.description ?? "")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.black.opacity(0.8))
                     
                     // Progress to next level
                     if let nextLevel = viewModel.nextLevel {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Progress to Level \(nextLevel.number)")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.7))
+                                .foregroundColor(.black.opacity(0.7))
                             
                             ProgressView(value: viewModel.progressToNextLevel)
                                 .progressViewStyle(LinearProgressViewStyle(tint: .white))
@@ -116,7 +116,7 @@ private extension AchievementsView {
         VStack(alignment: .leading, spacing: 16) {
             Text("Monthly Achievements")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 14) {
                 ForEach(homeViewModel.monthlyAchievements) { achievement in
@@ -160,11 +160,11 @@ struct LevelDetailSheet: View {
                     VStack(spacing: 8) {
                         Text(currentLevel?.title ?? "Unknown Level")
                             .font(.title.bold()) // Reduced from largeTitle
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         
                         Text(currentLevel?.description ?? "")
                             .font(.body) // Reduced from title3
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.black.opacity(0.8))
                             .multilineTextAlignment(.center)
                     }
                     
@@ -182,21 +182,21 @@ struct LevelDetailSheet: View {
                         HStack {
                             Text("Current Level")
                                 .font(.headline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                             Spacer()
                             Text("\(userProgress.level)")
                                 .font(.title.bold())
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                         }
                         
                         HStack {
                             Text("Total XP")
                                 .font(.headline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                             Spacer()
                             Text("\(userProgress.xp)")
                                 .font(.title.bold())
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                         }
                     }
                     .padding(16) // Reduced from 20

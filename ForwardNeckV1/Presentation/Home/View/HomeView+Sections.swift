@@ -17,8 +17,7 @@ extension HomeView {
             Image(mascotName)
                 .resizable()
                 .scaledToFit()
-                .frame(height: 180)
-                .shadow(color: Color.black.opacity(0.35), radius: 14, x: 0, y: 10)
+                .frame(height: 220)
                 .accessibilityHidden(true)
                 .onAppear {
                     Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
@@ -26,7 +25,7 @@ extension HomeView {
 
             Text("\(viewModel.healthPercentage)%")
                 .font(.system(size: 48, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
 
             VStack(spacing: 4) {
                 GeometryReader { geometry in
@@ -51,10 +50,10 @@ extension HomeView {
                 HStack(spacing: 4) {
                     Text("health")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                     Image(systemName: "info.circle")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                 }
             }
         }
@@ -66,7 +65,7 @@ extension HomeView {
     var statisticsSection: some View {
         VStack(spacing: 0) {
             Rectangle()
-                .fill(Color.white.opacity(0.3))
+                .fill(Color.black.opacity(0.2))
                 .frame(height: 1)
 
             Spacer().frame(height: 16)
@@ -75,35 +74,35 @@ extension HomeView {
                 VStack(spacing: 4) {
                     Text("neck fixes")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                         .padding(.top, 2)
                     Text("\(viewModel.neckFixesCompleted)/\(viewModel.neckFixesTarget)")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(spacing: 4) {
                     Text("record")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                         .padding(.top, 2)
                     Text("\(viewModel.recordStreak)")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity)
 
                 VStack(spacing: 4) {
                     Text("daily streak")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                         .padding(.top, 2)
 
                     HStack(spacing: 6) {
                         Text("\(viewModel.currentStreak)")
                             .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
 
                         if viewModel.currentStreak >= 1 {
                             Image(systemName: "flame.fill")
@@ -130,7 +129,7 @@ extension HomeView {
         VStack(alignment: .leading, spacing: 16) {
             Text("Today's Exercises")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
             
             VStack(spacing: 12) {
                 // Quick Workout Exercise Card
@@ -185,14 +184,16 @@ extension HomeView {
         VStack(alignment: .leading, spacing: 12) {
             Text("Previous 7 Days")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .accessibilityAddTraits(.isHeader)
+                .padding(.horizontal, 20) // Add padding to title only
 
             if viewModel.previousDayCards.isEmpty {
                 Text("Complete exercises to unlock your history ✨")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.black.opacity(0.6))
                     .padding(.vertical, 12)
+                    .padding(.horizontal, 20) // Add padding to empty state
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(spacing: 16) {
@@ -200,6 +201,7 @@ extension HomeView {
                             PreviousDayCardView(card: card)
                         }
                     }
+                    .padding(.horizontal, 20) // Add horizontal padding to content
                     .padding(.vertical, 4)
                 }
             }

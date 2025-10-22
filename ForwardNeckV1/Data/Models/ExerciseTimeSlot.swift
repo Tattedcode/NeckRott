@@ -130,13 +130,17 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
     
     /// Format time interval as countdown string (e.g., "2h 15m")
     static func formatTimeInterval(_ interval: TimeInterval) -> String {
-        let hours = Int(interval) / 3600
-        let minutes = (Int(interval) % 3600) / 60
+        let totalSeconds = Int(interval)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
         
         if hours > 0 {
             return "\(hours)h \(minutes)m"
-        } else {
+        } else if minutes > 0 {
             return "\(minutes)m"
+        } else {
+            return "\(seconds)s"
         }
     }
 }

@@ -72,7 +72,7 @@ struct RootTabView: View {
             }
             .tag(RootTab.settings)
         }
-        .tint(.white)
+        .tint(.black)
         .onAppear {
             // Configure tab bar appearance
             configureTabBarAppearance()
@@ -92,15 +92,15 @@ struct RootTabView: View {
         appearance.backgroundColor = UIColor.black.withAlphaComponent(0.8)
         
         // Configure normal state
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.white.withAlphaComponent(0.6)
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.black.withAlphaComponent(0.6)
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor.white.withAlphaComponent(0.6)
+            .foregroundColor: UIColor.black.withAlphaComponent(0.6)
         ]
         
         // Configure selected state
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.white
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.black
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor.white
+            .foregroundColor: UIColor.black
         ]
         
         // Apply appearance

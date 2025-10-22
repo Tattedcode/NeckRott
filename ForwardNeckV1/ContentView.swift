@@ -13,7 +13,7 @@ private enum OnboardingKeys {
 
 struct ContentView: View {
     @AppStorage(OnboardingKeys.hasCompleted) private var hasCompletedOnboarding = false
-//Test 
+    
     var body: some View {
         Group {
             if hasCompletedOnboarding {
@@ -26,7 +26,7 @@ struct ContentView: View {
         }
         .animation(.easeInOut, value: hasCompletedOnboarding)
         .onAppear {
-            // Reset onboarding for testing - remove this line when done
+            // Force start from onboarding for testing
             hasCompletedOnboarding = false
         }
     }

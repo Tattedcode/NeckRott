@@ -59,7 +59,7 @@ struct OnboardingReviewsView: View {
     /// Top section that mirrors the screenshot layout with title and star bar.
     private var ratingHeader: some View {
         VStack(spacing: 16) {
-            Text("give us a rating")
+            Text("How this app helps your neck")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -91,7 +91,7 @@ struct OnboardingReviewsView: View {
     /// Middle row that shows happy users and the +30,000 label.
     private var communityRow: some View {
         VStack(spacing: 12) {
-            Text("brainrot was made for people like you")
+            Text("Neckrot was made for people like you")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.white)
 
@@ -126,7 +126,7 @@ struct OnboardingReviewsView: View {
             }
             .padding(.top, 4)
 
-            Text("+30,000 brainrot users")
+            Text("+30,000 neckrot users")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white.opacity(0.7))
         }

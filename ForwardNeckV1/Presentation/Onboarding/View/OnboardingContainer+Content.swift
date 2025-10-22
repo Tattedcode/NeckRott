@@ -38,24 +38,6 @@ extension OnboardingContainer {
         case .screenTimeSelection:
             OnboardingTwo(selectedScreenTime: viewModel.binding(\.selectedScreenTime))
 
-        case .screenTimeMath:
-            OnboardingScreenTimeMath(selectedScreenTime: viewModel.selectedScreenTime)
-
-        case .screenTimePermission:
-            OnboardingFive(
-                triggerPermissionRequest: viewModel.binding(\.triggerScreenTimePermission),
-                isScreenTimePermissionGranted: viewModel.binding(\.isScreenTimePermissionGranted),
-                hasAlertBeenDismissed: viewModel.binding(\.hasScreenTimeAlertBeenDismissed),
-                hasScreenTimePermissionResponded: viewModel.binding(\.hasScreenTimePermissionResponded),
-                subtitle: viewModel.screens[6].subtitle
-            ) {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        viewModel.markScreenTimePermissionGranted()
-                    }
-                }
-            }
-
         case .notificationsPermission:
             OnboardingSix(
                 hasAlertBeenDismissed: viewModel.binding(\.hasNotificationsAlertBeenDismissed),
@@ -67,7 +49,7 @@ extension OnboardingContainer {
                         }
                     }
                 },
-                subtitle: viewModel.screens[7].subtitle
+                subtitle: viewModel.screens[5].subtitle
             )
 
         case .progressChart:
@@ -105,20 +87,20 @@ extension OnboardingContainer {
         VStack(spacing: 8) {
             Text("by continuing, you agree to our")
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.blue.opacity(0.8))
 
             HStack(spacing: 16) {
                 Button("Terms of Service") {}
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.blue)
 
                 Text("•")
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.blue.opacity(0.8))
 
                 Button("Privacy Policy") {}
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.blue)
             }
         }
     }

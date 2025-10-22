@@ -86,18 +86,23 @@ final class ExerciseStore: ObservableObject {
     func canStartSlot(_ slot: ExerciseTimeSlot, cooldownMinutes: Int = 60, on date: Date = Date()) -> (canStart: Bool, timeRemaining: TimeInterval?) {
         guard let lastCompletion = lastCompletionTime(for: slot, on: date) else {
             // No completion yet today, can start
+            Log.info("No completion found for \(slot.rawValue) today, can start")
             return (true, nil)
         }
         
         let cooldownSeconds = TimeInterval(cooldownMinutes * 60)
         let timeSinceLastCompletion = date.timeIntervalSince(lastCompletion)
         
+        Log.info("\(slot.rawValue) cooldown check: lastCompletion=\(lastCompletion), timeSince=\(timeSinceLastCompletion), cooldownSeconds=\(cooldownSeconds)")
+        
         if timeSinceLastCompletion >= cooldownSeconds {
             // Cooldown period has passed
+            Log.info("Cooldown period has passed for \(slot.rawValue)")
             return (true, nil)
         } else {
             // Still in cooldown
             let timeRemaining = cooldownSeconds - timeSinceLastCompletion
+            Log.info("Still in cooldown for \(slot.rawValue), timeRemaining=\(timeRemaining)")
             return (false, timeRemaining)
         }
     }

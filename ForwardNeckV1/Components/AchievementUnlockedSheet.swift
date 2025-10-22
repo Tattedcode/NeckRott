@@ -63,18 +63,18 @@ struct AchievementUnlockedSheet: View {
                 VStack(spacing: 8) {
                     Text(achievement.isUnlocked ? "Achievement Unlocked!" : "Achievement Goal")
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
 
                     Text(achievement.title)
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                 }
 
                 Button(action: onDismiss) {
                     Text(achievement.isUnlocked ? "Good Job!" : "Got it")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(buttonGradient)

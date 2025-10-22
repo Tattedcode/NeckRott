@@ -10,8 +10,8 @@ import SwiftUI
 extension ProgressTrackingView {
     private var cardColor: Color { Theme.cardBackground }
     private var inactiveDayColor: Color { Color.white.opacity(0.08) }
-    private var textPrimary: Color { .white }
-    private var secondaryText: Color { .white.opacity(0.7) }
+    private var textPrimary: Color { .black }
+    private var secondaryText: Color { .black.opacity(0.7) }
     private var calendarColumns: [GridItem] { Array(repeating: GridItem(.flexible(), spacing: 12), count: 7) }
     private var summaryColumns: [GridItem] { Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) }
 
@@ -19,7 +19,7 @@ extension ProgressTrackingView {
         VStack(alignment: .leading, spacing: 12) {
             Text("neck fix calendar")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
         }
     }
 
@@ -42,7 +42,7 @@ extension ProgressTrackingView {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 28)
-                .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+                .stroke(Color.black.opacity(0.15), lineWidth: 1.2)
         )
     }
 
@@ -101,7 +101,7 @@ extension ProgressTrackingView {
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
-                            .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+                            .stroke(Color.black.opacity(0.15), lineWidth: 1.2)
                     )
             }
         }
@@ -159,13 +159,13 @@ extension ProgressTrackingView {
                             Image(day.mascotAssetName)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 22, height: 22)
+                                .frame(width: 28, height: 28)
                         }
                         .padding(.vertical, 8)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(day.isToday ? 0.9 : 0), lineWidth: 2)
+                            .stroke(Color.black.opacity(day.isToday ? 0.9 : 0), lineWidth: 2)
                     )
                     .accessibilityLabel(calendarCellAccessibility(for: date, hasActivity: day.hasActivity))
             } else {

@@ -32,7 +32,7 @@ struct PreviousDayCardView: View {
                     ZStack(alignment: .trailing) {
                         Text("%")
                             .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .opacity(0)
                         
                         HStack(spacing: 0) {
@@ -40,17 +40,17 @@ struct PreviousDayCardView: View {
                             Text(valueOnly)
                                 .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
                                 .monospacedDigit()
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                                 .lineLimit(1)
                             Text("%")
                                 .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                         }
                     }
 
                     Text(card.label)
                         .font(.system(size: dateFont, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                         .lineLimit(1)
                 }
                 .padding(.trailing, 8)
@@ -62,7 +62,7 @@ struct PreviousDayCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.white.opacity(0.25), lineWidth: 1.2)
+                .stroke(Color.black.opacity(0.15), lineWidth: 1.2)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(card.label) \(card.percentageText)")

@@ -219,7 +219,23 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func resolveStatus(for slot: ExerciseTimeSlot, at date: Date) -> SlotStatus {
-        if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+        // Special handling for Quick Workout cooldown
+        if slot == .morning {
+            let cooldownCheck = exerciseStore.canStartSlot(.morning, cooldownMinutes: 60, on: date)
+            Log.info("Quick Workout cooldown check: canStart=\(cooldownCheck.canStart), timeRemaining=\(cooldownCheck.timeRemaining ?? 0)")
+            if !cooldownCheck.canStart {
+                Log.info("Quick Workout is in cooldown, returning .locked")
+                return .locked // Show as locked during cooldown
+            }
+            // If cooldown passed but there was a completion today, show as available (not completed)
+            if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+                Log.info("Quick Workout cooldown passed, returning .available")
+                return .available
+            }
+        }
+        
+        // For other slots, check completion normally
+        if slot != .morning && exerciseStore.isTimeSlotCompleted(slot, for: date) {
             return .completed
         }
 

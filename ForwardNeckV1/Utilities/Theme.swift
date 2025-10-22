@@ -8,17 +8,30 @@
 import SwiftUI
 
 enum Theme {
-    // Background gradient - deep blue gradient (219ebc → 023047) ⭐ RECOMMENDED
+    // Background gradient - Darker cream gradient ⭐ NEW
     static var backgroundGradient: LinearGradient {
-        Log.info("Theme.backgroundGradient applied (deep blue gradient - RECOMMENDED)")
+        Log.info("Theme.backgroundGradient applied (darker cream gradient - NEW)")
         return LinearGradient(
             colors: [
-                Color(red: 0.129, green: 0.620, blue: 0.737), // 219ebc - medium blue
-                Color(red: 0.008, green: 0.188, blue: 0.278)  // 023047 - dark blue
+                Color(red: 0.95, green: 0.92, blue: 0.85),   // F2EBD9 - darker cream
+                Color(red: 0.92, green: 0.88, blue: 0.80),   // EBE0CC - medium cream
+                Color(red: 0.88, green: 0.84, blue: 0.75)    // E0D6BF - warm cream
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+        
+        // BACKUP: Light cream gradient (comment out above and uncomment below to revert)
+//        Log.info("Theme.backgroundGradient applied (light cream gradient)")
+//        return LinearGradient(
+//            colors: [
+//                Color(red: 1.0, green: 0.988, blue: 0.961), // FFFCF5 - light cream
+//                Color(red: 0.98, green: 0.96, blue: 0.94),   // FAF5F0 - slightly darker cream
+//                Color(red: 0.96, green: 0.94, blue: 0.92)    // F5F0EB - warm cream
+//            ],
+//            startPoint: .topLeading,
+//            endPoint: .bottomTrailing
+//        )
         
         // BACKUP: Warm cream gradient (comment out above and uncomment below to revert)
 //        Log.info("Theme.backgroundGradient applied (warm cream gradient)")
@@ -61,14 +74,14 @@ enum Theme {
     static let gradientBrightPink: Color = Color(red: 0.478, green: 0.118, blue: 0.361)
 
     // Semi-transparent card background used across the app
-    // Light for readability on the dark background
-    static let cardBackground: Color = Color.white.opacity(0.12)
+    // Dark for readability on the light background
+    static let cardBackground: Color = Color.black.opacity(0.08)
 
     // Segmented pill states
     static let pillSelected: Color = Color.blue.opacity(0.9)
-    static let pillUnselected: Color = Color.white.opacity(0.16)
+    static let pillUnselected: Color = Color.black.opacity(0.12)
 
-    // Text colors - white for dark gradient background
-    static let primaryText: Color = .white
-    static let secondaryText: Color = Color.white.opacity(0.8)
+    // Text colors - black for light gradient background
+    static let primaryText: Color = .black
+    static let secondaryText: Color = Color.black.opacity(0.7)
 }

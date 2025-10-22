@@ -79,36 +79,16 @@ struct PlanView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Plan")
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                 
                 HStack(spacing: 8) {
                     Text("GET FIT")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                    
-                    // "Free Week" badge
-                    Text("Free Week")
-                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.black)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule()
-                                .fill(Color.yellow)
-                        )
                 }
             }
             
             Spacer()
-            
-            // Settings/filter button (top right in image)
-            Button(action: {
-                Log.debug("Filter button tapped")
-            }) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.white)
-            }
         }
         .padding(.top, 20)
     }
@@ -135,7 +115,7 @@ struct PlanView: View {
             // Day letter
             Text(dayLetters[dayIndex])
                 .font(.system(size: 18, weight: isSelected ? .bold : .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
@@ -147,7 +127,7 @@ struct PlanView: View {
             let completed = viewModel.fullWorkoutCompleted(on: date)
             Image(systemName: "checkmark")
                 .font(.system(size: 8, weight: .bold))
-                .foregroundColor(completed ? Color.green : Color.white.opacity(0.5))
+                .foregroundColor(completed ? Color.green : Color.red)
                 .frame(height: 6)
         }
     }

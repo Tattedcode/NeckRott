@@ -31,13 +31,17 @@ struct HomeView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         headerTitle
+                            .padding(.horizontal, 20)
                         mascotSection
+                            .padding(.horizontal, 20)
                         statisticsSection
+                            .padding(.horizontal, 20)
                         nextExerciseSection
+                            .padding(.horizontal, 20)
                         previousDatesSection
+                            // No horizontal padding - let it extend to screen edges
                         Spacer(minLength: 60)
                     }
-                    .padding(.horizontal, 20)
                 }
             }
 
@@ -83,9 +87,9 @@ struct HomeView: View {
     }
 
     private var headerTitle: some View {
-        Text("ForwardNeck")
+        Text("Neckrot")
             .font(.system(size: 28, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(.black)
             .padding(.top, 20)
     }
 

@@ -21,8 +21,6 @@ enum OnboardingContent {
     case reasonSelection
     case ageSelection
     case screenTimeSelection
-    case screenTimeMath
-    case screenTimePermission
     case notificationsPermission
     case progressChart
     case rewards
@@ -37,10 +35,8 @@ extension OnboardingScreen {
             OnboardingScreen(id: 2, title: "", subtitle: "", content: .ageSelection, buttonText: "continue"),
             OnboardingScreen(id: 3, title: "", subtitle: "", content: .forwardNeckInfo, buttonText: "continue"),
             OnboardingScreen(id: 4, title: "How much time do you spend scrolling daily?", subtitle: "", content: .screenTimeSelection, buttonText: "continue"),
-            OnboardingScreen(id: 5, title: "", subtitle: "", content: .screenTimeMath, buttonText: "continue"),
-            OnboardingScreen(id: 6, title: "", subtitle: "", content: .screenTimePermission, buttonText: "continue"),
-            OnboardingScreen(id: 7, title: "", subtitle: "", content: .notificationsPermission, buttonText: "continue"),
-            OnboardingScreen(id: 8, title: "", subtitle: "", content: .reviews, buttonText: "continue")
+            OnboardingScreen(id: 5, title: "", subtitle: "", content: .notificationsPermission, buttonText: "continue"),
+            OnboardingScreen(id: 6, title: "", subtitle: "", content: .reviews, buttonText: "continue")
         ]
     }
 }

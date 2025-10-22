@@ -27,7 +27,7 @@ extension OnboardingContainer {
             HStack(spacing: 8) {
                 ForEach(0..<viewModel.screens.count, id: \.self) { index in
                     Circle()
-                        .fill(index <= viewModel.currentScreen ? Color.white : Color.white.opacity(0.3))
+                        .fill(index <= viewModel.currentScreen ? Color.blue : Color.blue.opacity(0.3))
                         .frame(width: 8, height: 8)
                 }
             }
@@ -92,7 +92,7 @@ extension OnboardingContainer {
     }
 
     private var shouldShowSubtitle: Bool {
-        (viewModel.currentScreen != 4 || !viewModel.hasScreenTimeAlertBeenDismissed) &&
-        (viewModel.currentScreen != 5 || !viewModel.hasNotificationsAlertBeenDismissed)
+        // Show subtitle for all screens except notifications permission screen
+        viewModel.currentScreen != 5
     }
 }

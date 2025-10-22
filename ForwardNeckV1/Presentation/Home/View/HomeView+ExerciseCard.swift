@@ -20,7 +20,7 @@ extension HomeView {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(statusTextColor(for: status))
                     
-                    statusIcon(for: status)
+                    statusIcon(for: status, slot: slot)
                 }
                 
                 if !subtitle.isEmpty {
@@ -29,11 +29,23 @@ extension HomeView {
                         .foregroundColor(statusTextColor(for: status).opacity(0.7))
                 }
                 
-                if status == .locked, let timeUntil = slot.timeUntilAvailable() {
-                    Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.orange)
-                        .padding(.top, 4)
+                if status == .locked {
+                    if slot == .morning {
+                        // Show cooldown for Quick Workout
+                        let cooldownCheck = ExerciseStore.shared.canStartSlot(.morning, cooldownMinutes: 60)
+                        if let timeRemaining = cooldownCheck.timeRemaining {
+                            Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeRemaining))")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.red)
+                                .padding(.top, 4)
+                        }
+                    } else if let timeUntil = slot.timeUntilAvailable() {
+                        // Show time-based lock for Full Daily Workout
+                        Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.orange)
+                            .padding(.top, 4)
+                    }
                 }
                 
                 if let exercise = exercise, status != .locked {
@@ -75,13 +87,20 @@ extension HomeView {
     
     // MARK: - Status Helpers
     
-    private func statusIcon(for status: SlotStatus) -> some View {
+    @ViewBuilder
+    private func statusIcon(for status: SlotStatus, slot: ExerciseTimeSlot) -> some View {
         Group {
             switch status {
             case .locked:
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(.orange)
+                // Don't show countdown for Quick Workout, show lock for Full Daily Workout
+                if slot == .morning {
+                    // Quick Workout - don't show any icon during cooldown
+                    EmptyView()
+                } else {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.orange)
+                }
             case .available:
                 Image(systemName: "clock.fill")
                     .font(.system(size: 12))
@@ -97,9 +116,9 @@ extension HomeView {
     private func statusTextColor(for status: SlotStatus) -> Color {
         switch status {
         case .locked, .completed:
-            return .white.opacity(0.5)
+            return .black.opacity(0.7)
         case .available:
-            return .white
+            return .black
         }
     }
     
@@ -146,11 +165,11 @@ extension HomeView {
     private func cardBorder(for status: SlotStatus) -> Color {
         switch status {
         case .locked:
-            return Color.orange.opacity(0.3)
+            return Color.black.opacity(0.15)
         case .available:
-            return Color.green.opacity(0.4)
+            return Color.black.opacity(0.2)
         case .completed:
-            return Color.green.opacity(0.3)
+            return Color.black.opacity(0.15)
         }
     }
     
