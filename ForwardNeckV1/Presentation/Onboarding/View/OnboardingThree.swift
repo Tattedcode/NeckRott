@@ -26,7 +26,7 @@ struct OnboardingThree: View {
             // "Did you know?" title
             Text("Did you know?")
                 .font(.title.bold())
-                .foregroundColor(Theme.primaryText)
+                .foregroundColor(.black)
                 .multilineTextAlignment(.center)
             
             // Information cards
@@ -67,7 +67,7 @@ struct OnboardingThree: View {
             // Motivational message
             Text("we're here to help you be more mindful of these habits")
                 .font(.caption)
-                .foregroundColor(Theme.secondaryText)
+                .foregroundColor(.black.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .padding(.top, 8)
                 .opacity(showMotivationalMessage ? 1 : 0)
@@ -129,14 +129,14 @@ struct InfoCard: View {
             
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
             
             Spacer()
         }
         .padding(12)
-        .background(Color.white.opacity(0.1))
+        .background(Color.black.opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

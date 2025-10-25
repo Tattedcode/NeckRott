@@ -24,7 +24,7 @@ struct OnboardingSeven: View {
             Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 240, height: 240)
+                .frame(width: 200, height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .padding(.top, -40) // Move image up to fill gap above
@@ -32,13 +32,13 @@ struct OnboardingSeven: View {
             // Title underneath image
             Text("What's your age?")
                 .font(.title.bold())
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .multilineTextAlignment(.center)
             
             // Subtitle explaining why we need age
             Text("This will help us tailor our recommendations")
                 .font(.caption)
-                .foregroundColor(.gray)
+                .foregroundColor(.black.opacity(0.7))
                 .multilineTextAlignment(.center)
             
             // Age options with animation
@@ -123,7 +123,7 @@ struct AgeOption: View {
             HStack {
                 Text(text)
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .multilineTextAlignment(.leading)
                 
                 Spacer()
@@ -134,7 +134,7 @@ struct AgeOption: View {
                     .foregroundColor(isSelected ? .green : .blue)
             }
             .padding(12)
-            .background(isSelected ? Color.green.opacity(0.2) : Color.white.opacity(0.1))
+            .background(isSelected ? Color.green.opacity(0.3) : Color.black.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)

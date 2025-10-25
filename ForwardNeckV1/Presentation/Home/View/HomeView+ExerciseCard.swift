@@ -50,7 +50,7 @@ extension HomeView {
                 
                 if let exercise = exercise, status != .locked {
                     Text(exercise.description)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(statusTextColor(for: status).opacity(0.7))
                         .lineLimit(1)
                 }
@@ -202,7 +202,7 @@ extension HomeView {
                 } label: {
                     HStack(spacing: 6) {
                         Text("Instructions")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .semibold))
@@ -240,7 +240,7 @@ extension HomeView {
                 .accessibilityLabel("Start \(exercise.title)")
 
                 Text("Start")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
             }
             .frame(width: 90, alignment: .top)

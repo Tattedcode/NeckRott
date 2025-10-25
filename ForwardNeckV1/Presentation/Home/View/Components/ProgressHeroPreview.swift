@@ -35,11 +35,11 @@ struct ProgressHeroPreview: View {
     private func progressRow(label: String, value: String, color: Color) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.8))
             Spacer()
             Text(value)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.white)
         }
         .padding(.vertical, 4)

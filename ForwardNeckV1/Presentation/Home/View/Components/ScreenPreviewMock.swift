@@ -41,7 +41,7 @@ struct ScreenPreviewMock<Content: View>: View {
             .onAppear { Log.info("ScreenPreviewMock appeared for \(title)") }
 
             Text(title.uppercased())
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(.white.opacity(0.7))
                 .kerning(1.2)
         }

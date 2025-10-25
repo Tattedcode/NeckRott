@@ -57,10 +57,10 @@ struct WidgetSetupSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text("widget setup")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Theme.primaryText)
                 Text("follow the quick guide to add the ForwardNeck widget")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14))
                     .foregroundColor(Theme.secondaryText)
             }
 
@@ -71,7 +71,7 @@ struct WidgetSetupSheet: View {
                 onDone()
             }) {
                 Text(isConfigured ? "done" : "mark done")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.cyan)
             }
             .buttonStyle(.plain)
@@ -92,7 +92,7 @@ struct WidgetSetupSheet: View {
                     WidgetPreviewImage()
 
                     Text("add brain health widget")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Theme.primaryText)
                 }
                 .padding()
@@ -107,10 +107,10 @@ struct WidgetSetupSheet: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(step.title)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(Theme.primaryText)
                         Text(step.body)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 13))
                             .foregroundColor(Theme.secondaryText)
                     }
                 }
@@ -130,15 +130,15 @@ struct WidgetSetupSheet: View {
     private var tipCard: some View {
         HStack(spacing: 14) {
             Image(systemName: "lightbulb.fill")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.yellow)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("tip")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.yellow)
                 Text("the widget updates throughout the day to reflect your latest neck health progress")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13))
                     .foregroundColor(Theme.secondaryText)
             }
         }
@@ -156,7 +156,7 @@ struct WidgetSetupSheet: View {
                 .fill(Color.blue.opacity(0.35))
                 .frame(width: 34, height: 34)
             Text("\(number)")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundColor(Color.blue)
         }
     }
@@ -175,7 +175,7 @@ private struct WidgetPreviewImage: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Theme.cardBackground.opacity(0.4))
                 Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 48, weight: .medium))
+                    .font(.system(size: 48))
                     .foregroundColor(.white.opacity(0.75))
             }
             .frame(width: 240, height: 160)

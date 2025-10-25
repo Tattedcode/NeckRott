@@ -24,16 +24,16 @@ struct ExerciseDetailView: View {
                     VStack(spacing: 12) {
                         Image(systemName: exercise.iconSystemName)
                             .font(.system(size: 60))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         
                         Text(exercise.title)
                             .font(.largeTitle.bold())
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .multilineTextAlignment(.center)
                         
                         Text(exercise.description)
                             .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.black.opacity(0.8))
                             .multilineTextAlignment(.center)
                         
                         // Difficulty badge
@@ -43,7 +43,7 @@ struct ExerciseDetailView: View {
                                 .frame(width: 8, height: 8)
                             Text(exercise.difficulty.rawValue)
                                 .font(.caption.bold())
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -55,7 +55,7 @@ struct ExerciseDetailView: View {
                     VStack(spacing: 16) {
                         Text("Timer")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         
                         ZStack {
                             Circle()
@@ -71,11 +71,11 @@ struct ExerciseDetailView: View {
                             VStack {
                                 Text(timer.timeRemainingString)
                                     .font(.title.bold())
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .monospacedDigit()
                                 Text("remaining")
                                     .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(.black.opacity(0.7))
                             }
                         }
                         
@@ -84,7 +84,7 @@ struct ExerciseDetailView: View {
                             Button(action: timer.reset) {
                                 Image(systemName: "arrow.clockwise")
                                     .font(.title2)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .frame(width: 44, height: 44)
                                     .background(Theme.cardBackground)
                                     .clipShape(Circle())
@@ -93,7 +93,7 @@ struct ExerciseDetailView: View {
                             Button(action: timer.isRunning ? timer.pause : timer.start) {
                                 Image(systemName: timer.isRunning ? "pause.fill" : "play.fill")
                                     .font(.title)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .frame(width: 60, height: 60)
                                     .background(LinearGradient(colors: [Color.blue, Color.pink], startPoint: .leading, endPoint: .trailing))
                                     .clipShape(Circle())
@@ -108,20 +108,20 @@ struct ExerciseDetailView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Instructions")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                         
                         ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
                             HStack(alignment: .top, spacing: 12) {
                                 Text("\(index + 1)")
                                     .font(.caption.bold())
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .frame(width: 24, height: 24)
                                     .background(Theme.pillSelected)
                                     .clipShape(Circle())
                                 
                                 Text(instruction)
                                     .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.9))
+                                    .foregroundColor(.black.opacity(0.9))
                                     .multilineTextAlignment(.leading)
                                 
                                 Spacer()
@@ -140,7 +140,7 @@ struct ExerciseDetailView: View {
                                 Text("Mark as Complete")
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.vertical, 16)
                             .frame(maxWidth: .infinity)
                             .background(LinearGradient(colors: [Color.blue, Color.pink], startPoint: .leading, endPoint: .trailing))

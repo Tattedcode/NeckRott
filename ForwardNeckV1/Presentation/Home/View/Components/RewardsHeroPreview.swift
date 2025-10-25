@@ -43,10 +43,10 @@ struct RewardsHeroPreview: View {
                         .foregroundColor(.white)
                 )
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12))
                 .foregroundColor(.white.opacity(0.75))
             Text(value)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.white)
         }
         .frame(maxWidth: .infinity)
@@ -58,7 +58,7 @@ struct RewardsHeroPreview: View {
     private func progressMeter(title: String, progress: Double) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 12))
                 .foregroundColor(.white.opacity(0.7))
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 12)

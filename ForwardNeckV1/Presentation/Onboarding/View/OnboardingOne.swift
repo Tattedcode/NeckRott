@@ -112,7 +112,7 @@ struct FirstScreenTypewriterView: View {
                         // Animation complete
                     }
                 )
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .lineSpacing(10)
@@ -130,7 +130,7 @@ struct PhoneMockupView: View {
         Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
             .resizable()
             .aspectRatio(contentMode: .fit)
-                .frame(width: 240, height: 240)
+                .frame(width: 200, height: 200)
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
     }

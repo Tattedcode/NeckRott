@@ -50,10 +50,10 @@ extension ProgressTrackingView {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(viewModel.monthTitle) Summary")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(textPrimary)
                 Text("Stats reset at the start of each month")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12))
                     .foregroundColor(secondaryText)
             }
 
@@ -83,12 +83,12 @@ extension ProgressTrackingView {
     var dailySummarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Last 7 Days Summary")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(textPrimary)
 
             if viewModel.dailySummary.isEmpty {
                 Text("No exercise data yet.")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14))
                     .foregroundColor(secondaryText)
                     .padding(.vertical, 24)
                     .frame(maxWidth: .infinity)
@@ -114,7 +114,7 @@ extension ProgressTrackingView {
             }
             Spacer(minLength: 12)
             Text(viewModel.monthTitle)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(textPrimary)
             Spacer(minLength: 12)
             Button(action: { viewModel.moveMonth(by: 1) }) {
@@ -129,7 +129,7 @@ extension ProgressTrackingView {
             .frame(width: 44, height: 44)
             .overlay(
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(textPrimary)
             )
     }
@@ -138,7 +138,7 @@ extension ProgressTrackingView {
         HStack(spacing: 12) {
             ForEach(viewModel.weekdaySymbols, id: \.self) { symbol in
                 Text(symbol)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(secondaryText)
                     .frame(maxWidth: .infinity)
             }
@@ -154,7 +154,7 @@ extension ProgressTrackingView {
                     .overlay(
                         VStack(spacing: 6) {
                             Text("\(dayNumber)")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(textPrimary)
                             Image(day.mascotAssetName)
                                 .resizable()

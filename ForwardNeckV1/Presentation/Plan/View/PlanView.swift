@@ -79,12 +79,12 @@ struct PlanView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Plan")
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(.black)
+                    .foregroundColor(.white)
                 
                 HStack(spacing: 8) {
                     Text("GET FIT")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.black)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
                 }
             }
             
@@ -114,8 +114,8 @@ struct PlanView: View {
         return VStack(spacing: 8) {
             // Day letter
             Text(dayLetters[dayIndex])
-                .font(.system(size: 18, weight: isSelected ? .bold : .semibold))
-                .foregroundColor(.black)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.white)
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
@@ -143,7 +143,7 @@ struct PlanView: View {
                 HStack(spacing: 16) {
                     // Body icon
                     Image(systemName: "figure.stand")
-                        .font(.system(size: 40, weight: .semibold))
+                        .font(.system(size: 40, weight: .bold))
                         .foregroundColor(Theme.gradientBrightPink)
                         .frame(width: 60, height: 60)
                     
@@ -153,7 +153,7 @@ struct PlanView: View {
                             .foregroundColor(.white)
                         
                         Text("Monday")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(size: 15))
                             .foregroundColor(.white.opacity(0.6))
                     }
                     
@@ -173,7 +173,7 @@ struct PlanView: View {
                 // Description with "more" button
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Scientifically proven to provide the best results in the shortest possible time. This HIIT classic ha")
-                        .font(.system(size: 15, weight: .regular))
+                        .font(.system(size: 15))
                         .foregroundColor(.white.opacity(0.8))
                         .lineLimit(isDescriptionExpanded ? nil : 2)
                     
@@ -181,7 +181,7 @@ struct PlanView: View {
                         isDescriptionExpanded.toggle()
                     }) {
                         Text(isDescriptionExpanded ? "less" : "more")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
@@ -282,7 +282,7 @@ struct PlanView: View {
             
             // Exercise name
             Text(exercise.title)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.system(size: 17, weight: .bold))
                 .foregroundColor(.white)
             
             Spacer()

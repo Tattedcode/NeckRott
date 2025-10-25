@@ -38,7 +38,7 @@ struct DailySummaryChart: View {
                 HStack {
                     ForEach(entries) { entry in
                         Text("\(entry.count)")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.black.opacity(0.85))
                             .frame(maxWidth: .infinity)
                     }
@@ -138,7 +138,7 @@ struct DailySummaryChart: View {
                 HStack {
                     ForEach(entries) { entry in
                         Text(entry.label)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 12))
                             .foregroundColor(.black.opacity(0.8))
                             .frame(maxWidth: .infinity)
                     }

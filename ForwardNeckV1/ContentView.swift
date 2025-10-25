@@ -26,7 +26,7 @@ struct ContentView: View {
         }
         .animation(.easeInOut, value: hasCompletedOnboarding)
         .onAppear {
-            // Force start from onboarding for testing
+            // Force start from first onboarding view for testing
             hasCompletedOnboarding = false
         }
     }

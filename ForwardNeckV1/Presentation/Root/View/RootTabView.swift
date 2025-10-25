@@ -19,6 +19,7 @@ enum RootTab: String, CaseIterable, Hashable {
 
 struct RootTabView: View {
     @State private var selection: RootTab = .home
+    @StateObject private var levelUpManager = LevelUpManager.shared
 
     var body: some View {
         TabView(selection: $selection) {
@@ -81,6 +82,15 @@ struct RootTabView: View {
         .onChange(of: selection) { oldValue, newValue in
             // Log tab changes for debugging
             Log.info("Tab changed from \(oldValue.rawValue) to \(newValue.rawValue)")
+        }
+        .sheet(isPresented: $levelUpManager.showLevelUpSheet) {
+            if let level = levelUpManager.currentLevelUp {
+                LevelUpSheet(level: level) {
+                    levelUpManager.dismissLevelUpSheet()
+                }
+                .presentationDetents([.fraction(0.8)])
+                .presentationDragIndicator(.visible)
+            }
         }
     }
     

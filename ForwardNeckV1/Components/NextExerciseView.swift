@@ -34,7 +34,7 @@ struct NextExerciseView: View {
                     // Exercise title
                     Text(exercise.title)
                         .font(.title2.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                     
                     // Large circular countdown timer

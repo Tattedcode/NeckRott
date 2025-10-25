@@ -23,11 +23,11 @@ struct SummaryCard: View {
                 .frame(width: 28, height: 28)
                 .overlay(
                     Image(systemName: systemIcon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.black)
                 )
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundColor(secondaryText)
             Text(value)
                 .font(.system(size: 22, weight: .bold))

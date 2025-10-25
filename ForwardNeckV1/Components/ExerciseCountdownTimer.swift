@@ -63,11 +63,11 @@ struct ExerciseCountdownTimer: View {
                 VStack(spacing: 4) {
                     Text(timeString)
                         .font(.title.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                     
                     Text("remaining")
                         .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.black.opacity(0.7))
                 }
             }
             
@@ -80,7 +80,7 @@ struct ExerciseCountdownTimer: View {
                             Image(systemName: "play.fill")
                             Text("Start")
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                         .background(Color.green)
@@ -95,7 +95,7 @@ struct ExerciseCountdownTimer: View {
                                 Image(systemName: isPaused ? "play.fill" : "pause.fill")
                                 Text(isPaused ? "Resume" : "Pause")
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
@@ -109,7 +109,7 @@ struct ExerciseCountdownTimer: View {
                                 Image(systemName: "arrow.clockwise")
                                 Text("Reset")
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
@@ -123,7 +123,7 @@ struct ExerciseCountdownTimer: View {
                                 Image(systemName: "stop.fill")
                                 Text("Cancel")
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)

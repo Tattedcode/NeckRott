@@ -34,11 +34,11 @@ struct SettingsHeroPreview: View {
     private func settingsRow(icon: String, title: String, value: String) -> some View {
         HStack {
             Label(title, systemImage: icon)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 14))
                 .foregroundColor(.white)
             Spacer()
             Text(value)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(Color.white.opacity(0.8))
         }
         .padding(.vertical, 6)

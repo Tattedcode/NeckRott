@@ -19,10 +19,10 @@ struct ExerciseListView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "figure.strengthtraining.functional")
                         .font(.system(size: 60))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.black.opacity(0.6))
                     Text("Loading exercises...")
                         .font(.headline)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.black.opacity(0.8))
                 }
             } else {
                 ScrollView {
@@ -71,12 +71,12 @@ struct ExerciseRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(exercise.title)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .multilineTextAlignment(.leading)
                 
                 Text(exercise.description)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.black.opacity(0.7))
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
                 
@@ -88,7 +88,7 @@ struct ExerciseRowView: View {
                         Text(exercise.durationLabel)
                             .font(.caption)
                     }
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.8))
                     
                     // Difficulty
                     HStack(spacing: 4) {
@@ -98,7 +98,7 @@ struct ExerciseRowView: View {
                         Text(exercise.difficulty.rawValue)
                             .font(.caption)
                     }
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.black.opacity(0.8))
                 }
             }
             
@@ -107,7 +107,7 @@ struct ExerciseRowView: View {
             // Chevron
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(.black.opacity(0.5))
         }
         .padding(16)
         .background(Theme.cardBackground)

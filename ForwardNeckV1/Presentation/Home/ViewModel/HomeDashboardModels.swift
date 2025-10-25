@@ -41,6 +41,7 @@ enum MonthlyAchievementKind: String, CaseIterable, Hashable, Codable {
     case dailyStreakStarted
     case fifteenDayStreak
     case fullMonthStreak
+    case weeklyStreak
 }
 
 extension MonthlyAchievementKind {
@@ -53,6 +54,7 @@ extension MonthlyAchievementKind {
         case .dailyStreakStarted: return "Daily Streak Started"
         case .fifteenDayStreak: return "15 Day Streak"
         case .fullMonthStreak: return "Full Month Streak"
+        case .weeklyStreak: return "Weekly Streak"
         }
     }
 
@@ -72,6 +74,8 @@ extension MonthlyAchievementKind {
             return "tencompleted"
         case .twentyCompleted:
             return "twentycompleted"
+        case .weeklyStreak:
+            return "weeklystreak"
         }
     }
 

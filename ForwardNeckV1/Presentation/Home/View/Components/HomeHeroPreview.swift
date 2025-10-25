@@ -14,16 +14,16 @@ struct HomeHeroPreview: View {
 
             VStack(spacing: 16) {
                 Text("ForwardNeck")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
 
                 HStack(alignment: .center, spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("neck health")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white.opacity(0.7))
                         Text("87%")
-                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                            .font(.system(size: 34, weight: .bold))
                             .foregroundColor(.white)
                     }
 
@@ -52,7 +52,7 @@ struct HomeHeroPreview: View {
     private func summaryTile(title: String, value: String) -> some View {
         VStack(spacing: 6) {
             Text(title.uppercased())
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 10))
                 .foregroundColor(.white.opacity(0.7))
             Text(value)
                 .font(.system(size: 18, weight: .bold))

@@ -62,7 +62,7 @@ struct AchievementUnlockedSheet: View {
 
                 VStack(spacing: 8) {
                     Text(achievement.isUnlocked ? "Achievement Unlocked!" : "Achievement Goal")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.black)
 
                     Text(achievement.title)

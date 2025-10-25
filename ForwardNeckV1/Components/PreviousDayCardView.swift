@@ -31,25 +31,25 @@ struct PreviousDayCardView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     ZStack(alignment: .trailing) {
                         Text("%")
-                            .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                            .font(.system(size: percentageFont, weight: .bold))
                             .foregroundColor(.black)
                             .opacity(0)
                         
                         HStack(spacing: 0) {
                             Spacer()
                             Text(valueOnly)
-                                .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                                .font(.system(size: percentageFont, weight: .bold))
                                 .monospacedDigit()
                                 .foregroundColor(.black)
                                 .lineLimit(1)
                             Text("%")
-                                .font(.system(size: percentageFont, weight: .heavy, design: .rounded))
+                                .font(.system(size: percentageFont, weight: .bold))
                                 .foregroundColor(.black)
                         }
                     }
 
                     Text(card.label)
-                        .font(.system(size: dateFont, weight: .medium))
+                        .font(.system(size: dateFont))
                         .foregroundColor(.black.opacity(0.7))
                         .lineLimit(1)
                 }

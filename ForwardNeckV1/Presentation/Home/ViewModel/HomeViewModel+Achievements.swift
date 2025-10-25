@@ -51,6 +51,8 @@ extension HomeViewModel {
                     return currentPostureStreak >= 15
                 case .fullMonthStreak:
                     return currentPostureStreak >= 30
+                case .weeklyStreak:
+                    return currentPostureStreak >= 7
                 case .tenCompleted:
                     return totalCompletions >= 10
                 case .twentyCompleted:

@@ -6,24 +6,35 @@ struct OnboardingReviewsView: View {
     private let reviews: [Review] = [
         Review(
             id: "aaron",
-            name: "aaron",
-            quote: "the amount of time i've saved by brainrotting less is insane. i reduced my screen time by 40%!"
+            name: "Aaron",
+            quote: "My neck pain is gone after just 2 weeks! The quick workouts actually work."
         ),
         Review(
             id: "karina",
-            name: "karina",
-            quote: "i've been sleeping better since i started using brainrot to limit my scrolling! i block apps that i don't want to use in the evenings."
+            name: "Karina",
+            quote: "I love tracking my progress. Seeing my streaks motivates me to stay consistent."
+        ),
+        Review(
+            id: "mike",
+            name: "Mike",
+            quote: "Finally found something that fits my busy schedule. 2 minutes and I'm done!"
         )
     ]
 
     @State private var showHeader = false
     @State private var visibleReviewCount = 0
+    @State private var showStats = false
 
     var body: some View {
         VStack(spacing: 28) {
             ratingHeader
                 .opacity(showHeader ? 1 : 0)
                 .offset(y: showHeader ? 0 : 20)
+
+            // Statistics Section
+            statisticsSection
+                .opacity(showStats ? 1 : 0)
+                .offset(y: showStats ? 0 : 20)
 
             communityRow
 
@@ -44,10 +55,17 @@ struct OnboardingReviewsView: View {
             withAnimation(.easeOut(duration: 0.5)) {
                 showHeader = true
             }
+            
+            // Show stats after header
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    showStats = true
+                }
+            }
 
             // Stagger in the review cards so the screen feels alive.
             reviews.indices.forEach { index in
-                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.25) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.25 + 0.6) {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         visibleReviewCount = index + 1
                     }
@@ -61,7 +79,7 @@ struct OnboardingReviewsView: View {
         VStack(spacing: 16) {
             Text("How this app helps your neck")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -88,12 +106,47 @@ struct OnboardingReviewsView: View {
         }
     }
 
+    /// Statistics section showing impressive numbers
+    private var statisticsSection: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 20) {
+                StatCard(
+                    number: "60%",
+                    label: "Less neck pain",
+                    subtitle: "in 2 weeks"
+                )
+                
+                StatCard(
+                    number: "2 min",
+                    label: "Daily workouts",
+                    subtitle: "quick & effective"
+                )
+            }
+            
+            HStack(spacing: 20) {
+                StatCard(
+                    number: "10K+",
+                    label: "Happy users",
+                    subtitle: "worldwide"
+                )
+                
+                StatCard(
+                    number: "4.8★",
+                    label: "App rating",
+                    subtitle: "on App Store"
+                )
+            }
+        }
+        .padding(.horizontal, 8)
+    }
+    
     /// Middle row that shows happy users and the +30,000 label.
     private var communityRow: some View {
         VStack(spacing: 12) {
-            Text("Neckrot was made for people like you")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.white)
+            Text("Join thousands of users improving their neck health")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
 
             HStack(spacing: -16) {
                 // Use real portraits from assets for community avatars
@@ -127,8 +180,8 @@ struct OnboardingReviewsView: View {
             .padding(.top, 4)
 
             Text("+30,000 neckrot users")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
+                .font(.system(size: 14))
+                .foregroundColor(.black.opacity(0.7))
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -142,6 +195,39 @@ private extension OnboardingReviewsView {
         let name: String
         let quote: String
     }
+    
+    /// Statistics card component
+    struct StatCard: View {
+        let number: String
+        let label: String
+        let subtitle: String
+        
+        var body: some View {
+            VStack(spacing: 4) {
+                Text(number)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.black)
+                
+                Text(label)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.black)
+                
+                Text(subtitle)
+                    .font(.system(size: 10))
+                    .foregroundColor(.black.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+            )
+        }
+    }
 
     /// Card that mimics the rounded testimonial blocks from the mockup.
     struct ReviewCard: View {
@@ -151,6 +237,7 @@ private extension OnboardingReviewsView {
             switch review.id {
             case "aaron": return "portrait1"
             case "karina": return "portrait2"
+            case "mike": return "portrait3"
             default: return "portrait4" // spare portrait if more reviews are added
             }
         }
@@ -177,8 +264,8 @@ private extension OnboardingReviewsView {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         Text(review.name)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black)
 
                         HStack(spacing: 2) {
                             ForEach(0..<5) { _ in
@@ -191,14 +278,14 @@ private extension OnboardingReviewsView {
 
                     Text(review.quote)
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(.black.opacity(0.85))
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer()
             }
             .padding(18)
-            .background(Color.white.opacity(0.12))
+            .background(Color.black.opacity(0.15))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 6)
             .accessibilityElement(children: .ignore)

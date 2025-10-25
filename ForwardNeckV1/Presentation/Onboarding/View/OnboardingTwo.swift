@@ -52,7 +52,7 @@ struct OnboardingTwo: View {
             Image(MascotAssetProvider.resolvedMascotName(for: mascotImage))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 240, height: 240)
+                .frame(width: 200, height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .animation(.easeInOut(duration: 0.3), value: mascotImage)
@@ -61,7 +61,7 @@ struct OnboardingTwo: View {
             Text(screenTimeText)
                 .font(.largeTitle)
                 .fontWeight(.bold)
-                .foregroundColor(Theme.primaryText)
+                .foregroundColor(.black)
             
             // Slider with 3 discrete options
             VStack(spacing: 8) {

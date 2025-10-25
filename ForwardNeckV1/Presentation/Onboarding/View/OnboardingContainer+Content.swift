@@ -14,6 +14,12 @@ extension OnboardingContainer {
         case .phoneMockup:
             PhoneMockupView()
 
+        case .videoDemo:
+            OnboardingVideoDemo()
+
+        case .featureHighlights:
+            OnboardingFeatures()
+
         case .forwardNeckInfo:
             OnboardingThree()
 
@@ -49,7 +55,7 @@ extension OnboardingContainer {
                         }
                     }
                 },
-                subtitle: viewModel.screens[5].subtitle
+                subtitle: viewModel.screens[7].subtitle
             )
 
         case .progressChart:
@@ -78,8 +84,17 @@ extension OnboardingContainer {
                     )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                .scaleEffect(1.0)
         }
         .buttonStyle(.plain)
+        .scaleEffect(1.0)
+        .onTapGesture {
+            // Add press animation
+            withAnimation(.easeInOut(duration: 0.1)) {
+                // Scale effect handled by button style
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.continueButtonColors)
     }
 
     @ViewBuilder
@@ -106,8 +121,11 @@ extension OnboardingContainer {
     }
 
     private func handleContinueTapped() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        withAnimation(.easeInOut(duration: 0.3)) {
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             viewModel.advance(onComplete: onComplete)
         }
     }

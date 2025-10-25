@@ -107,7 +107,7 @@ struct WorkoutFlowView: View {
                                 .foregroundColor(.white.opacity(0.8))
                             
                             Text(instruction)
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 16))
                                 .foregroundColor(.white.opacity(0.8))
                         }
                     }
@@ -141,7 +141,7 @@ struct WorkoutFlowView: View {
             if let nextExercise = viewModel.nextExercise {
                 VStack(spacing: 8) {
                     Text("Next up")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white.opacity(0.6))
                     
                     Text(nextExercise.title)
@@ -158,7 +158,7 @@ struct WorkoutFlowView: View {
         VStack(spacing: 16) {
             // Progress text
             Text("Exercise \(viewModel.currentExerciseIndex + 1) of \(exercises.count)")
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white.opacity(0.8))
             
             // Progress bar

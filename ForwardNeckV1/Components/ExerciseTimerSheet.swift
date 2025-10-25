@@ -18,19 +18,19 @@ struct ExerciseTimerSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(exercise.title)
                         .font(.title2.bold())
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                     Text(exercise.description)
                         .font(.body.bold())
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.black.opacity(0.8))
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Steps")
-                        .font(.headline.bold())
-                        .foregroundColor(.white)
+                        .font(.headline)
+                        .foregroundColor(.black)
                     ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
                         Text("\(index + 1). \(instruction)")
-                            .foregroundColor(.white.opacity(0.85))
+                            .foregroundColor(.black.opacity(0.85))
                     }
                 }
                 

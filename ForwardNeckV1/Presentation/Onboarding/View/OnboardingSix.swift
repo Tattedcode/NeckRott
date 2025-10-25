@@ -32,7 +32,7 @@ struct OnboardingSix: View {
             Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 240, height: 240)
+                .frame(width: 200, height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .padding(.top, -40) // Move image up to fill gap above
@@ -40,13 +40,13 @@ struct OnboardingSix: View {
             // Title
             Text("Notifications")
                 .font(.title.bold())
-                .foregroundColor(Theme.primaryText)
+                .foregroundColor(.black)
                 .multilineTextAlignment(.center)
             
             // Subtitle
             Text("Allow us to remind you of your neck")
                 .font(.subheadline)
-                .foregroundColor(Theme.secondaryText)
+                .foregroundColor(.black.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
             
@@ -63,7 +63,7 @@ struct OnboardingSix: View {
                     .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08), value: showCards[index])
                 }
             }
-            .background(Color.white.opacity(0.1)) // Background for the single container
+            .background(Color.black.opacity(0.15)) // Background for the single container
             .clipShape(RoundedRectangle(cornerRadius: 12)) // Rounded corners for the single container
         }
         
@@ -151,11 +151,11 @@ struct NotificationFeatureCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundColor(Theme.primaryText)
+                    .foregroundColor(.black)
                 
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(Theme.secondaryText)
+                    .foregroundColor(.black.opacity(0.7))
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
