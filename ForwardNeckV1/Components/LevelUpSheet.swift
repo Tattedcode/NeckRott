@@ -24,17 +24,20 @@ struct LevelUpSheet: View {
             VStack(spacing: 30) {
                 Spacer()
                 
-                // Level Icon with Animation
+                // Level Image with Animation
                 ZStack {
+                    // Background circle
                     Circle()
                         .fill(level.color.opacity(0.2))
-                        .frame(width: 120, height: 120)
+                        .frame(width: 140, height: 140)
                         .scaleEffect(showConfetti ? 1.1 : 1.0)
                         .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showConfetti)
                     
-                    Image(systemName: level.iconSystemName)
-                        .font(.system(size: 50, weight: .bold))
-                        .foregroundColor(level.color)
+                    // Level achievement image
+                    Image(levelImageName(for: level.number))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 110, height: 110)
                         .scaleEffect(showConfetti ? 1.2 : 1.0)
                         .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showConfetti)
                 }
@@ -176,6 +179,14 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Helper Functions
+
+private func levelImageName(for level: Int) -> String {
+    // Ensure level is within valid range (1-20)
+    let clampedLevel = max(1, min(level, 20))
+    return "level\(clampedLevel)"
 }
 
 #Preview {

@@ -221,7 +221,7 @@ final class HomeViewModel: ObservableObject {
     private func resolveStatus(for slot: ExerciseTimeSlot, at date: Date) -> SlotStatus {
         // Special handling for Quick Workout cooldown
         if slot == .morning {
-            let cooldownCheck = exerciseStore.canStartSlot(.morning, cooldownMinutes: 60, on: date)
+            let cooldownCheck = exerciseStore.canStartSlot(.morning, cooldownMinutes: 30, on: date)
             Log.info("Quick Workout cooldown check: canStart=\(cooldownCheck.canStart), timeRemaining=\(cooldownCheck.timeRemaining ?? 0)")
             if !cooldownCheck.canStart {
                 Log.info("Quick Workout is in cooldown, returning .locked")
