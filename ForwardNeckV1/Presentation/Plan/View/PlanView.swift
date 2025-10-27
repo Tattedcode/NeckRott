@@ -79,12 +79,12 @@ struct PlanView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Plan")
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                 
                 HStack(spacing: 8) {
                     Text("GET FIT")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
             }
             
@@ -115,11 +115,11 @@ struct PlanView: View {
             // Day letter
             Text(dayLetters[dayIndex])
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
                 .frame(width: 44, height: 44)
                 .background(
                     Circle()
-                        .fill(isSelected ? Color.white.opacity(0.3) : Color.clear)
+                        .fill(isSelected ? Color.black.opacity(0.1) : Color.clear)
                 )
             
             // Status tick below (green if completed, gray if missed)

@@ -31,8 +31,8 @@ extension HomeView {
                 
                 if status == .locked {
                     if slot == .morning {
-                        // Show cooldown for Quick Workout
-                        let cooldownCheck = ExerciseStore.shared.canStartSlot(.morning, cooldownMinutes: 60)
+                        // Show cooldown for Quick Workout (30 minutes)
+                        let cooldownCheck = ExerciseStore.shared.canStartSlot(.morning, cooldownMinutes: 30)
                         if let timeRemaining = cooldownCheck.timeRemaining {
                             Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeRemaining))")
                                 .font(.system(size: 11, weight: .semibold))

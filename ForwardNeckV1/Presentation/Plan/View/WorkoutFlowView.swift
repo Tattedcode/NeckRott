@@ -65,11 +65,11 @@ struct WorkoutFlowView: View {
             Button(action: onCancel) {
                 Image(systemName: "xmark")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .frame(width: 44, height: 44)
                     .background(
                         Circle()
-                            .fill(Color.white.opacity(0.2))
+                            .fill(Color.black.opacity(0.1))
                     )
             }
         }
@@ -89,13 +89,13 @@ struct WorkoutFlowView: View {
                 // Exercise name
                 Text(currentExercise.title)
                     .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .multilineTextAlignment(.center)
                 
                 // Timer
                 Text("\(viewModel.timeRemaining)")
                     .font(.system(size: 80, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .monospacedDigit()
                 
                 // Instructions
@@ -104,11 +104,11 @@ struct WorkoutFlowView: View {
                         HStack(alignment: .top, spacing: 12) {
                             Text("\(index + 1).")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.black.opacity(0.8))
                             
                             Text(instruction)
                                 .font(.system(size: 16))
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.black.opacity(0.8))
                         }
                     }
                 }
@@ -129,12 +129,12 @@ struct WorkoutFlowView: View {
             // "Rest" text
             Text("Rest")
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
             
             // Countdown
             Text("\(viewModel.timeRemaining)")
                 .font(.system(size: 80, weight: .bold))
-                .foregroundColor(.orange)
+                .foregroundColor(.black)
                 .monospacedDigit()
             
             // Next exercise preview
@@ -142,11 +142,11 @@ struct WorkoutFlowView: View {
                 VStack(spacing: 8) {
                     Text("Next up")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.black.opacity(0.6))
                     
                     Text(nextExercise.title)
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
             }
         }
@@ -159,7 +159,7 @@ struct WorkoutFlowView: View {
             // Progress text
             Text("Exercise \(viewModel.currentExerciseIndex + 1) of \(exercises.count)")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(.black.opacity(0.8))
             
             // Progress bar
             GeometryReader { geometry in

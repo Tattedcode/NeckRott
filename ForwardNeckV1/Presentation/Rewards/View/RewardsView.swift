@@ -15,38 +15,67 @@ struct AchievementsView: View {
     @StateObject private var homeViewModel = HomeViewModel()
     @State private var showingLevelSheet = false
     @State private var selectedAchievement: MonthlyAchievement?
+    @State private var selectedTab: AchievementTab = .level
+    
+    enum AchievementTab: String, CaseIterable {
+        case level = "Level"
+        case monthly = "Monthly Achievements"
+    }
     
     var body: some View {
         ZStack {
             Theme.backgroundGradient.ignoresSafeArea()
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    currentLevelSection
-                    monthlyAchievementsSection
-
-                    Button {
-                        Log.info("Testing button tapped -> adding 25 XP for previewing level flow")
-                        viewModel.addXP(25, source: "Testing button")
-                    } label: {
-                        Text("Add 25 XP (Test)")
-                            .font(.headline)
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+            VStack(spacing: 0) {
+                // Tab selector
+                HStack(spacing: 20) {
+                    ForEach(AchievementTab.allCases, id: \.self) { tab in
+                        Button(action: {
+                            selectedTab = tab
+                        }) {
+                            Text(tab.rawValue)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(selectedTab == tab ? .black : .black.opacity(0.6))
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 16)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.top, 12)
-                    .accessibilityIdentifier("testAddXpButton")
-                    .overlay(
-                        Text("Temporary testing button for XP flow")
-                            .font(.caption2)
-                            .foregroundColor(.black.opacity(0.6))
-                            .padding(.top, 4), alignment: .bottom
-                    )
-
                 }
-                .padding(16)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                
+                // Content based on selected tab
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        if selectedTab == .level {
+                            currentLevelSection
+                        } else {
+                            monthlyAchievementsSection
+                        }
+
+                        Button {
+                            Log.info("Testing button tapped -> adding 25 XP for previewing level flow")
+                            viewModel.addXP(25, source: "Testing button")
+                        } label: {
+                            Text("Add 25 XP (Test)")
+                                .font(.headline)
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue.opacity(0.8))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .padding(.top, 12)
+                        .accessibilityIdentifier("testAddXpButton")
+                        .overlay(
+                            Text("Temporary testing button for XP flow")
+                                .font(.caption2)
+                                .foregroundColor(.black.opacity(0.6))
+                                .padding(.top, 4), alignment: .bottom
+                        )
+                    }
+                    .padding(16)
+                }
             }
         }
         .onAppear {
@@ -68,52 +97,63 @@ struct AchievementsView: View {
     
     /// Current level section showing level progress
     private var currentLevelSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                // Level icon - clickable level image
-                Button(action: {
-                    showingLevelSheet = true
-                }) {
-                    Image(levelImageName(for: viewModel.userProgress.level))
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 120, height: 120)
-                }
-                .buttonStyle(.plain)
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(viewModel.currentLevel?.title ?? "Unknown")
-                        .font(.title2.bold())
-                        .foregroundColor(.black)
-                    
-                    Text(viewModel.currentLevel?.description ?? "")
-                        .font(.subheadline)
-                        .foregroundColor(.black.opacity(0.8))
-                    
-                    // Progress to next level
-                    if let nextLevel = viewModel.nextLevel {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Progress to Level \(nextLevel.number)")
-                                .font(.caption)
-                                .foregroundColor(.black.opacity(0.7))
-                            
-                            ProgressView(value: viewModel.progressToNextLevel)
-                                .progressViewStyle(LinearProgressViewStyle(tint: .green))
-                                .scaleEffect(x: 1, y: 2, anchor: .center)
-                        }
-                    } else {
-                        Text("Max Level Reached!")
-                            .font(.caption.bold())
-                            .foregroundColor(.yellow)
+        VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 12) {
+                    // Level icon - clickable level image
+                    Button(action: {
+                        showingLevelSheet = true
+                    }) {
+                        Image(levelImageName(for: viewModel.userProgress.level))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 120, height: 120)
                     }
+                    .buttonStyle(.plain)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(viewModel.currentLevel?.title ?? "Unknown")
+                            .font(.title2.bold())
+                            .foregroundColor(.black)
+                        
+                        Text(viewModel.currentLevel?.description ?? "")
+                            .font(.subheadline)
+                            .foregroundColor(.black.opacity(0.8))
+                        
+                        // Progress to next level
+                        if let nextLevel = viewModel.nextLevel {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Progress to Level \(nextLevel.number)")
+                                    .font(.caption)
+                                    .foregroundColor(.black.opacity(0.7))
+                                
+                                ProgressView(value: viewModel.progressToNextLevel)
+                                    .progressViewStyle(LinearProgressViewStyle(tint: .green))
+                                    .scaleEffect(x: 1, y: 2, anchor: .center)
+                            }
+                        } else {
+                            Text("Max Level Reached!")
+                                .font(.caption.bold())
+                                .foregroundColor(.yellow)
+                        }
+                    }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
+            }
+            .padding(16)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            
+            // Roadmap to next level
+            if viewModel.nextLevel != nil {
+                LevelRoadmapView(
+                    currentLevel: viewModel.currentLevel,
+                    nextLevel: viewModel.nextLevel,
+                    userProgress: viewModel.userProgress
+                )
             }
         }
-        .padding(16)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
 
