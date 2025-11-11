@@ -139,7 +139,7 @@ struct OnboardingReviewsView: View {
         }
         .padding(.horizontal, 8)
     }
-    
+
     /// Middle row that shows happy users and the +30,000 label.
     private var communityRow: some View {
         VStack(spacing: 12) {

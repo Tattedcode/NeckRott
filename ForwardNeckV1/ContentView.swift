@@ -13,7 +13,7 @@ private enum OnboardingKeys {
 
 struct ContentView: View {
     @AppStorage(OnboardingKeys.hasCompleted) private var hasCompletedOnboarding = false
-    
+
     var body: some View {
         Group {
             if hasCompletedOnboarding {

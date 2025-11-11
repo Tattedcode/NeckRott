@@ -32,6 +32,42 @@ final class ExerciseStore: ObservableObject {
     
     func allCompletions() -> [ExerciseCompletion] { completions }
     
+    /// Update an exercise by title with new instructions
+    func updateExercise(title: String, instructions: [String]) async {
+        if let index = exercises.firstIndex(where: { $0.title == title }) {
+            let existingExercise = exercises[index]
+            exercises[index] = Exercise(
+                id: existingExercise.id,
+                title: existingExercise.title,
+                description: existingExercise.description,
+                instructions: instructions,
+                durationSeconds: existingExercise.durationSeconds,
+                iconSystemName: existingExercise.iconSystemName,
+                difficulty: existingExercise.difficulty
+            )
+            await save()
+            Log.info("Updated exercise '\(title)' with new instructions")
+        }
+    }
+    
+    /// Rename an exercise from old title to new title and update its properties
+    func renameExercise(oldTitle: String, newTitle: String, description: String, instructions: [String]) async {
+        if let index = exercises.firstIndex(where: { $0.title == oldTitle }) {
+            let existingExercise = exercises[index]
+            exercises[index] = Exercise(
+                id: existingExercise.id,
+                title: newTitle,
+                description: description,
+                instructions: instructions,
+                durationSeconds: existingExercise.durationSeconds,
+                iconSystemName: existingExercise.iconSystemName,
+                difficulty: existingExercise.difficulty
+            )
+            await save()
+            Log.info("Renamed exercise from '\(oldTitle)' to '\(newTitle)'")
+        }
+    }
+    
     func completions(for exerciseId: UUID) -> [ExerciseCompletion] {
         completions.filter { $0.exerciseId == exerciseId }
     }
@@ -50,6 +86,9 @@ final class ExerciseStore: ObservableObject {
         completions.append(completion)
         Log.info("Recorded completion for exercise \(exerciseId) - \(durationSeconds)s in \(timeSlot.rawValue) slot")
         await save()
+        
+        // Notify leaderboard system of exercise completion
+        NotificationCenter.default.post(name: .exerciseCompleted, object: nil)
     }
     
     func completionCount(on date: Date) -> Int {
@@ -161,6 +200,49 @@ final class ExerciseStore: ObservableObject {
             if normalizedExercises != container.exercises {
                 await save()
             }
+            
+            // Update Chin Tucks exercise with new instructions
+            await updateExercise(
+                title: "Chin Tucks",
+                instructions: [
+                    "Sit or stand with back straight, place 2 fingers on your chin.",
+                    "Gently push chin back like you are making a double chin.",
+                    "Hold 5 seconds.",
+                    "Release and repeat 5 times"
+                ]
+            )
+            
+            // Rename Neck Tilt Stretch to Neck Flexion and update instructions
+            await renameExercise(
+                oldTitle: "Neck Tilt Stretch",
+                newTitle: "Neck Flexion",
+                description: "Gentle neck stretch to relieve tension",
+                instructions: [
+                    "Begin by sitting comfortably in a chair or on the floor.",
+                    "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
+                    "Hold this position for 15-30 seconds.",
+                    "Repeat 5 times per session."
+                ]
+            )
+            
+            // Also update if it's already named Neck Flexion
+            await updateExercise(
+                title: "Neck Flexion",
+                instructions: [
+                    "Begin by sitting comfortably in a chair or on the floor.",
+                    "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
+                    "Hold this position for 15-30 seconds.",
+                    "Repeat 5 times per session."
+                ]
+            )
+            
+            // Update Wall Angel exercise with new instructions
+            await updateExercise(
+                title: "Wall Angel",
+                instructions: [
+                    "Stand with your back against a wall"
+                ]
+            )
         } catch {
             // First run - seed with default exercises
             await seedDefaultExercises()
@@ -182,13 +264,13 @@ final class ExerciseStore: ObservableObject {
     private func seedDefaultExercises() async {
         exercises = [
             Exercise(
-                title: "Neck Tilt Stretch",
+                title: "Neck Flexion",
                 description: "Gentle neck stretch to relieve tension",
                 instructions: [
-                    "Sit or stand with shoulders relaxed",
-                    "Slowly tilt your head to the right",
-                    "Hold for 15 seconds",
-                    "Return to center and repeat on left side"
+                    "Begin by sitting comfortably in a chair or on the floor.",
+                    "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
+                    "Hold this position for 15-30 seconds.",
+                    "Repeat 5 times per session."
                 ],
                 durationSeconds: 10,
                 iconSystemName: "person.fill.viewfinder",
@@ -198,10 +280,10 @@ final class ExerciseStore: ObservableObject {
                 title: "Chin Tucks",
                 description: "Strengthen deep neck flexors",
                 instructions: [
-                    "Sit with back straight",
-                    "Gently pull chin back without tilting head",
-                    "Hold for 5 seconds",
-                    "Release and repeat 10 times"
+                    "Sit or stand with back straight, place 2 fingers on your chin.",
+                    "Gently push chin back like you are making a double chin.",
+                    "Hold 5 seconds.",
+                    "Release and repeat 5 times"
                 ],
                 durationSeconds: 10,
                 iconSystemName: "face.smiling",
@@ -224,10 +306,7 @@ final class ExerciseStore: ObservableObject {
                 title: "Wall Angel",
                 description: "Improve posture and shoulder mobility",
                 instructions: [
-                    "Stand with back against wall",
-                    "Place arms in 'W' position against wall",
-                    "Slowly slide arms up to 'Y' position",
-                    "Return to 'W' and repeat 10 times"
+                    "Stand with your back against a wall"
                 ],
                 durationSeconds: 10,
                 iconSystemName: "figure.walk",

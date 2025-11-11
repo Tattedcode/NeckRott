@@ -80,6 +80,20 @@ extension HomeViewModel {
             recentlyUnlockedAchievement = newlyUnlocked
         }
     }
+    
+    // MARK: - Testing Helper
+    
+    /// Unlock the next locked achievement for testing purposes
+    func unlockNextAchievement() {
+        // Find the first locked achievement
+        if let nextAchievement = monthlyAchievements.first(where: { !$0.isUnlocked }) {
+            unlockedAchievementKinds.insert(nextAchievement.kind)
+            updateMonthlyAchievements(skipCelebration: true)
+            Log.info("Test: Unlocked achievement \(nextAchievement.kind.title)")
+        } else {
+            Log.info("Test: All achievements are already unlocked")
+        }
+    }
 
     static func loadShownAchievementsForCurrentMonth(key: String, monthKey: String) -> Set<MonthlyAchievementKind> {
         let calendar = Calendar.current

@@ -19,6 +19,9 @@ struct PlanView: View {
     /// State for showing workout flow
     @State private var isShowingWorkoutFlow = false
     
+    /// State for showing chin tuck instruction view
+    @State private var selectedExercise: Exercise? = nil
+    
     // MARK: - Body
     
     var body: some View {
@@ -68,6 +71,46 @@ struct PlanView: View {
                     isShowingWorkoutFlow = false
                 }
             )
+        }
+        .sheet(item: $selectedExercise) { exercise in
+            // Show chin tuck instruction view when chin tucks is selected
+            if exercise.title.lowercased().contains("chin") || exercise.title.lowercased().contains("tuck") {
+                NavigationStack {
+                    ChinTuckInstructionView(exercise: exercise) {
+                        selectedExercise = nil
+                    }
+                }
+            } else if exercise.title.lowercased().contains("neck flexion") || exercise.title.lowercased().contains("flexion") || exercise.title.lowercased().contains("neck tilt stretch") || exercise.title.lowercased().contains("neck tilt") {
+                // Show neck flexion instruction view when neck flexion is selected
+                NavigationStack {
+                    NeckFlexionInstructionView(exercise: exercise) {
+                        selectedExercise = nil
+                    }
+                }
+            } else if exercise.title.lowercased().contains("wall angel") || (exercise.title.lowercased().contains("wall") && exercise.title.lowercased().contains("angel")) {
+                // Show wall angel instruction view when wall angel is selected
+                NavigationStack {
+                    WallAngelInstructionView(exercise: exercise) {
+                        selectedExercise = nil
+                    }
+                }
+            } else {
+                // For other exercises, show standard detail view
+                NavigationStack {
+                    ExerciseDetailView(exercise: exercise)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button(action: {
+                                    selectedExercise = nil
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.black.opacity(0.7))
+                                }
+                            }
+                        }
+                }
+            }
         }
     }
     
@@ -273,21 +316,53 @@ struct PlanView: View {
     
     // MARK: - Exercise Row
     
-    /// Individual exercise row with emoji/icon and name
+    /// Individual exercise row with emoji/icon and name - now clickable
     private func exerciseRow(exercise: Exercise) -> some View {
-        HStack(spacing: 16) {
-            // Exercise icon/emoji
-            Text(exerciseEmoji(for: exercise.title))
-                .font(.system(size: 32))
-            
-            // Exercise name
-            Text(exercise.title)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundColor(.white)
-            
-            Spacer()
+        Button(action: {
+            // When exercise is clicked, show instruction view
+            Log.info("Exercise tapped: \(exercise.title)")
+            selectedExercise = exercise
+        }) {
+            HStack(spacing: 16) {
+                // Exercise icon/emoji - use chintuck1.png for Chin Tucks, flexion1.png for Neck Flexion, angel1.png for Wall Angel
+                if exercise.title.lowercased().contains("chin") || exercise.title.lowercased().contains("tuck") {
+                    Image("chintuck1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else if exercise.title.lowercased().contains("neck flexion") || exercise.title.lowercased().contains("flexion") || exercise.title.lowercased().contains("neck tilt stretch") || exercise.title.lowercased().contains("neck tilt") {
+                    Image("flexion1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else if exercise.title.lowercased().contains("wall angel") || (exercise.title.lowercased().contains("wall") && exercise.title.lowercased().contains("angel")) {
+                    Image("angel1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else {
+                    Text(exerciseEmoji(for: exercise.title))
+                        .font(.system(size: 32))
+                }
+                
+                // Exercise name
+                Text(exercise.title)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // Chevron indicator to show it's clickable
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+            .padding(.vertical, 8)
         }
-        .padding(.vertical, 8)
+        .buttonStyle(.plain) // Remove default button styling
     }
     
     // MARK: - Helpers

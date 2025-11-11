@@ -10,6 +10,13 @@
 		008A7EDF2E803D8B004B7591 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008A7B782E8036EA004B7591 /* WidgetKit.framework */; };
 		008A7EE02E803D8B004B7591 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008A7B7A2E8036EB004B7591 /* SwiftUI.framework */; };
 		008A7EF12E803D8C004B7591 /* ForwardNeckWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 008A7EDE2E803D8B004B7591 /* ForwardNeckWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0091AF262EB106260049AC9E /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF252EB106260049AC9E /* Auth */; };
+		0091AF282EB106260049AC9E /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF272EB106260049AC9E /* Functions */; };
+		0091AF2A2EB106260049AC9E /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF292EB106260049AC9E /* PostgREST */; };
+		0091AF2C2EB106260049AC9E /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF2B2EB106260049AC9E /* Realtime */; };
+		0091AF2E2EB106260049AC9E /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF2D2EB106260049AC9E /* Storage */; };
+		0091AF412EB109A10049AC9E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF402EB109A10049AC9E /* Supabase */; };
+		0091AF432EB10C960049AC9E /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0091AF422EB10C960049AC9E /* Supabase */; };
 		2A66932B53774FCDA11223A0 /* ForwardNeckWidget/ForwardNeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 560252D4C4DE062E5070CC37 /* ForwardNeckWidget/ForwardNeckWidget.swift */; };
 		987F68E962B54E3CA011D638 /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242E5F38E9C357BD651B5BD /* ForwardNeckWidget/ForwardNeckWidgetBundle.swift */; };
 /* End PBXBuildFile section */
@@ -81,6 +88,7 @@
 			files = (
 				008A7EE02E803D8B004B7591 /* SwiftUI.framework in Frameworks */,
 				008A7EDF2E803D8B004B7591 /* WidgetKit.framework in Frameworks */,
+				0091AF412EB109A10049AC9E /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +96,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0091AF2A2EB106260049AC9E /* PostgREST in Frameworks */,
+				0091AF282EB106260049AC9E /* Functions in Frameworks */,
+				0091AF432EB10C960049AC9E /* Supabase in Frameworks */,
+				0091AF262EB106260049AC9E /* Auth in Frameworks */,
+				0091AF2E2EB106260049AC9E /* Storage in Frameworks */,
+				0091AF2C2EB106260049AC9E /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,6 +166,7 @@
 			);
 			name = ForwardNeckWidget;
 			packageProductDependencies = (
+				0091AF402EB109A10049AC9E /* Supabase */,
 			);
 			productName = ForwardNeckWidget;
 			productReference = 008A7EDE2E803D8B004B7591 /* ForwardNeckWidget.appex */;
@@ -175,6 +190,12 @@
 			);
 			name = ForwardNeckV1;
 			packageProductDependencies = (
+				0091AF252EB106260049AC9E /* Auth */,
+				0091AF272EB106260049AC9E /* Functions */,
+				0091AF292EB106260049AC9E /* PostgREST */,
+				0091AF2B2EB106260049AC9E /* Realtime */,
+				0091AF2D2EB106260049AC9E /* Storage */,
+				0091AF422EB10C960049AC9E /* Supabase */,
 			);
 			productName = ForwardNeckV1;
 			productReference = 0097D62C2E7176D700AE9F22 /* ForwardNeckV1.app */;
@@ -207,6 +228,9 @@
 			);
 			mainGroup = 0097D6232E7176D700AE9F22;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0097D62D2E7176D700AE9F22 /* Products */;
 			projectDirPath = "";
@@ -531,6 +555,55 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0091AF252EB106260049AC9E /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		0091AF272EB106260049AC9E /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		0091AF292EB106260049AC9E /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		0091AF2B2EB106260049AC9E /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		0091AF2D2EB106260049AC9E /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		0091AF402EB109A10049AC9E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		0091AF422EB10C960049AC9E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0091AF242EB106260049AC9E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0097D6242E7176D700AE9F22 /* Project object */;
 }

@@ -70,18 +70,53 @@ extension HomeView {
 
             Spacer().frame(height: 16)
 
-            HStack(spacing: 30) {
+            HStack(spacing: 20) {
+                // Rank section (first column)
                 VStack(spacing: 4) {
-                    Text("neck fixes")
+                    Text("rank")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.black.opacity(0.7))
                         .padding(.top, 2)
-                    Text("\(viewModel.neckFixesCompleted)/\(viewModel.neckFixesTarget)")
+                    
+                    if LeaderboardStore.shared.hasJoinedLeaderboard {
+                        if let rank = LeaderboardStore.shared.currentUserRank {
+                            Text("#\(rank)")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.black)
+                        } else {
+                            Text("—")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.black.opacity(0.5))
+                        }
+                    } else {
+                        Button(action: {
+                            selectedTab = .leaderboard
+                        }) {
+                            Text("Join")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .background(Color.green)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Today section
+                VStack(spacing: 4) {
+                    Text("today")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.black.opacity(0.7))
+                        .padding(.top, 2)
+                    Text("\(viewModel.neckFixesCompleted)")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity)
 
+                // Record section
                 VStack(spacing: 4) {
                     Text("record")
                         .font(.system(size: 12, weight: .bold))
@@ -93,6 +128,7 @@ extension HomeView {
                 }
                 .frame(maxWidth: .infinity)
 
+                // Daily streak section
                 VStack(spacing: 4) {
                     Text("daily streak")
                         .font(.system(size: 12, weight: .bold))

@@ -10,8 +10,8 @@ import SwiftUI
 enum RootTab: String, CaseIterable, Hashable {
     case home = "Home"
     case plan = "Plan"
+    case leaderboard = "Leaderboard"
     case stats = "Stats"
-    case rewards = "Achievements"
     case settings = "Settings"
     
     var id: String { rawValue }
@@ -43,6 +43,15 @@ struct RootTabView: View {
             }
             .tag(RootTab.plan)
 
+            // Leaderboard Tab - Global rankings (Center position, blue tint)
+            NavigationStack {
+                LeaderboardView()
+            }
+            .tabItem {
+                Label("Leaderboard", systemImage: "chart.bar.fill")
+            }
+            .tag(RootTab.leaderboard)
+
             // Stats Tab - Calendar-based progress tracking
             NavigationStack { 
                 ProgressTrackingView()
@@ -52,17 +61,6 @@ struct RootTabView: View {
                 Label("Stats", systemImage: "calendar") 
             }
             .tag(RootTab.stats)
-
-            // Achievements Tab - Gamification and progress
-            NavigationStack { 
-                AchievementsView()
-                    .navigationTitle("Achievements")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tabItem { 
-                Label("Achievements", systemImage: "rosette") 
-            }
-            .tag(RootTab.rewards)
 
             // Settings Tab - App settings and preferences
             NavigationStack { 
@@ -98,8 +96,16 @@ struct RootTabView: View {
     /// Part of B-008: Connect all screens with bottom tab bar
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        
+        // Use different configuration based on iOS version for better compatibility
+        if #available(iOS 15.0, *) {
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+            appearance.shadowColor = UIColor.clear
+        } else {
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor.black.withAlphaComponent(0.85)
+        }
         
         // Configure normal state
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.black.withAlphaComponent(0.6)
@@ -107,7 +113,7 @@ struct RootTabView: View {
             .foregroundColor: UIColor.black.withAlphaComponent(0.6)
         ]
         
-        // Configure selected state
+        // Configure selected state - default behavior
         appearance.stackedLayoutAppearance.selected.iconColor = UIColor.black
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
             .foregroundColor: UIColor.black
@@ -116,6 +122,18 @@ struct RootTabView: View {
         // Apply appearance
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
+        
+        // Custom color for leaderboard tab only - this won't work as expected, need different approach
+        // We'll use a custom modifier on the tab item itself
+        
+        // Apply shadow for better visibility on older iOS versions
+        if !ProcessInfo.processInfo.isiOSAppOnMac {
+            UITabBar.appearance().layer.shadowColor = UIColor.black.cgColor
+            UITabBar.appearance().layer.shadowOffset = CGSize(width: 0, height: -2)
+            UITabBar.appearance().layer.shadowRadius = 8
+            UITabBar.appearance().layer.shadowOpacity = 0.3
+            UITabBar.appearance().clipsToBounds = false
+        }
     }
 }
 
