@@ -9,8 +9,8 @@ import SwiftUI
 
 enum RootTab: String, CaseIterable, Hashable {
     case home = "Home"
-    case plan = "Plan"
-    case leaderboard = "Leaderboard"
+    case circuit = "Circuit"
+    case leaderboard = "Ranking"
     case stats = "Stats"
     case settings = "Settings"
     
@@ -33,22 +33,29 @@ struct RootTabView: View {
             }
             .tag(RootTab.home)
 
-            // Plan Tab - Daily neck workout circuit
+            // Circuit Tab - Daily neck workout circuit
             NavigationStack { 
-                PlanView()
-                    .navigationBarHidden(true) 
+                PlanView(selectedTab: Binding(
+                    get: { selection },
+                    set: { newValue in
+                        if let newValue = newValue {
+                            selection = newValue
+                        }
+                    }
+                ))
+                    .navigationBarHidden(true)
             }
             .tabItem { 
-                Label("Plan", systemImage: "dumbbell.fill") 
+                Label("Circuit", systemImage: "dumbbell.fill") 
             }
-            .tag(RootTab.plan)
+            .tag(RootTab.circuit)
 
-            // Leaderboard Tab - Global rankings (Center position, blue tint)
+            // Ranking Tab - Global rankings (Center position, blue tint)
             NavigationStack {
                 LeaderboardView()
             }
             .tabItem {
-                Label("Leaderboard", systemImage: "chart.bar.fill")
+                Label("Ranking", systemImage: "chart.bar.fill")
             }
             .tag(RootTab.leaderboard)
 
@@ -94,46 +101,52 @@ struct RootTabView: View {
     
     /// Configure tab bar appearance for better visual design
     /// Part of B-008: Connect all screens with bottom tab bar
+    /// Only customize for iOS versions below iOS 16 - keep default appearance for iOS 16+
     private func configureTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        
-        // Use different configuration based on iOS version for better compatibility
-        if #available(iOS 15.0, *) {
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-            appearance.shadowColor = UIColor.clear
-        } else {
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.black.withAlphaComponent(0.85)
+        // iOS 16+ uses default system appearance - no customization needed
+        if #available(iOS 16.0, *) {
+            // Let iOS handle the tab bar appearance natively
+            return
         }
         
-        // Configure normal state
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.black.withAlphaComponent(0.6)
+        // Only customize for iOS versions below 16 - make it clean and visible
+        let appearance = UITabBarAppearance()
+        
+        if #available(iOS 15.0, *) {
+            // iOS 15: use transparent background with light, clean appearance
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.98)
+            appearance.shadowColor = UIColor.clear
+        } else {
+            // iOS 14 and below: use opaque background with light appearance
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor.systemBackground
+        }
+        
+        // Configure normal state - use a more visible gray (not too faint)
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.secondaryLabel
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor.black.withAlphaComponent(0.6)
+            .foregroundColor: UIColor.secondaryLabel,
+            .font: UIFont.systemFont(ofSize: 10, weight: .regular)
         ]
         
-        // Configure selected state - default behavior
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.black
+        // Configure selected state - use black for clear visibility
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.label
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor.black
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
         ]
         
         // Apply appearance
         UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
         
-        // Custom color for leaderboard tab only - this won't work as expected, need different approach
-        // We'll use a custom modifier on the tab item itself
-        
-        // Apply shadow for better visibility on older iOS versions
-        if !ProcessInfo.processInfo.isiOSAppOnMac {
-            UITabBar.appearance().layer.shadowColor = UIColor.black.cgColor
-            UITabBar.appearance().layer.shadowOffset = CGSize(width: 0, height: -2)
-            UITabBar.appearance().layer.shadowRadius = 8
-            UITabBar.appearance().layer.shadowOpacity = 0.3
-            UITabBar.appearance().clipsToBounds = false
+        // iOS 15+ supports scrollEdgeAppearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
+        
+        // Ensure tab bar is always visible
+        UITabBar.appearance().isHidden = false
     }
 }
 

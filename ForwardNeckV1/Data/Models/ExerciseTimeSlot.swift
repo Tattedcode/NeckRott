@@ -26,7 +26,7 @@ enum ExerciseTimeSlot: String, Codable, CaseIterable {
     var timeRangeString: String {
         switch self {
         case .morning:
-            return "Available anytime (30 minute cooldown)"
+            return "30 minute cooldown"
         case .afternoon:
             return "6:00 AM - 11:59 PM"
         }

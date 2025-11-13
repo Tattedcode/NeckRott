@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 /// ViewModel for the leaderboard view
 /// Handles data fetching, user profile updates, and UI state
@@ -22,25 +23,34 @@ final class LeaderboardViewModel {
     var showingResetAlert: Bool = false
     var resetStatusMessage: String = ""
     
-    // Computed properties from store
+    // Local state that mirrors store properties (for @Observable reactivity)
+    // These will be updated when the store changes
+    private var _leaderboardUsers: [LeaderboardUser] = []
+    private var _userProfile: UserProfile
+    private var _currentUserRank: Int?
+    private var _isLoading: Bool = false
+    private var _errorMessage: String?
+    private var _lastRefreshDate: Date?
+    
+    // Computed properties that return local state (which updates when store changes)
     var leaderboardUsers: [LeaderboardUser] {
-        leaderboardStore.leaderboardUsers
+        _leaderboardUsers
     }
     
     var userProfile: UserProfile {
-        leaderboardStore.userProfile
+        _userProfile
     }
     
     var currentUserRank: Int? {
-        leaderboardStore.currentUserRank
+        _currentUserRank
     }
     
     var isLoading: Bool {
-        leaderboardStore.isLoading
+        _isLoading
     }
     
     var errorMessage: String? {
-        leaderboardStore.errorMessage
+        _errorMessage
     }
     
     var hasJoinedLeaderboard: Bool {
@@ -48,13 +58,82 @@ final class LeaderboardViewModel {
     }
     
     var lastRefreshDate: Date? {
-        leaderboardStore.lastRefreshDate
+        _lastRefreshDate
     }
+    
+    // Combine subscriptions to observe store changes
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
     init() {
+        // Initialize local state from store
+        _leaderboardUsers = leaderboardStore.leaderboardUsers
+        _userProfile = leaderboardStore.userProfile
+        _currentUserRank = leaderboardStore.currentUserRank
+        _isLoading = leaderboardStore.isLoading
+        _errorMessage = leaderboardStore.errorMessage
+        _lastRefreshDate = leaderboardStore.lastRefreshDate
+        
+        // Observe store changes and update local state
+        // This ensures @Observable triggers UI updates when store changes
+        observeStoreChanges()
+        
         Log.info("LeaderboardViewModel initialized")
+    }
+    
+    /// Set up Combine subscriptions to observe store changes
+    /// This ensures the ViewModel updates when the store changes
+    private func observeStoreChanges() {
+        // Observe leaderboardUsers changes
+        leaderboardStore.$leaderboardUsers
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] users in
+                self?._leaderboardUsers = users
+                Log.info("LeaderboardViewModel: Updated leaderboardUsers (\(users.count) users)")
+            }
+            .store(in: &cancellables)
+        
+        // Observe userProfile changes (this is the key fix!)
+        leaderboardStore.$userProfile
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] profile in
+                self?._userProfile = profile
+                Log.info("LeaderboardViewModel: Updated userProfile (username: \(profile.username ?? "nil"))")
+            }
+            .store(in: &cancellables)
+        
+        // Observe currentUserRank changes
+        leaderboardStore.$currentUserRank
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] rank in
+                self?._currentUserRank = rank
+            }
+            .store(in: &cancellables)
+        
+        // Observe isLoading changes
+        leaderboardStore.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] loading in
+                self?._isLoading = loading
+            }
+            .store(in: &cancellables)
+        
+        // Observe errorMessage changes
+        leaderboardStore.$errorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?._errorMessage = error
+            }
+            .store(in: &cancellables)
+        
+        // Observe lastRefreshDate changes
+        leaderboardStore.$lastRefreshDate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] date in
+                self?._lastRefreshDate = date
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Actions
@@ -67,12 +146,22 @@ final class LeaderboardViewModel {
     
     /// Refresh leaderboard data
     func refreshLeaderboard() async {
-        await leaderboardStore.refreshLeaderboard()
+        Log.info("🔄 Manual refresh triggered")
+        await leaderboardStore.refreshLeaderboard(force: true)
         
         if let error = errorMessage {
             showingError = true
             Log.error("Error refreshing leaderboard: \(error)")
+        } else {
+            Log.info("✅ Refresh completed. Found \(leaderboardUsers.count) users")
         }
+    }
+    
+    /// Manually sync current user's stats and refresh leaderboard
+    func syncAndRefresh() async {
+        Log.info("🔄 Manual sync and refresh triggered")
+        await leaderboardStore.syncToSupabase()
+        await refreshLeaderboard()
     }
     
     /// Show username setup sheet
@@ -164,6 +253,23 @@ final class LeaderboardViewModel {
             await leaderboardStore.resetLocalProfile()
             resetStatusMessage = "Local profile reset! You can join again."
             showingResetAlert = true
+        }
+    }
+    
+    /// Delete a specific user from the leaderboard
+    /// - Parameters:
+    ///   - deviceId: Device ID of the user to delete
+    ///   - monthYear: Optional month. If nil, deletes from all months
+    func deleteUser(deviceId: String, monthYear: String? = nil) async {
+        Log.info("Deleting user: \(deviceId)")
+        do {
+            try await leaderboardStore.deleteUser(deviceId: deviceId, monthYear: monthYear)
+            resetStatusMessage = "User deleted successfully"
+            showingResetAlert = true
+        } catch {
+            resetStatusMessage = "Failed to delete user: \(error.localizedDescription)"
+            showingResetAlert = true
+            Log.error("Failed to delete user: \(error)")
         }
     }
 }

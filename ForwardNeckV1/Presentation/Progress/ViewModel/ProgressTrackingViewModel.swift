@@ -173,8 +173,8 @@ final class ProgressTrackingViewModel: ObservableObject {
             let resolvedMascot = MascotAssetProvider.resolvedMascotName(for: baseMascot)
             Log.info("ProgressTrackingViewModel calendar mascot base=\(baseMascot) resolved=\(resolvedMascot) for day=\(day)")
             
-            // Check if all 3 time slots are completed (goal = 3 exercises)
-            let didReachGoal = count >= 3
+            // Check if health bar is 100% (goal = 5 exercises for 100% health)
+            let didReachGoal = count >= 5
             cells.append(
                 CalendarDay(
                     date: date,

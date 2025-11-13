@@ -58,10 +58,11 @@ struct HomeView: View {
         .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
         .onChange(of: viewModel.recentlyUnlockedAchievement) { _, achievement in
             guard let achievement else { return }
+            // Show the achievement sheet when a new achievement is set
             presentedAchievement = achievement
             lastPresentedAchievement = achievement
             shouldCelebrate = true
-            viewModel.clearRecentlyUnlockedAchievement()
+            // Don't clear here - wait until sheet is dismissed
         }
         .sheet(item: $presentedAchievement, onDismiss: handleAchievementDismissal) { achievement in
             AchievementUnlockedSheet(
@@ -95,9 +96,10 @@ struct HomeView: View {
 
     private var exerciseTimerSheet: some View {
         Group {
-            if let exercise = viewModel.nextExercise {
+            if let exercise = viewModel.dailyUnrotExercise ?? viewModel.nextExercise {
                 ExerciseTimerSheet(
                     exercise: exercise,
+                    timeSlot: viewModel.currentTimeSlot, // Pass the current time slot to identify quick workout
                     onComplete: {
                         Task { @MainActor in
                             await viewModel.completeCurrentExercise()
@@ -120,11 +122,20 @@ struct HomeView: View {
     }
 
     private func handleAchievementDismissal() {
-            if shouldCelebrate, let last = lastPresentedAchievement {
-                viewModel.markAchievementCelebrated(last)
-            }
-            shouldCelebrate = false
-            lastPresentedAchievement = nil
+        // Mark the achievement as celebrated
+        if shouldCelebrate, let last = lastPresentedAchievement {
+            viewModel.markAchievementCelebrated(last)
+        }
+        shouldCelebrate = false
+        lastPresentedAchievement = nil
+        
+        // Clear the presented achievement first so the sheet closes
+        presentedAchievement = nil
+        
+        // Clear the current achievement and show the next one from queue (if any)
+        // This will automatically trigger showing the next achievement if one is queued
+        // The onChange handler will set presentedAchievement again if there's a next achievement
+        viewModel.clearRecentlyUnlockedAchievement()
     }
 }
 

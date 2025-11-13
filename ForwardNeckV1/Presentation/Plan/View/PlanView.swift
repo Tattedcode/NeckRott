@@ -10,17 +10,22 @@ import SwiftUI
 struct PlanView: View {
     // MARK: - Properties
     
+    /// Binding to control tab selection (for navigation after workout completion)
+    @Binding var selectedTab: RootTab?
+    
     /// View model managing workout circuit data
     @StateObject var viewModel = PlanViewModel()
-    
-    /// State for showing full description
-    @State private var isDescriptionExpanded = false
     
     /// State for showing workout flow
     @State private var isShowingWorkoutFlow = false
     
     /// State for showing chin tuck instruction view
     @State private var selectedExercise: Exercise? = nil
+    
+    /// Initialize with optional tab binding (defaults to nil for previews)
+    init(selectedTab: Binding<RootTab?> = .constant(nil)) {
+        self._selectedTab = selectedTab
+    }
     
     // MARK: - Body
     
@@ -63,8 +68,15 @@ struct PlanView: View {
                         )
                         Log.info("Full Daily Workout completed and recorded")
                         
+                        // Cancel Full Daily Workout notifications after completion
+                        await NotificationManager.shared.cancelFullDailyWorkoutNotifications()
+                        Log.info("Cancelled Full Daily Workout notifications after completion")
+                        
                         // Refresh completion status to update button
                         viewModel.refreshCompletionStatus()
+                        
+                        // Navigate to home view after workout completion
+                        selectedTab = .home
                     }
                 },
                 onCancel: {
@@ -73,21 +85,30 @@ struct PlanView: View {
             )
         }
         .sheet(item: $selectedExercise) { exercise in
+            let titleLower = exercise.title.lowercased()
+            
             // Show chin tuck instruction view when chin tucks is selected
-            if exercise.title.lowercased().contains("chin") || exercise.title.lowercased().contains("tuck") {
+            if titleLower.contains("chin") || titleLower.contains("tuck") {
                 NavigationStack {
                     ChinTuckInstructionView(exercise: exercise) {
                         selectedExercise = nil
                     }
                 }
-            } else if exercise.title.lowercased().contains("neck flexion") || exercise.title.lowercased().contains("flexion") || exercise.title.lowercased().contains("neck tilt stretch") || exercise.title.lowercased().contains("neck tilt") {
-                // Show neck flexion instruction view when neck flexion is selected
+            } else if titleLower.contains("neck flexion") || (titleLower.contains("flexion") && !titleLower.contains("tilt")) {
+                // Show neck flexion instruction view when neck flexion is selected (but not neck tilt)
                 NavigationStack {
                     NeckFlexionInstructionView(exercise: exercise) {
                         selectedExercise = nil
                     }
                 }
-            } else if exercise.title.lowercased().contains("wall angel") || (exercise.title.lowercased().contains("wall") && exercise.title.lowercased().contains("angel")) {
+            } else if titleLower == "neck tilts" || titleLower.contains("neck tilt") {
+                // Show neck tilt instruction view when neck tilts is selected
+                NavigationStack {
+                    NeckTiltInstructionView(exercise: exercise) {
+                        selectedExercise = nil
+                    }
+                }
+            } else if titleLower.contains("wall angel") || (titleLower.contains("wall") && titleLower.contains("angel")) {
                 // Show wall angel instruction view when wall angel is selected
                 NavigationStack {
                     WallAngelInstructionView(exercise: exercise) {
@@ -120,7 +141,7 @@ struct PlanView: View {
     private var headerSection: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Plan")
+                Text("Circuit")
                     .font(.system(size: 40, weight: .bold))
                     .foregroundColor(.black)
                 
@@ -165,7 +186,7 @@ struct PlanView: View {
                         .fill(isSelected ? Color.black.opacity(0.1) : Color.clear)
                 )
             
-            // Status tick below (green if completed, gray if missed)
+            // Status tick below (green if completed, red if missed)
             let date = viewModel.dateForDayIndex(dayIndex)
             let completed = viewModel.fullWorkoutCompleted(on: date)
             Image(systemName: "checkmark")
@@ -184,51 +205,24 @@ struct PlanView: View {
             VStack(spacing: 16) {
                 // Icon and title row
                 HStack(spacing: 16) {
-                    // Body icon
-                    Image(systemName: "figure.stand")
-                        .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(Theme.gradientBrightPink)
+                    // Angel icon
+                    Image("angel1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
                         .frame(width: 60, height: 60)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Full Body")
+                        Text("Full Daily Workout")
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(.white)
                         
-                        Text("Monday")
+                        Text(currentDayName)
                             .font(.system(size: 15))
                             .foregroundColor(.white.opacity(0.6))
                     }
                     
                     Spacer()
-                    
-                    // Menu button (three dots)
-                    Button(action: {
-                        Log.debug("Menu button tapped")
-                    }) {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Theme.gradientBrightPink)
-                            .rotationEffect(.degrees(90))
-                    }
                 }
-                
-                // Description with "more" button
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Scientifically proven to provide the best results in the shortest possible time. This HIIT classic ha")
-                        .font(.system(size: 15))
-                        .foregroundColor(.white.opacity(0.8))
-                        .lineLimit(isDescriptionExpanded ? nil : 2)
-                    
-                    Button(action: {
-                        isDescriptionExpanded.toggle()
-                    }) {
-                        Text(isDescriptionExpanded ? "less" : "more")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 // Start Workout button (blue) or Completed button (green)
                 if viewModel.isWorkoutCompletedToday {
@@ -324,20 +318,28 @@ struct PlanView: View {
             selectedExercise = exercise
         }) {
             HStack(spacing: 16) {
-                // Exercise icon/emoji - use chintuck1.png for Chin Tucks, flexion1.png for Neck Flexion, angel1.png for Wall Angel
-                if exercise.title.lowercased().contains("chin") || exercise.title.lowercased().contains("tuck") {
+                // Exercise icon/emoji - use chintuck1.png for Chin Tucks, flexion1.png for Neck Flexion, necktilt1.png for Neck Tilts, angel1.png for Wall Angel
+                let titleLower = exercise.title.lowercased()
+                
+                if titleLower.contains("chin") || titleLower.contains("tuck") {
                     Image("chintuck1")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 32, height: 32)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
-                } else if exercise.title.lowercased().contains("neck flexion") || exercise.title.lowercased().contains("flexion") || exercise.title.lowercased().contains("neck tilt stretch") || exercise.title.lowercased().contains("neck tilt") {
+                } else if titleLower == "neck tilts" || titleLower.contains("neck tilt") {
+                    Image("necktilt1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else if titleLower.contains("neck flexion") || (titleLower.contains("flexion") && !titleLower.contains("tilt")) {
                     Image("flexion1")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 32, height: 32)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
-                } else if exercise.title.lowercased().contains("wall angel") || (exercise.title.lowercased().contains("wall") && exercise.title.lowercased().contains("angel")) {
+                } else if titleLower.contains("wall angel") || (titleLower.contains("wall") && titleLower.contains("angel")) {
                     Image("angel1")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -366,6 +368,13 @@ struct PlanView: View {
     }
     
     // MARK: - Helpers
+    
+    /// Get current day name (Monday, Tuesday, etc.)
+    private var currentDayName: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter.string(from: Date())
+    }
     
     /// Get emoji for exercise based on title (matching image style)
     private func exerciseEmoji(for title: String) -> String {

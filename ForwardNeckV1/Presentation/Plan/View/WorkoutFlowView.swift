@@ -79,12 +79,11 @@ struct WorkoutFlowView: View {
     // MARK: - Exercise View
     
     private var exerciseView: some View {
-        VStack(spacing: 32) {
-            // Exercise emoji/icon
+        VStack(spacing: 24) {
             if let currentExercise = viewModel.currentExercise {
-                Text(exerciseEmoji(for: currentExercise.title))
-                    .font(.system(size: 120))
-                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                // Exercise images at top
+                exerciseImages(for: currentExercise)
+                    .frame(maxHeight: 180)
                 
                 // Exercise name
                 Text(currentExercise.title)
@@ -92,28 +91,217 @@ struct WorkoutFlowView: View {
                     .foregroundColor(.black)
                     .multilineTextAlignment(.center)
                 
-                // Timer
-                Text("\(viewModel.timeRemaining)")
-                    .font(.system(size: 80, weight: .bold))
-                    .foregroundColor(.black)
-                    .monospacedDigit()
-                
-                // Instructions
-                VStack(alignment: .leading, spacing: 12) {
+                // Instructions below images and title
+                VStack(alignment: .leading, spacing: 16) {
+                    // Instructions list
                     ForEach(Array(currentExercise.instructions.enumerated()), id: \.offset) { index, instruction in
-                        HStack(alignment: .top, spacing: 12) {
-                            Text("\(index + 1).")
+                        HStack(alignment: .center, spacing: 16) {
+                            // Step number badge - matching instruction view style
+                            Text("\(index + 1)")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.black.opacity(0.8))
+                                .foregroundColor(.white)
+                                .frame(width: 32, height: 32)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Theme.gradientBrightPink, Theme.gradientBrightBlue],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .clipShape(Circle())
                             
+                            // Instruction text
                             Text(instruction)
                                 .font(.system(size: 16))
-                                .foregroundColor(.black.opacity(0.8))
+                                .foregroundColor(.black.opacity(0.9))
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            Spacer()
                         }
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(20)
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                
+                // Timer or Start Button below instructions
+                if viewModel.isTimerRunning {
+                    // Timer is running - show countdown with progress ring
+                    ZStack {
+                        // Circular progress ring
+                        Circle()
+                            .stroke(Color.black.opacity(0.1), lineWidth: 8)
+                            .frame(width: 160, height: 160)
+                        
+                        // Progress circle
+                        Circle()
+                            .trim(from: 0, to: timerProgress)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [Theme.gradientBrightPink, Theme.gradientBrightBlue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                            )
+                            .frame(width: 160, height: 160)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 1), value: timerProgress)
+                        
+                        // Timer number
+                        Text("\(viewModel.timeRemaining)")
+                            .font(.system(size: 80, weight: .bold))
+                            .foregroundColor(.black)
+                            .monospacedDigit()
+                    }
+                    .padding(.top, 8)
+                } else {
+                    // Timer not running - show start button
+                    Button(action: {
+                        viewModel.startExerciseTimer()
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 24, weight: .bold))
+                            Text("Start")
+                                .font(.system(size: 28, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.vertical, 20)
+                        .padding(.horizontal, 60)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.2, green: 0.5, blue: 1.0),
+                                    Color(red: 0.1, green: 0.3, blue: 0.8)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
+                    }
+                    .padding(.top, 8)
+                }
             }
+        }
+    }
+    
+    // MARK: - Exercise Images Helper
+    
+    /// Get exercise images based on exercise title
+    private func exerciseImages(for exercise: Exercise) -> some View {
+        let titleLower = exercise.title.lowercased()
+        
+        if titleLower.contains("chin") || titleLower.contains("tuck") {
+            return AnyView(
+                HStack(spacing: 0) {
+                    Spacer()
+                    Image("chintuck1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.horizontal, 16)
+                    
+                    Image("chintuck2")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    Spacer()
+                }
+            )
+        } else if titleLower == "neck tilts" || titleLower.contains("neck tilt") {
+            return AnyView(
+                HStack(spacing: 0) {
+                    Spacer()
+                    Image("necktilt1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.horizontal, 16)
+                    
+                    Image("necktilt2")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    Spacer()
+                }
+            )
+        } else if titleLower.contains("neck flexion") || (titleLower.contains("flexion") && !titleLower.contains("tilt")) {
+            return AnyView(
+                HStack(spacing: 0) {
+                    Spacer()
+                    Image("flexion1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.horizontal, 16)
+                    
+                    Image("flexion2")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    Spacer()
+                }
+            )
+        } else if titleLower.contains("wall angel") || (titleLower.contains("wall") && titleLower.contains("angel")) {
+            return AnyView(
+                HStack(spacing: 0) {
+                    Spacer()
+                    Image("angel1")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 32, weight: .semibold))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.horizontal, 16)
+                    
+                    Image("angel2")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    Spacer()
+                }
+            )
+        } else {
+            // Fallback to emoji
+            return AnyView(
+                Text(exerciseEmoji(for: exercise.title))
+                    .font(.system(size: 120))
+                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+            )
         }
     }
     
@@ -190,6 +378,15 @@ struct WorkoutFlowView: View {
     }
     
     // MARK: - Helpers
+    
+    /// Calculate progress for the countdown ring (0.0 to 1.0)
+    private var timerProgress: Double {
+        guard let currentExercise = viewModel.currentExercise else { return 0 }
+        let totalDuration = currentExercise.durationSeconds
+        guard totalDuration > 0 else { return 0 }
+        let elapsed = Double(totalDuration - viewModel.timeRemaining)
+        return elapsed / Double(totalDuration)
+    }
     
     private func exerciseEmoji(for title: String) -> String {
         let lowercased = title.lowercased()

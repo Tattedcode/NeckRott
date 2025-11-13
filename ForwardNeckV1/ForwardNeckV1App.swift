@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct ForwardNeckV1App: App {
+    @Environment(\.scenePhase) private var scenePhase
+    
     init() {
         // Initialize leaderboard store on app launch
         // This generates device ID and sets up local profile
@@ -23,6 +25,15 @@ struct ForwardNeckV1App: App {
                     // Schedule exercise reminders on app launch
                     Task {
                         await NotificationManager.shared.scheduleExerciseReminders()
+                    }
+                }
+                .onChange(of: scenePhase) { oldPhase, newPhase in
+                    // Reschedule Full Daily Workout notifications when app becomes active
+                    // This ensures notifications are cancelled if workout was completed while app was in background
+                    if newPhase == .active && oldPhase != .active {
+                        Task {
+                            await NotificationManager.shared.rescheduleFullDailyWorkoutNotifications()
+                        }
                     }
                 }
         }

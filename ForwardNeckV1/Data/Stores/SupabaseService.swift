@@ -23,12 +23,24 @@ final class SupabaseService {
     
     private init() {
         // Initialize Supabase client with credentials
+        // NOTE: If your Supabase project was paused and re-enabled, verify these credentials:
+        // 1. Go to Supabase Dashboard → Project Settings → API
+        // 2. Copy the "Project URL" (should match supabaseURL below)
+        // 3. Copy the "anon public" key (should match supabaseKey below)
+        // 4. If keys don't match, update them here
+        let supabaseURLString = "https://zlkndnpjqajahgvrtdyf.supabase.co"
+        let supabaseKeyString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsa25kbnBqcWFqYWhndnJ0ZHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTgwMzgsImV4cCI6MjA3NzIzNDAzOH0.-xCNLGrli153XSycp82nEcyivfV_Vh2ITwdhOmxfV-4"
+        
+        guard let url = URL(string: supabaseURLString) else {
+            fatalError("Invalid Supabase URL: \(supabaseURLString)")
+        }
+        
         self.client = SupabaseClient(
-            supabaseURL: URL(string: "https://zlkndnpjqajahgvrtdyf.supabase.co")!,
-            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsa25kbnBqcWFqYWhndnJ0ZHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NTgwMzgsImV4cCI6MjA3NzIzNDAzOH0.-xCNLGrli153XSycp82nEcyivfV_Vh2ITwdhOmxfV-4"
+            supabaseURL: url,
+            supabaseKey: supabaseKeyString
         )
         
-        Log.info("SupabaseService initialized")
+        Log.info("SupabaseService initialized with URL: \(supabaseURLString)")
     }
     
     // MARK: - User Stats Sync
@@ -41,7 +53,7 @@ final class SupabaseService {
     ///   - totalSessions: Total exercise sessions completed this month
     ///   - monthYear: Current month in "YYYY-MM" format
     func syncUserStats(deviceId: String, username: String?, countryCode: String?, totalSessions: Int, monthYear: String) async throws {
-        Log.info("Syncing stats for device \(deviceId): sessions=\(totalSessions), month=\(monthYear)")
+        Log.info("Syncing stats for device \(deviceId): username=\(username ?? "nil"), country=\(countryCode ?? "nil"), sessions=\(totalSessions), month=\(monthYear)")
         
         // Prepare data for upsert using JSONEncoder
         struct UserStatsData: Codable {
@@ -64,14 +76,18 @@ final class SupabaseService {
         
         do {
             // Use upsert to insert or update
-            try await client
+            // Note: Upsert requires a unique constraint on (device_id, month_year) in Supabase
+            // The upsert will insert if new, or update if the combination already exists
+            let response = try await client
                 .from(tableName)
                 .upsert(userData)
                 .execute()
             
-            Log.info("Successfully synced stats to Supabase")
+            Log.info("Successfully synced stats to Supabase. Response status: \(response.status)")
+            Log.info("Synced data: device_id=\(deviceId), username=\(username ?? "nil"), sessions=\(totalSessions), month=\(monthYear)")
         } catch {
             Log.error("Failed to sync stats: \(error.localizedDescription)")
+            Log.error("Error details: \(error)")
             throw error
         }
     }
@@ -84,10 +100,13 @@ final class SupabaseService {
     ///   - monthYear: Month to fetch leaderboard for
     /// - Returns: Array of LeaderboardUser with ranks assigned
     func fetchLeaderboard(limit: Int = 100, monthYear: String) async throws -> [LeaderboardUser] {
-        Log.info("Fetching leaderboard for month \(monthYear), limit: \(limit)")
+        Log.info("🔍 Fetching leaderboard for month '\(monthYear)', limit: \(limit)")
+        Log.info("🔍 Table name: \(tableName)")
         
         do {
             // Query leaderboard, ordered by total_sessions descending
+            // Select all columns - this should return all users for the month
+            // IMPORTANT: Make sure month_year format matches exactly (YYYY-MM)
             let response: [LeaderboardUser] = try await client
                 .from(tableName)
                 .select()
@@ -97,6 +116,20 @@ final class SupabaseService {
                 .execute()
                 .value
             
+            // Log detailed info about what was fetched
+            Log.info("✅ Raw response count: \(response.count) users")
+            if response.isEmpty {
+                Log.info("⚠️ No users found in leaderboard for month \(monthYear)")
+                Log.info("⚠️ This could mean:")
+                Log.info("   1. No users have synced data for this month")
+                Log.info("   2. RLS policies are filtering results")
+                Log.info("   3. Month format mismatch (expected: \(monthYear))")
+            } else {
+                for (index, user) in response.enumerated() {
+                    Log.info("   User \(index + 1): device_id=\(user.id), username=\(user.username ?? "nil"), sessions=\(user.totalSessions), month=\(user.monthYear)")
+                }
+            }
+            
             // Assign ranks based on position
             let rankedUsers = response.enumerated().map { index, user in
                 var rankedUser = user
@@ -104,10 +137,12 @@ final class SupabaseService {
                 return rankedUser
             }
             
-            Log.info("Fetched \(rankedUsers.count) users from leaderboard")
+            Log.info("✅ Successfully fetched \(rankedUsers.count) users from leaderboard for month \(monthYear)")
             return rankedUsers
         } catch {
-            Log.error("Failed to fetch leaderboard: \(error.localizedDescription)")
+            Log.error("❌ Failed to fetch leaderboard: \(error.localizedDescription)")
+            Log.error("❌ Error details: \(error)")
+            Log.error("❌ Month being queried: \(monthYear)")
             throw error
         }
     }
@@ -224,6 +259,29 @@ final class SupabaseService {
             Log.error("Failed to update country code: \(error.localizedDescription)")
             throw error
         }
+    }
+    
+    // MARK: - User Deletion
+    
+    /// Delete a specific user from the leaderboard by device ID
+    /// - Parameters:
+    ///   - deviceId: The device ID of the user to delete
+    ///   - monthYear: Optional month to delete from. If nil, deletes from all months
+    func deleteUser(deviceId: String, monthYear: String? = nil) async throws {
+        Log.info("Deleting user with device_id: \(deviceId), month: \(monthYear ?? "all")")
+        
+        var query = client
+            .from(tableName)
+            .delete()
+            .eq("device_id", value: deviceId)
+        
+        if let monthYear = monthYear {
+            query = query.eq("month_year", value: monthYear)
+        }
+        
+        try await query.execute()
+        
+        Log.info("Successfully deleted user \(deviceId)")
     }
     
     // MARK: - Testing Helpers

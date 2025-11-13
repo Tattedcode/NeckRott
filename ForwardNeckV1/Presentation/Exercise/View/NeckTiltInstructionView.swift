@@ -1,16 +1,16 @@
 //
-//  WallAngelInstructionView.swift
+//  NeckTiltInstructionView.swift
 //  ForwardNeckV1
 //
-//  Detailed instruction view for Wall Angel exercise with images.
+//  Detailed instruction view for Neck Tilts exercise with images.
 //
 
 import SwiftUI
 
-struct WallAngelInstructionView: View {
+struct NeckTiltInstructionView: View {
     // MARK: - Properties
     
-    /// The wall angel exercise being displayed
+    /// The neck tilt exercise being displayed
     let exercise: Exercise
     
     /// Closure called when user dismisses the view
@@ -58,11 +58,11 @@ struct WallAngelInstructionView: View {
     
     // MARK: - Header Section
     
-    /// Header with exercise title (no icon, no description)
+    /// Header with exercise title
     private var headerSection: some View {
         VStack(spacing: 8) {
             // Exercise title
-            Text("Wall Angel")
+            Text(exercise.title)
                 .font(.system(size: 32, weight: .bold))
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
@@ -92,8 +92,8 @@ struct WallAngelInstructionView: View {
             // Leading spacer to center the content
             Spacer()
             
-            // First instruction image - angel1.png
-            Image("angel1")
+            // First instruction image - necktilt1.png
+            Image("necktilt1")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxHeight: 300)
@@ -106,8 +106,8 @@ struct WallAngelInstructionView: View {
                 .foregroundColor(.black.opacity(0.6))
                 .padding(.horizontal, 16)
             
-            // Second instruction image - angel2.png
-            Image("angel2")
+            // Second instruction image - necktilt2.png
+            Image("necktilt2")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxHeight: 300)
@@ -180,19 +180,19 @@ struct WallAngelInstructionView: View {
 
 #Preview {
     NavigationStack {
-        WallAngelInstructionView(
+        NeckTiltInstructionView(
             exercise: Exercise(
-                title: "Wall Angel",
-                description: "Improve posture and shoulder mobility",
+                title: "Neck Tilts",
+                description: "Release shoulder tension",
                 instructions: [
-                    "Stand with your back against the wall, with your arms in a \"W\" shape.",
-                    "Slowly move your arms up to a \"Y\" shape and hold for 5 seconds",
-                    "Slowly move back down to the W and hold for 5 seconds.",
-                    "Repeat"
+                    "Stand or sit straight with arms by your sides.",
+                    "Lean head to one shoulder and hold for 10 seconds",
+                    "Lean head to other shoulder and hold for 10 seconds",
+                    "Repeat both sides"
                 ],
                 durationSeconds: 10,
-                iconSystemName: "figure.walk",
-                difficulty: .medium
+                iconSystemName: "figure.strengthtraining.traditional",
+                difficulty: .easy
             ),
             onDismiss: nil
         )

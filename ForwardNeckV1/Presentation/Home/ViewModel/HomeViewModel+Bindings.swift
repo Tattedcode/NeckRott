@@ -61,10 +61,12 @@ extension HomeViewModel {
             return
         }
 
-        // Legacy single exercise logic
+        // Filter out the last exercise to prevent same exercise twice in a row
         let filtered = exercises.filter { $0.id != lastExerciseId }
         let selectionPool = filtered.isEmpty ? exercises : filtered
-        guard let selection = selectionPool.randomElement() else {
+        
+        // Randomly select exercise for Quick Workout (dailyUnrotExercise)
+        guard let randomSelection = selectionPool.randomElement() else {
             nextExercise = nil
             dailyUnrotExercise = nil
             dailyPostureFixExercise = nil
@@ -72,18 +74,20 @@ extension HomeViewModel {
             return
         }
 
-        lastExerciseId = selection.id
-        nextExercise = selection
+        // Update lastExerciseId to prevent same exercise next time
+        lastExerciseId = randomSelection.id
         
-        // Assign two different exercises for the dual card layout
-        // First card: Daily Unrot - pick first exercise
-        dailyUnrotExercise = exercises.first
+        // Set both nextExercise and dailyUnrotExercise to the randomly selected exercise
+        nextExercise = randomSelection
+        dailyUnrotExercise = randomSelection
         
-        // Second card: Daily Posture Fix - pick second exercise if available, otherwise same as first
-        if exercises.count > 1 {
-            dailyPostureFixExercise = exercises[1]
+        // Second card: Daily Posture Fix - pick a different exercise if available
+        let remainingExercises = exercises.filter { $0.id != randomSelection.id }
+        if let secondExercise = remainingExercises.randomElement() {
+            dailyPostureFixExercise = secondExercise
         } else {
-            dailyPostureFixExercise = exercises.first
+            // If only one exercise exists, use the same one
+            dailyPostureFixExercise = randomSelection
         }
         
         Log.debug("HomeViewModel updated exercises: Unrot=\(dailyUnrotExercise?.title ?? "nil") PostureFix=\(dailyPostureFixExercise?.title ?? "nil")")
@@ -95,13 +99,14 @@ extension HomeViewModel {
         let calendar = Calendar.current
         let normalizedDate = calendar.startOfDay(for: date)
         let completions = exerciseStore.completionCount(on: normalizedDate)
-        let goalMet = completions >= goal
+        // Mark day as completed if ANY exercises were completed (not just if goal is met)
+        let dayCompleted = completions > 0
         let streakType: StreakType = .postureChecks
 
-        streakStore.addStreak(for: normalizedDate, completed: goalMet, type: streakType)
+        streakStore.addStreak(for: normalizedDate, completed: dayCompleted, type: streakType)
         currentStreak = streakStore.currentStreak(for: streakType)
         recordStreak = streakStore.longestStreak(for: streakType)
 
-        Log.info("HomeViewModel streak check: date=\(normalizedDate) completions=\(completions) goal=\(goal) goalMet=\(goalMet) current=\(currentStreak) record=\(recordStreak)")
+        Log.info("HomeViewModel streak check: date=\(normalizedDate) completions=\(completions) goal=\(goal) dayCompleted=\(dayCompleted) current=\(currentStreak) record=\(recordStreak)")
     }
 }

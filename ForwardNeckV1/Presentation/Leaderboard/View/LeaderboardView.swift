@@ -17,7 +17,7 @@ struct LeaderboardView: View {
     @State private var selectedAchievement: MonthlyAchievement?
     
     enum LeaderboardTab: String, CaseIterable {
-        case leaderboard = "Leaderboard"
+        case leaderboard = "Ranking"
         case level = "Level"
         case achievements = "Achievements"
     }
@@ -31,7 +31,7 @@ struct LeaderboardView: View {
             VStack(spacing: 0) {
                 // Title section
                 VStack(spacing: 0) {
-                    Text("Leaderboard")
+                    Text("Ranking")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.black)
                         .padding(.top, 20)
@@ -303,7 +303,7 @@ struct LeaderboardView: View {
             }) {
                 HStack {
                     Image(systemName: "person.badge.plus")
-                    Text("Join Leaderboard")
+                    Text("Join Ranking")
                 }
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.white)
@@ -348,7 +348,7 @@ struct LeaderboardView: View {
                             .foregroundColor(.black)
                     }
                     
-                    Text("\(monthlySessionCount) sessions")
+                    Text("\(monthlySessionCount) neck fixes")
                         .font(.system(size: 14))
                         .foregroundColor(.black.opacity(0.7))
                 }
@@ -431,7 +431,7 @@ struct LeaderboardView: View {
                     }
                 }
                 
-                Text("\(user.totalSessions) sessions")
+                Text("\(user.totalSessions) neck fixes")
                     .font(.system(size: 13))
                     .foregroundColor(.black.opacity(0.6))
             }

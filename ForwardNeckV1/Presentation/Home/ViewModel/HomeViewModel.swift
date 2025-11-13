@@ -39,6 +39,9 @@ final class HomeViewModel: ObservableObject {
     @Published var neckFixHistory: [NeckFixDaySummary] = []
     @Published var previousDayCards: [PreviousDaySummary] = []
     
+    // Queue for achievements that need to be shown (handles multiple achievements unlocking at once)
+    private var achievementQueue: [MonthlyAchievement] = []
+    
     // MARK: - Time Slot State
     
     @Published var morningSlotStatus: SlotStatus = .locked
@@ -130,12 +133,23 @@ final class HomeViewModel: ObservableObject {
     // MARK: - Public API
 
     func completeCurrentExercise() async {
-        guard let exercise = nextExercise else { return }
+        guard let exercise = nextExercise ?? dailyUnrotExercise else { return }
         
         // Determine which time slot this exercise is for
         let timeSlot = currentTimeSlot ?? ExerciseTimeSlot.currentTimeSlot() ?? .morning
         
         await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: exercise.durationSeconds, timeSlot: timeSlot)
+        
+        // Cancel Full Daily Workout notifications if this was a Full Daily Workout completion
+        if timeSlot == .afternoon {
+            await NotificationManager.shared.cancelFullDailyWorkoutNotifications()
+            Log.info("Cancelled Full Daily Workout notifications after completion")
+        }
+        
+        // Update lastExerciseId to prevent same exercise next time
+        lastExerciseId = exercise.id
+        
+        // Get a new random exercise for next time
         updateNextExercise()
         updateNeckFixes(for: selectedNeckFixDate)
         updateTimeSlotStatuses()
@@ -156,6 +170,38 @@ final class HomeViewModel: ObservableObject {
 
     func clearRecentlyUnlockedAchievement() {
         recentlyUnlockedAchievement = nil
+        
+        // Show next achievement from queue if available
+        showNextAchievementFromQueue()
+    }
+    
+    /// Add achievement to queue and show it if no other achievement is currently showing
+    func enqueueAchievement(_ achievement: MonthlyAchievement) {
+        achievementQueue.append(achievement)
+        Log.info("Enqueued achievement: \(achievement.title). Queue size: \(achievementQueue.count)")
+        
+        // If no achievement is currently showing, show the first one from queue
+        if recentlyUnlockedAchievement == nil {
+            showNextAchievementFromQueue()
+        }
+    }
+    
+    /// Show the next achievement from the queue
+    private func showNextAchievementFromQueue() {
+        guard recentlyUnlockedAchievement == nil, !achievementQueue.isEmpty else {
+            return
+        }
+        
+        // Remove and show the first achievement in queue
+        let nextAchievement = achievementQueue.removeFirst()
+        recentlyUnlockedAchievement = nextAchievement
+        Log.info("Showing next achievement from queue: \(nextAchievement.title). Remaining in queue: \(achievementQueue.count)")
+    }
+    
+    /// Clear the achievement queue (used during app reset)
+    func clearAchievementQueue() {
+        achievementQueue = []
+        Log.info("Cleared achievement queue")
     }
     
     // MARK: - Time Slot Methods
@@ -234,9 +280,36 @@ final class HomeViewModel: ObservableObject {
             }
         }
         
-        // For other slots, check completion normally
-        if slot != .morning && exerciseStore.isTimeSlotCompleted(slot, for: date) {
-            return .completed
+        // Special handling for Full Daily Workout - lock until 6am next day after completion
+        if slot == .afternoon {
+            if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+                let calendar = Calendar.current
+                let now = date
+                let hour = calendar.component(.hour, from: now)
+                let lastCompletion = exerciseStore.lastCompletionTime(for: slot, on: date)
+                
+                if let lastCompletion = lastCompletion {
+                    let completionDay = calendar.startOfDay(for: lastCompletion)
+                    let today = calendar.startOfDay(for: date)
+                    
+                    if completionDay == today {
+                        // Completed today - lock until 6am tomorrow
+                        Log.info("Full Daily Workout completed today, locked until 6am tomorrow")
+                        return .locked
+                    } else {
+                        // Completed yesterday or earlier
+                        if hour >= 6 {
+                            // It's after 6am today, so it's been unlocked
+                            Log.info("Full Daily Workout completed yesterday, available now (after 6am)")
+                            return .available
+                        } else {
+                            // It's before 6am today, still locked until 6am
+                            Log.info("Full Daily Workout completed yesterday, locked until 6am today")
+                            return .locked
+                        }
+                    }
+                }
+            }
         }
 
         if exerciseStore.isTimeSlotAvailable(slot, for: date) {

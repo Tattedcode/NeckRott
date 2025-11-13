@@ -16,10 +16,10 @@ final class WorkoutFlowViewModel: ObservableObject {
     @Published var timeRemaining: Int = 30
     @Published var isBreak: Bool = false
     @Published var isCompleted: Bool = false
+    @Published var isTimerRunning: Bool = false // Track if timer is actively running
     
     // MARK: - Constants
     
-    private let exerciseDuration: Int = 30 // seconds
     private let breakDuration: Int = 5 // seconds
     
     // MARK: - Properties
@@ -47,7 +47,8 @@ final class WorkoutFlowViewModel: ObservableObject {
         
         // Calculate progress including current exercise
         let completedExercises = currentExerciseIndex
-        let currentProgress = isBreak ? 1.0 : (Double(exerciseDuration - timeRemaining) / Double(exerciseDuration))
+        let currentExerciseDuration = currentExercise?.durationSeconds ?? 30
+        let currentProgress = isBreak ? 1.0 : (Double(currentExerciseDuration - timeRemaining) / Double(currentExerciseDuration))
         
         return CGFloat((Double(completedExercises) + currentProgress) / Double(totalExercises))
     }
@@ -56,6 +57,10 @@ final class WorkoutFlowViewModel: ObservableObject {
     
     init(exercises: [Exercise]) {
         self.exercises = exercises
+        // Initialize with first exercise ready but timer not started
+        if let firstExercise = exercises.first {
+            timeRemaining = firstExercise.durationSeconds
+        }
         Log.info("WorkoutFlowViewModel initialized with \(exercises.count) exercises")
     }
     
@@ -65,24 +70,40 @@ final class WorkoutFlowViewModel: ObservableObject {
     
     // MARK: - Public Methods
     
+    /// Start the workout flow - prepares first exercise but doesn't start timer
     func start() {
-        Log.info("Starting workout flow")
-        startExercise()
+        Log.info("Starting workout flow - ready for first exercise")
+        prepareExercise()
+    }
+    
+    /// Manually start the timer for current exercise
+    func startExerciseTimer() {
+        guard !isTimerRunning else { return }
+        guard currentExerciseIndex < exercises.count else {
+            completeWorkout()
+            return
+        }
+        
+        isTimerRunning = true
+        Log.debug("Starting timer for exercise \(currentExerciseIndex + 1): \(currentExercise?.title ?? "")")
+        startTimer()
     }
     
     // MARK: - Private Methods
     
-    private func startExercise() {
+    private func prepareExercise() {
         guard currentExerciseIndex < exercises.count else {
             completeWorkout()
             return
         }
         
         isBreak = false
-        timeRemaining = exerciseDuration
+        isTimerRunning = false
+        if let exercise = currentExercise {
+            timeRemaining = exercise.durationSeconds
+        }
         
-        Log.debug("Starting exercise \(currentExerciseIndex + 1): \(currentExercise?.title ?? "")")
-        startTimer()
+        Log.debug("Prepared exercise \(currentExerciseIndex + 1): \(currentExercise?.title ?? "")")
     }
     
     private func startBreak() {
@@ -93,6 +114,7 @@ final class WorkoutFlowViewModel: ObservableObject {
         }
         
         isBreak = true
+        isTimerRunning = true
         timeRemaining = breakDuration
         
         Log.debug("Starting break after exercise \(currentExerciseIndex + 1)")
@@ -114,20 +136,29 @@ final class WorkoutFlowViewModel: ObservableObject {
         
         if timeRemaining <= 0 {
             timer?.invalidate()
+            isTimerRunning = false
             
             if isBreak {
                 // Break finished, move to next exercise
                 currentExerciseIndex += 1
-                startExercise()
+                prepareExercise() // Prepare next exercise but don't start timer
             } else {
-                // Exercise finished, start break (or complete if last exercise)
-                startBreak()
+                // Exercise finished, prepare for next exercise
+                if currentExerciseIndex < exercises.count - 1 {
+                    // There's another exercise, prepare it
+                    currentExerciseIndex += 1
+                    prepareExercise()
+                } else {
+                    // Last exercise completed
+                    completeWorkout()
+                }
             }
         }
     }
     
     private func completeWorkout() {
         timer?.invalidate()
+        isTimerRunning = false
         isCompleted = true
         Log.info("Workout flow completed - all \(exercises.count) exercises finished")
     }

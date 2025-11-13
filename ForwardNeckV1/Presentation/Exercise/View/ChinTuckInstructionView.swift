@@ -126,16 +126,9 @@ struct ChinTuckInstructionView: View {
     /// Section displaying step-by-step instructions
     private var instructionsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section header
-            Text("Step-by-Step Instructions")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(.black)
-            
             // Instructions list
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
-                    instructionRow(stepNumber: index + 1, instruction: instruction)
-                }
+            ForEach(Array(exercise.instructions.enumerated()), id: \.offset) { index, instruction in
+                instructionRow(stepNumber: index + 1, instruction: instruction)
             }
         }
         .padding(20)
@@ -195,7 +188,7 @@ struct ChinTuckInstructionView: View {
                     "Sit or stand with back straight, place 2 fingers on your chin.",
                     "Gently push chin back like you are making a double chin.",
                     "Hold 5 seconds.",
-                    "Release and repeat 5 times"
+                    "Release and repeat"
                 ],
                 durationSeconds: 10,
                 iconSystemName: "face.smiling",

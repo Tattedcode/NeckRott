@@ -31,7 +31,8 @@ extension HomeViewModel {
         let monthlyCompletionCount = completionsThisMonth.count
         let dailyGoal = userStore.dailyGoal
 
-        var newlyUnlocked: MonthlyAchievement?
+        // Collect ALL newly unlocked achievements (not just the first one)
+        var newlyUnlockedAchievements: [MonthlyAchievement] = []
 
         for index in updated.indices {
             let kind = updated[index].kind
@@ -41,12 +42,9 @@ extension HomeViewModel {
                 switch kind {
                 case .firstExercise:
                     return monthlyCompletionCount >= 1
-                case .extraExercises:
-                    let goal = max(0, dailyGoal)
-                    return goal == 0 ? completionsTodayCount >= 1 : completionsTodayCount > goal
                 case .dailyStreakStarted:
-                    let goalMetToday = dailyGoal <= 0 ? completionsTodayCount >= 1 : completionsTodayCount >= dailyGoal
-                    return currentPostureStreak >= 1 && goalMetToday
+                    // Unlock as soon as a streak is started (1 day)
+                    return currentPostureStreak >= 1
                 case .fifteenDayStreak:
                     return currentPostureStreak >= 15
                 case .fullMonthStreak:
@@ -67,17 +65,24 @@ extension HomeViewModel {
                 shownAchievementKinds.insert(kind)
             }
 
+            // Collect all newly unlocked achievements (not just the first one)
             if !skipCelebration,
                isUnlocked,
                !wasUnlocked,
                !shownAchievementKinds.contains(kind) {
-                newlyUnlocked = updated[index]
+                newlyUnlockedAchievements.append(updated[index])
             }
         }
 
         monthlyAchievements = updated
-        if let newlyUnlocked {
-            recentlyUnlockedAchievement = newlyUnlocked
+        
+        // Add all newly unlocked achievements to the queue
+        // They will be shown one at a time when the user dismisses each sheet
+        if !newlyUnlockedAchievements.isEmpty {
+            Log.info("Found \(newlyUnlockedAchievements.count) newly unlocked achievement(s)")
+            for achievement in newlyUnlockedAchievements {
+                enqueueAchievement(achievement)
+            }
         }
     }
     
@@ -152,6 +157,8 @@ extension HomeViewModel {
         shownAchievementKinds = []
         unlockedAchievementKinds = []
         recentlyUnlockedAchievement = nil
+        // Clear achievement queue when resetting app data
+        clearAchievementQueue()
         UserDefaults.standard.removeObject(forKey: achievementsShownKey)
         UserDefaults.standard.removeObject(forKey: achievementsUnlockedKey)
         UserDefaults.standard.removeObject(forKey: achievementsMonthKey + ".shown.month")

@@ -35,7 +35,6 @@ struct PreviousDaySummary: Identifiable, Equatable {
 
 enum MonthlyAchievementKind: String, CaseIterable, Hashable, Codable {
     case firstExercise
-    case extraExercises
     case tenCompleted
     case twentyCompleted
     case dailyStreakStarted
@@ -48,7 +47,6 @@ extension MonthlyAchievementKind {
     var title: String {
         switch self {
         case .firstExercise: return "First Exercise This Month"
-        case .extraExercises: return "Completed Extra Exercise"
         case .tenCompleted: return "10 Exercises Completed"
         case .twentyCompleted: return "20 Exercises Completed"
         case .dailyStreakStarted: return "Daily Streak Started"
@@ -60,8 +58,6 @@ extension MonthlyAchievementKind {
 
     private var baseAssetName: String {
         switch self {
-        case .extraExercises:
-            return "extraexercises"
         case .dailyStreakStarted:
             return "dailystreakstarted"
         case .fifteenDayStreak:

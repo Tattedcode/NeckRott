@@ -179,6 +179,12 @@ struct ExerciseDetailView: View {
             
             await ExerciseStore.shared.recordCompletion(exerciseId: exercise.id, durationSeconds: timer.elapsedSeconds, timeSlot: timeSlot)
             
+            // Cancel Full Daily Workout notifications if this was a Full Daily Workout completion
+            if timeSlot == .afternoon {
+                await NotificationManager.shared.cancelFullDailyWorkoutNotifications()
+                Log.info("Cancelled Full Daily Workout notifications after completion")
+            }
+            
             // Update streaks after exercise completion
             await updateStreaks()
             

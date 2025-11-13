@@ -348,8 +348,6 @@ struct AchievementDetailSheet: View {
         switch kind {
         case .firstExercise:
             return "Complete your first exercise this month"
-        case .extraExercises:
-            return "Complete more exercises than your daily goal"
         case .tenCompleted:
             return "Complete 10 exercises total"
         case .twentyCompleted:
@@ -369,8 +367,6 @@ struct AchievementDetailSheet: View {
         switch kind {
         case .firstExercise:
             return "Complete 1 exercise this month"
-        case .extraExercises:
-            return "Exceed your daily goal"
         case .tenCompleted:
             return "Complete 10 exercises"
         case .twentyCompleted:
@@ -390,8 +386,6 @@ struct AchievementDetailSheet: View {
         switch kind {
         case .firstExercise:
             return "Well done on taking your first step this month towards better neck health. Working on your neck now will save it in the future"
-        case .extraExercises:
-            return "Going above and beyond your daily goal shows dedication and commitment to your neck health journey."
         case .tenCompleted:
             return "You've completed 10 exercises! This milestone shows you're building a consistent habit of caring for your neck."
         case .twentyCompleted:

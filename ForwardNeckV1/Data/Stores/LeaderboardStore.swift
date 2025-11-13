@@ -99,23 +99,34 @@ final class LeaderboardStore: ObservableObject {
     
     /// Update user profile locally and sync to Supabase
     func updateProfile(username: String? = nil, countryCode: String? = nil, optedIn: Bool? = nil) async {
-        // Update local profile
+        // Update local profile by creating a new struct instance
+        // This ensures @Published property wrapper detects the change
+        var updatedProfile = userProfile
+        
         if let username = username {
-            userProfile.username = username
+            updatedProfile.username = username
         }
         if let countryCode = countryCode {
-            userProfile.countryCode = countryCode
+            updatedProfile.countryCode = countryCode
         }
         if let optedIn = optedIn {
-            userProfile.optedIntoLeaderboard = optedIn
+            updatedProfile.optedIntoLeaderboard = optedIn
         }
+        
+        // Reassign the entire struct to trigger @Published notification
+        userProfile = updatedProfile
         
         // Save to disk
         Self.saveProfile(userProfile, to: profileFileURL)
         
+        Log.info("Updated user profile - username: \(userProfile.username ?? "nil"), optedIn: \(userProfile.optedIntoLeaderboard)")
+        
         // Sync to Supabase if opted in
         if userProfile.optedIntoLeaderboard {
+            Log.info("User opted into leaderboard, syncing stats immediately")
             await syncToSupabase()
+            // Force refresh leaderboard after joining to see all users
+            await refreshLeaderboard(force: true)
         }
     }
     
@@ -159,10 +170,17 @@ final class LeaderboardStore: ObservableObject {
         errorMessage = nil
         
         do {
+            // Always use Gregorian calendar format (e.g., "2025-11") regardless of device locale
+            // This ensures Thai users (Buddhist Era) and other users see the same leaderboard
             let monthYear = UserProfile.currentMonthYear
+            Log.info("Refreshing leaderboard for month: \(monthYear), current device: \(userProfile.deviceId)")
             
             // Fetch leaderboard
             let users = try await supabaseService.fetchLeaderboard(limit: 100, monthYear: monthYear)
+            
+            Log.info("Received \(users.count) users from Supabase")
+            Log.info("User device IDs in response: \(users.map { $0.id })")
+            
             leaderboardUsers = users
             lastRefreshDate = Date()
             
@@ -173,13 +191,17 @@ final class LeaderboardStore: ObservableObject {
             if userProfile.optedIntoLeaderboard {
                 if let rankData = try await supabaseService.fetchUserRank(deviceId: userProfile.deviceId, monthYear: monthYear) {
                     currentUserRank = rankData.rank
+                    Log.info("Current user rank: \(rankData.rank)")
+                } else {
+                    Log.info("Current user not found in leaderboard rankings")
                 }
             }
             
-            Log.info("Refreshed leaderboard: \(users.count) users")
+            Log.info("Successfully refreshed leaderboard: \(users.count) users")
         } catch {
             errorMessage = "Failed to load leaderboard: \(error.localizedDescription)"
             Log.error("Failed to refresh leaderboard: \(error.localizedDescription)")
+            Log.error("Error: \(error)")
         }
         
         isLoading = false
@@ -194,12 +216,17 @@ final class LeaderboardStore: ObservableObject {
             return
         }
         
+        // Always use Gregorian calendar format (e.g., "2025-11") regardless of device locale
+        // This ensures Thai users (Buddhist Era) and other users see the same leaderboard
         let monthYear = UserProfile.currentMonthYear
         
         // Check if new month - reset counter if needed
         if userProfile.isNewMonth {
             Log.info("New month detected, resetting session counter")
-            userProfile.lastSyncedMonth = monthYear
+            // Create a new profile instance to trigger @Published notification
+            var updatedProfile = userProfile
+            updatedProfile.lastSyncedMonth = monthYear
+            userProfile = updatedProfile  // Reassign to trigger notification
             Self.saveProfile(userProfile, to: profileFileURL)
         }
         
@@ -215,24 +242,35 @@ final class LeaderboardStore: ObservableObject {
                 monthYear: monthYear
             )
             
-            Log.info("Synced \(thisMonthSessions) sessions to Supabase")
+            Log.info("Synced \(thisMonthSessions) sessions to Supabase for month \(monthYear)")
             
-            // Update last synced month
-            userProfile.lastSyncedMonth = monthYear
+            // Update last synced month (create new instance to trigger @Published)
+            var updatedProfile = userProfile
+            updatedProfile.lastSyncedMonth = monthYear
+            userProfile = updatedProfile  // Reassign to trigger notification
             Self.saveProfile(userProfile, to: profileFileURL)
+            
+            // Refresh leaderboard after sync to see updated rankings
+            Log.info("Refreshing leaderboard after sync to show all users")
+            await refreshLeaderboard(force: true)
         } catch {
             Log.error("Failed to sync to Supabase: \(error.localizedDescription)")
+            Log.error("Sync error details: \(error)")
             errorMessage = "Sync failed: \(error.localizedDescription)"
         }
     }
     
     /// Handle exercise completion notification
     private func handleExerciseCompletion() async {
-        Log.info("Exercise completed, triggering sync")
+        guard userProfile.optedIntoLeaderboard else {
+            Log.info("User not opted into leaderboard, skipping sync")
+            return
+        }
+        
+        Log.info("Exercise completed, triggering sync for device \(userProfile.deviceId)")
         await syncToSupabase()
         
-        // Refresh leaderboard to see updated rankings
-        await refreshLeaderboard(force: true)
+        // Note: syncToSupabase already refreshes leaderboard, so we don't need to do it again here
     }
     
     /// Calculate total sessions completed in the current month
@@ -296,11 +334,29 @@ final class LeaderboardStore: ObservableObject {
         resetLocalProfileData()
     }
     
+    /// Delete a specific user from Supabase leaderboard
+    /// - Parameters:
+    ///   - deviceId: Device ID of the user to delete
+    ///   - monthYear: Optional month. If nil, deletes from all months
+    func deleteUser(deviceId: String, monthYear: String? = nil) async throws {
+        Log.info("Deleting user \(deviceId) from leaderboard")
+        try await supabaseService.deleteUser(deviceId: deviceId, monthYear: monthYear)
+        
+        // Refresh leaderboard after deletion
+        await refreshLeaderboard(force: true)
+    }
+    
     private func resetLocalProfileData() {
-        userProfile.optedIntoLeaderboard = false
-        userProfile.username = nil
-        userProfile.countryCode = nil  // Reset country too
-        userProfile.lastSyncedMonth = nil  // Reset sync tracking
+        // Create a new profile instance to trigger @Published notification
+        var resetProfile = userProfile
+        resetProfile.optedIntoLeaderboard = false
+        resetProfile.username = nil
+        resetProfile.countryCode = nil  // Reset country too
+        resetProfile.lastSyncedMonth = nil  // Reset sync tracking
+        
+        // Reassign the entire struct to trigger @Published notification
+        userProfile = resetProfile
+        
         Self.saveProfile(userProfile, to: profileFileURL)
         
         leaderboardUsers = []

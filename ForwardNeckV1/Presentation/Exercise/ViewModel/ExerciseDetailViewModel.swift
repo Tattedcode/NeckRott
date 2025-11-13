@@ -100,6 +100,12 @@ final class ExerciseDetailViewModel {
         let slot = ExerciseTimeSlot.currentTimeSlot() ?? .morning
         await exerciseStore.recordCompletion(exerciseId: exercise.id, durationSeconds: elapsedSeconds, timeSlot: slot)
         
+        // Cancel Full Daily Workout notifications if this was a Full Daily Workout completion
+        if slot == .afternoon {
+            await NotificationManager.shared.cancelFullDailyWorkoutNotifications()
+            Log.info("Cancelled Full Daily Workout notifications after completion")
+        }
+        
         // Update streaks after exercise completion
         await updateStreaks()
         

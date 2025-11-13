@@ -39,7 +39,7 @@ struct SetUsernameSheet: View {
                                 .frame(width: 60, height: 60)
                                 .foregroundColor(.yellow)
                             
-                            Text("Join the Leaderboard")
+                            Text("Join the Ranking")
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(.black)
                             
@@ -143,7 +143,7 @@ struct SetUsernameSheet: View {
                         
                         // Save button
                         Button(action: saveAndJoin) {
-                            Text("Join Leaderboard")
+                            Text("Join Ranking")
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)

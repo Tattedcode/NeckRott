@@ -39,8 +39,16 @@ extension HomeView {
                                 .foregroundColor(.red)
                                 .padding(.top, 4)
                         }
+                    } else if slot == .afternoon {
+                        // Show countdown until 6am next day for Full Daily Workout
+                        if let timeUntil = timeUntil6AMNextDay() {
+                            Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.red)
+                                .padding(.top, 4)
+                        }
                     } else if let timeUntil = slot.timeUntilAvailable() {
-                        // Show time-based lock for Full Daily Workout
+                        // Show time-based lock for other slots
                         Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.orange)
@@ -48,11 +56,23 @@ extension HomeView {
                     }
                 }
                 
-                if let exercise = exercise, status != .locked {
-                    Text(exercise.description)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(statusTextColor(for: status).opacity(0.7))
-                        .lineLimit(1)
+                if status != .locked {
+                    if slot == .morning {
+                        Text("Complete a random workout for neck health")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(statusTextColor(for: status).opacity(0.7))
+                            .lineLimit(1)
+                    } else if slot == .afternoon {
+                        Text("Fully strengthen your neck")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(statusTextColor(for: status).opacity(0.7))
+                            .lineLimit(1)
+                    } else if let exercise = exercise {
+                        Text(exercise.description)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(statusTextColor(for: status).opacity(0.7))
+                            .lineLimit(1)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -92,15 +112,10 @@ extension HomeView {
         Group {
             switch status {
             case .locked:
-                // Don't show countdown for Quick Workout, show lock for Full Daily Workout
-                if slot == .morning {
-                    // Quick Workout - don't show any icon during cooldown
-                    EmptyView()
-                } else {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.orange)
-                }
+                // Show lock icon for both Quick Workout and Full Daily Workout when locked
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.red)
             case .available:
                 Image(systemName: "clock.fill")
                     .font(.system(size: 12))
@@ -119,6 +134,16 @@ extension HomeView {
             return .black.opacity(0.7)
         case .available:
             return .black
+        }
+    }
+    
+    /// Get description text for exercise card based on slot
+    private func descriptionText(for slot: ExerciseTimeSlot, exercise: Exercise?) -> String {
+        switch slot {
+        case .morning:
+            return "Complete a random workout for neck health"
+        case .afternoon:
+            return "Fully strengthen your neck"
         }
     }
     
@@ -283,5 +308,32 @@ extension HomeView {
         case .hard:
             return .red
         }
+    }
+    
+    /// Calculate time until 6am next day (for Full Daily Workout lockout)
+    private func timeUntil6AMNextDay() -> TimeInterval? {
+        let calendar = Calendar.current
+        let now = Date()
+        let hour = calendar.component(.hour, from: now)
+        
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = 6
+        components.minute = 0
+        components.second = 0
+        
+        // If it's before 6am today, return time until 6am today
+        if hour < 6 {
+            if let today6AM = calendar.date(from: components) {
+                return today6AM.timeIntervalSince(now)
+            }
+        } else {
+            // If it's after 6am, return time until 6am tomorrow
+            components.day! += 1
+            if let tomorrow6AM = calendar.date(from: components) {
+                return tomorrow6AM.timeIntervalSince(now)
+            }
+        }
+        
+        return nil
     }
 }

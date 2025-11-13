@@ -72,73 +72,72 @@ struct ExerciseCountdownTimer: View {
             }
             
             // Control buttons
-            VStack(spacing: 12) {
-                if !isRunning && !isCompleted {
-                    // Start button
-                    Button(action: startTimer) {
+            VStack(spacing: 8) {
+                // Start button - always shown at top
+                Button(action: startTimer) {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Start")
+                    }
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.green)
+                    .clipShape(Capsule())
+                }
+                .disabled(isRunning || isPaused) // Disable when timer is running or paused
+                .opacity((isRunning || isPaused) ? 0.5 : 1.0) // Dim when disabled
+                
+                // Running/Paused state buttons - shown below Start button
+                if isRunning || isPaused {
+                    // Pause/Resume button
+                    Button(action: togglePause) {
                         HStack {
-                            Image(systemName: "play.fill")
-                            Text("Start")
+                            Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                            Text(isPaused ? "Resume" : "Pause")
                         }
                         .foregroundColor(.black)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
-                        .background(Color.green)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.orange)
                         .clipShape(Capsule())
                     }
-                } else if isRunning || isPaused {
-                    // Running/Paused state buttons - vertical layout
-                    VStack(spacing: 8) {
-                        // Pause/Resume button
-                        Button(action: togglePause) {
-                            HStack {
-                                Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                                Text(isPaused ? "Resume" : "Pause")
-                            }
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.orange)
-                            .clipShape(Capsule())
+                    
+                    // Reset button
+                    Button(action: resetTimer) {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Reset")
                         }
-                        
-                        // Reset button
-                        Button(action: resetTimer) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                Text("Reset")
-                            }
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .clipShape(Capsule())
-                        }
-                        
-                        // Cancel button
-                        Button(action: cancelTimer) {
-                            HStack {
-                                Image(systemName: "stop.fill")
-                                Text("Cancel")
-                            }
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.red)
-                            .clipShape(Capsule())
-                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .clipShape(Capsule())
                     }
-                // Removed completion state - goes directly back to home view
+                    
+                    // Cancel button
+                    Button(action: cancelTimer) {
+                        HStack {
+                            Image(systemName: "stop.fill")
+                            Text("Cancel")
+                        }
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.red)
+                        .clipShape(Capsule())
+                    }
                 }
             }
         }
         .padding(20)
-        .background(Theme.cardBackground)
+        .background(Color.white.opacity(0.05)) // Very subtle background, no white borders
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
         .onAppear {
             Log.info("ExerciseCountdownTimer appeared - Duration: \(totalDuration) seconds")
             if autoStart {

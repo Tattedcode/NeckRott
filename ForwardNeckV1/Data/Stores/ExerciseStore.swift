@@ -32,8 +32,8 @@ final class ExerciseStore: ObservableObject {
     
     func allCompletions() -> [ExerciseCompletion] { completions }
     
-    /// Update an exercise by title with new instructions
-    func updateExercise(title: String, instructions: [String]) async {
+    /// Update an exercise by title with new instructions and optional duration
+    func updateExercise(title: String, instructions: [String], durationSeconds: Int? = nil) async {
         if let index = exercises.firstIndex(where: { $0.title == title }) {
             let existingExercise = exercises[index]
             exercises[index] = Exercise(
@@ -41,12 +41,12 @@ final class ExerciseStore: ObservableObject {
                 title: existingExercise.title,
                 description: existingExercise.description,
                 instructions: instructions,
-                durationSeconds: existingExercise.durationSeconds,
+                durationSeconds: durationSeconds ?? existingExercise.durationSeconds,
                 iconSystemName: existingExercise.iconSystemName,
                 difficulty: existingExercise.difficulty
             )
             await save()
-            Log.info("Updated exercise '\(title)' with new instructions")
+            Log.info("Updated exercise '\(title)' with new instructions and duration: \(durationSeconds ?? existingExercise.durationSeconds)s")
         }
     }
     
@@ -86,6 +86,10 @@ final class ExerciseStore: ObservableObject {
         completions.append(completion)
         Log.info("Recorded completion for exercise \(exerciseId) - \(durationSeconds)s in \(timeSlot.rawValue) slot")
         await save()
+        
+        // Award 2 XP for completing any exercise
+        let gamificationStore = GamificationStore.shared
+        gamificationStore.addXP(2, source: "Exercise completed")
         
         // Notify leaderboard system of exercise completion
         NotificationCenter.default.post(name: .exerciseCompleted, object: nil)
@@ -201,15 +205,16 @@ final class ExerciseStore: ObservableObject {
                 await save()
             }
             
-            // Update Chin Tucks exercise with new instructions
+            // Update Chin Tucks exercise with new instructions and duration
             await updateExercise(
                 title: "Chin Tucks",
                 instructions: [
                     "Sit or stand with back straight, place 2 fingers on your chin.",
                     "Gently push chin back like you are making a double chin.",
                     "Hold 5 seconds.",
-                    "Release and repeat 5 times"
-                ]
+                    "Release and repeat"
+                ],
+                durationSeconds: 50
             )
             
             // Rename Neck Tilt Stretch to Neck Flexion and update instructions
@@ -221,7 +226,7 @@ final class ExerciseStore: ObservableObject {
                     "Begin by sitting comfortably in a chair or on the floor.",
                     "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
                     "Hold this position for 15-30 seconds.",
-                    "Repeat 5 times per session."
+                    "Repeat"
                 ]
             )
             
@@ -232,16 +237,46 @@ final class ExerciseStore: ObservableObject {
                     "Begin by sitting comfortably in a chair or on the floor.",
                     "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
                     "Hold this position for 15-30 seconds.",
-                    "Repeat 5 times per session."
-                ]
+                    "Repeat"
+                ],
+                durationSeconds: 90
             )
             
-            // Update Wall Angel exercise with new instructions
+            // Update Wall Angel exercise with new instructions and duration
             await updateExercise(
                 title: "Wall Angel",
                 instructions: [
-                    "Stand with your back against a wall"
+                    "Stand with your back against the wall, with your arms in a \"W\" shape.",
+                    "Slowly move your arms up to a \"Y\" shape and hold for 5 seconds",
+                    "Slowly move back down to the W and hold for 5 seconds.",
+                    "Repeat"
+                ],
+                durationSeconds: 50
+            )
+            
+            // Rename Shoulder Rolls to Neck Tilts
+            await renameExercise(
+                oldTitle: "Shoulder Rolls",
+                newTitle: "Neck Tilts",
+                description: "Release shoulder tension",
+                instructions: [
+                    "Stand or sit straight with arms by your sides.",
+                    "Lean head to one shoulder and hold for 10 seconds",
+                    "Lean head to other shoulder and hold for 10 seconds",
+                    "Repeat both sides"
                 ]
+            )
+            
+            // Also update if it's already named Neck Tilts (to ensure instructions are correct)
+            await updateExercise(
+                title: "Neck Tilts",
+                instructions: [
+                    "Stand or sit straight with arms by your sides.",
+                    "Lean head to one shoulder and hold for 10 seconds",
+                    "Lean head to other shoulder and hold for 10 seconds",
+                    "Repeat both sides"
+                ],
+                durationSeconds: 70
             )
         } catch {
             // First run - seed with default exercises
@@ -270,35 +305,35 @@ final class ExerciseStore: ObservableObject {
                     "Begin by sitting comfortably in a chair or on the floor.",
                     "Tilt your head forward until you feel a gentle stretch at the back of your neck.",
                     "Hold this position for 15-30 seconds.",
-                    "Repeat 5 times per session."
+                    "Repeat"
                 ],
-                durationSeconds: 10,
+                durationSeconds: 90,
                 iconSystemName: "person.fill.viewfinder",
                 difficulty: .easy
             ),
             Exercise(
                 title: "Chin Tucks",
-                description: "Strengthen deep neck flexors",
+                description: "Fully strengthen your neck",
                 instructions: [
                     "Sit or stand with back straight, place 2 fingers on your chin.",
                     "Gently push chin back like you are making a double chin.",
                     "Hold 5 seconds.",
-                    "Release and repeat 5 times"
+                    "Release and repeat"
                 ],
-                durationSeconds: 10,
+                durationSeconds: 50,
                 iconSystemName: "face.smiling",
                 difficulty: .easy
             ),
             Exercise(
-                title: "Shoulder Rolls",
+                title: "Neck Tilts",
                 description: "Release shoulder tension",
                 instructions: [
-                    "Stand with arms at sides",
-                    "Roll shoulders backward in circular motion",
-                    "Complete 10 full circles",
-                    "Reverse direction for 10 more"
+                    "Stand or sit straight with arms by your sides.",
+                    "Lean head to one shoulder and hold for 10 seconds",
+                    "Lean head to other shoulder and hold for 10 seconds",
+                    "Repeat both sides"
                 ],
-                durationSeconds: 10,
+                durationSeconds: 70,
                 iconSystemName: "figure.strengthtraining.traditional",
                 difficulty: .easy
             ),
@@ -306,9 +341,12 @@ final class ExerciseStore: ObservableObject {
                 title: "Wall Angel",
                 description: "Improve posture and shoulder mobility",
                 instructions: [
-                    "Stand with your back against a wall"
+                    "Stand with your back against the wall, with your arms in a \"W\" shape.",
+                    "Slowly move your arms up to a \"Y\" shape and hold for 5 seconds",
+                    "Slowly move back down to the W and hold for 5 seconds.",
+                    "Repeat"
                 ],
-                durationSeconds: 10,
+                durationSeconds: 50,
                 iconSystemName: "figure.walk",
                 difficulty: .medium
             )
@@ -318,17 +356,32 @@ final class ExerciseStore: ObservableObject {
     }
 
     private func normalizeExercises(_ exercises: [Exercise]) -> [Exercise] {
-        exercises.map { exercise in
-            guard exercise.durationSeconds != 10 else { return exercise }
-            return Exercise(
-                id: exercise.id,
-                title: exercise.title,
-                description: exercise.description,
-                instructions: exercise.instructions,
-                durationSeconds: 10,
-                iconSystemName: exercise.iconSystemName,
-                difficulty: exercise.difficulty
-            )
+        // Map of exercise titles to their correct durations
+        let exerciseDurations: [String: Int] = [
+            "Wall Angel": 50,
+            "Chin Tucks": 50,
+            "Neck Flexion": 90,
+            "Neck Tilts": 70
+        ]
+        
+        return exercises.map { exercise in
+            // If exercise has a defined duration, use it; otherwise keep existing duration
+            if let correctDuration = exerciseDurations[exercise.title] {
+                // Only update if duration is wrong (was 10 seconds from old code)
+                if exercise.durationSeconds == 10 {
+                    return Exercise(
+                        id: exercise.id,
+                        title: exercise.title,
+                        description: exercise.description,
+                        instructions: exercise.instructions,
+                        durationSeconds: correctDuration,
+                        iconSystemName: exercise.iconSystemName,
+                        difficulty: exercise.difficulty
+                    )
+                }
+            }
+            // Keep exercise as-is if duration is already correct
+            return exercise
         }
     }
     

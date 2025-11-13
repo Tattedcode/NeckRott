@@ -20,9 +20,9 @@ final class LevelProgressManager {
     func processDailyProgress(date: Date, dailyGoal: Int, completions: Int, currentStreak: Int) {
         guard calendar.isDateInToday(date) else { return }
 
-        if dailyGoal > 0 {
-            handleDailyGoal(date: date, dailyGoal: dailyGoal, completions: completions)
-        }
+        // XP is now awarded per exercise completion (2 XP each)
+        // Only handle streak milestones here
+        handleStreakProgress(currentStreak: currentStreak)
     }
 
     func resetTracking() {
@@ -31,37 +31,7 @@ final class LevelProgressManager {
 
     // MARK: - Private Helpers
 
-    private func handleDailyGoal(date: Date, dailyGoal: Int, completions: Int) {
-        let todayKey = dayKey(for: date)
-        let lastAward = defaults.string(forKey: Keys.lastGoalAwardDate)
-
-        guard completions >= dailyGoal, lastAward != todayKey else { return }
-
-        gamificationStore.addXP(25, source: "Daily goal completed")
-        defaults.set(todayKey, forKey: Keys.lastGoalAwardDate)
-    }
-
-    private func handleExtraExercises(date: Date, dailyGoal: Int, completions: Int) {
-        guard completions > dailyGoal else { return }
-
-        let todayKey = dayKey(for: date)
-        let lastExtraDate = defaults.string(forKey: Keys.lastExtraAwardDate)
-        var extrasAwarded = defaults.integer(forKey: Keys.extraAwardCount)
-
-        if lastExtraDate != todayKey {
-            extrasAwarded = 0
-        }
-
-        let extrasCompleted = completions - dailyGoal
-        let newExtras = extrasCompleted - extrasAwarded
-        guard newExtras > 0 else { return }
-
-        let xpToAward = newExtras * 5
-        gamificationStore.addXP(xpToAward, source: "Extra exercises")
-
-        defaults.set(todayKey, forKey: Keys.lastExtraAwardDate)
-        defaults.set(extrasCompleted, forKey: Keys.extraAwardCount)
-    }
+    // Daily goal and extra exercises XP removed - now 2 XP per exercise completion
 
     private func handleStreakProgress(currentStreak: Int) {
         let thresholds: [(value: Int, xp: Int)] = [

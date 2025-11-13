@@ -84,9 +84,16 @@ extension HomeView {
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.black)
                         } else {
-                            Text("—")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.black.opacity(0.5))
+                            Button(action: {
+                                selectedTab = .leaderboard
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 28, height: 28)
+                                    .background(Color.blue)
+                                    .clipShape(Circle())
+                            }
                         }
                     } else {
                         Button(action: {
@@ -175,14 +182,12 @@ extension HomeView {
                     exercise: viewModel.dailyUnrotExercise
                 )
                 
-                // Full Daily Workout Exercise Card - only show if not completed today
-                if viewModel.afternoonSlotStatus != .completed {
-                    timeSlotExerciseCard(
-                        slot: .afternoon,
-                        status: viewModel.afternoonSlotStatus,
-                        exercise: viewModel.dailyUnrotExercise
-                    )
-                }
+                // Full Daily Workout Exercise Card - always show (locked with countdown when completed)
+                timeSlotExerciseCard(
+                    slot: .afternoon,
+                    status: viewModel.afternoonSlotStatus,
+                    exercise: viewModel.dailyUnrotExercise
+                )
             }
         }
         .debugOutline(.green, enabled: debugOutlines)
@@ -200,10 +205,10 @@ extension HomeView {
             // Check if user can start this exercise
             guard viewModel.checkCanStartExercise(for: slot) else { return }
             
-            // For Full Daily Workout (afternoon), navigate to Plan tab instead of showing timer
+            // For Full Daily Workout (afternoon), navigate to Circuit tab instead of showing timer
             if slot == .afternoon {
-                selectedTab = .plan
-                Log.debug("HomeView navigating to Plan tab for Full Daily Workout")
+                selectedTab = .circuit
+                Log.debug("HomeView navigating to Circuit tab for Full Daily Workout")
             } else {
                 // For Quick Workout (morning), show timer as before
                 viewModel.currentTimeSlot = slot
