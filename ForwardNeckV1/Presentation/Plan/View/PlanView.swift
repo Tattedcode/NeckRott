@@ -1,6 +1,6 @@
 //
 //  PlanView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Daily neck workout plan view showing workout details and exercises in a card.
 //
@@ -217,7 +217,7 @@ struct PlanView: View {
                             .foregroundColor(.white)
                         
                         Text(currentDayName)
-                            .font(.system(size: 15))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.white.opacity(0.6))
                     }
                     

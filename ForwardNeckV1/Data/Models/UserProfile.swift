@@ -1,6 +1,6 @@
 //
 //  UserProfile.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Local user profile for leaderboard participation
 //
@@ -21,6 +21,28 @@ struct UserProfile: Codable, Equatable {
         self.countryCode = countryCode
         self.optedIntoLeaderboard = optedIntoLeaderboard
         self.lastSyncedMonth = lastSyncedMonth
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case deviceId
+        case username
+        case countryCode
+        case optedIntoLeaderboard
+        case lastSyncedMonth
+    }
+    
+    /// Custom decoding to stay backwards-compatible with profiles saved
+    /// before `optedIntoLeaderboard`/`lastSyncedMonth` existed. Those
+    /// profiles only stored the username; treat that as an opt-in so
+    /// existing users don't see the join prompt again.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deviceId = try container.decode(String.self, forKey: .deviceId)
+        username = try container.decodeIfPresent(String.self, forKey: .username)
+        countryCode = try container.decodeIfPresent(String.self, forKey: .countryCode)
+        let storedOptedIn = try container.decodeIfPresent(Bool.self, forKey: .optedIntoLeaderboard)
+        optedIntoLeaderboard = storedOptedIn ?? (username?.isEmpty == false)
+        lastSyncedMonth = try container.decodeIfPresent(String.self, forKey: .lastSyncedMonth)
     }
     
     /// Check if user has set up their profile for leaderboard
@@ -51,7 +73,6 @@ struct UserProfile: Codable, Equatable {
         return lastMonth != Self.currentMonthYear
     }
 }
-
 
 
 

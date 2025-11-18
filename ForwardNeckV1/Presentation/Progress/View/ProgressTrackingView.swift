@@ -1,6 +1,6 @@
 //
 //  ProgressTrackingView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Calendar-first stats screen inspired by the brainrot calendar design.
 //

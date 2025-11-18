@@ -1,6 +1,6 @@
 //
 //  PostureCheckIn.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Data model for a single posture check-in.
 //

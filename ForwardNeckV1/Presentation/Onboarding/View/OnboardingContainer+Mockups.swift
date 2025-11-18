@@ -1,6 +1,6 @@
 //
 //  OnboardingContainer+Mockups.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Placeholder content for legacy mockup steps.
 //

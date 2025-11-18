@@ -1,6 +1,6 @@
 //
 //  LeaderboardUser.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Represents a user on the global monthly leaderboard
 //
@@ -63,6 +63,11 @@ struct LeaderboardUser: Codable, Identifiable, Equatable {
         }
     }
 }
+
+
+
+
+
 
 
 

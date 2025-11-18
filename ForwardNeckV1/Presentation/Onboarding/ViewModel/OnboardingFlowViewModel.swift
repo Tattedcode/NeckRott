@@ -1,6 +1,6 @@
 //
 //  OnboardingFlowViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Drives the multi-screen onboarding flow.
 //
@@ -20,6 +20,7 @@ final class OnboardingFlowViewModel: ObservableObject {
     @Published var triggerReasonValidation = false
     @Published var hasSelectedAge = false
     @Published var selectedScreenTime = 0
+    @Published var selectedMascotType: MascotPreferenceManager.MascotType = .male
 
     // MARK: - Dependencies
 
@@ -32,6 +33,8 @@ final class OnboardingFlowViewModel: ObservableObject {
         self.userStore = userStore ?? UserStore()
         self.screens = OnboardingScreen.makeDefaultSequence()
         self.currentScreen = initialScreen
+        // Load saved mascot preference or default to male
+        self.selectedMascotType = MascotPreferenceManager.selectedMascotType
     }
 
     // MARK: - Derived State
@@ -44,10 +47,18 @@ final class OnboardingFlowViewModel: ObservableObject {
 
     var continueButtonColors: [Color] {
         switch currentScreen {
-        case 3: // Reason selection (was 1)
-            return [Color.blue, Color.blue.opacity(hasReasonSelected ? 0.8 : 0.3)]
-        case 4: // Age selection (was 2)
-            return [Color.blue, Color.blue.opacity(hasSelectedAge ? 0.8 : 0.3)]
+        case 4: // Reason selection
+            if hasReasonSelected {
+                return [Color.blue, Color.blue.opacity(0.8)]
+            } else {
+                return [Color.gray.opacity(0.5), Color.gray.opacity(0.4)]
+            }
+        case 5: // Age selection
+            if hasSelectedAge {
+                return [Color.blue, Color.blue.opacity(0.8)]
+            } else {
+                return [Color.gray.opacity(0.5), Color.gray.opacity(0.4)]
+            }
         default:
             return [Color.blue, Color.blue.opacity(0.8)]
         }
@@ -73,14 +84,14 @@ final class OnboardingFlowViewModel: ObservableObject {
     func completeAgeSelection(_ ageLabel: String) {
         hasSelectedAge = true
         Log.info("OnboardingFlow selected age=\(ageLabel)")
-        if currentScreen == 4 { // Age selection (was 2)
+        if currentScreen == 5 { // Age selection
             currentScreen += 1
         }
     }
 
     func markNotificationStepComplete() {
         hasNotificationsAlertBeenDismissed = true
-        if currentScreen == 7 { // Notifications permission (was 5)
+        if currentScreen == 7 { // Notifications permission
             currentScreen += 1
         }
     }
@@ -96,7 +107,7 @@ final class OnboardingFlowViewModel: ObservableObject {
 
     private func handlePreconditions() -> Bool {
         switch currentScreen {
-        case 3: // Reason selection (was 1)
+        case 4: // Reason selection
             guard hasReasonSelected else {
                 triggerReasonValidation = true
                 Log.info("OnboardingFlow continue blocked – reason not selected")
@@ -104,12 +115,12 @@ final class OnboardingFlowViewModel: ObservableObject {
             }
             return true
 
-        case 4: // Age selection (was 2)
+        case 5: // Age selection
             triggerAgeValidation = true
             Log.info("OnboardingFlow requesting age validation")
             return false
 
-        case 6: // Screen time selection (was 4)
+        case 1: // Screen time selection (moved from index 6 to index 1)
             // Screen time selection - no special preconditions needed
             return true
 

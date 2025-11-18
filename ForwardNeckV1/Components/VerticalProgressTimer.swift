@@ -1,6 +1,6 @@
 //
 //  VerticalProgressTimer.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  A vertical progress bar timer that fills up as time progresses.
 //  Shows time remaining and progress with a modern vertical bar design.

@@ -1,6 +1,6 @@
 //
 //  GoalCard.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Displays a single goal summary.
 //

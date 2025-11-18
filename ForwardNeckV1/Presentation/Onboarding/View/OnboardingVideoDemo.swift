@@ -1,6 +1,6 @@
 //
 //  OnboardingVideoDemo.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Video demonstration screen for onboarding
 //

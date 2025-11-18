@@ -1,6 +1,6 @@
 //
 //  WorkoutFlowView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Full workout flow with exercises and breaks.
 //

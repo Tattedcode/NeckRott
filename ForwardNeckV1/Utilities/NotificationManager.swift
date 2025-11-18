@@ -1,6 +1,6 @@
 //
 //  NotificationManager.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Handles local notification permission and scheduling for reminders.
 //

@@ -1,6 +1,6 @@
 //
 //  ProgressTrackingViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Calendar-driven stats view model powering the Stats tab.
 //

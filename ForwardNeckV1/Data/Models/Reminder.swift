@@ -1,6 +1,6 @@
 //
 //  Reminder.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Data model for a daily posture reminder time.
 //

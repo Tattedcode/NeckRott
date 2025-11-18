@@ -1,6 +1,6 @@
 //
 //  ExerciseDetailViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  ViewModel for ExerciseDetailView following MVVM pattern
 //

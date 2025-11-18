@@ -1,6 +1,6 @@
 //
 //  HomeDashboardModels.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Shared data models used by the home dashboard.
 //

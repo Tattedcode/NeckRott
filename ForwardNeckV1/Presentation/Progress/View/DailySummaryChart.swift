@@ -1,6 +1,6 @@
 //
 //  DailySummaryChart.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Line chart summarising the last seven days.
 //

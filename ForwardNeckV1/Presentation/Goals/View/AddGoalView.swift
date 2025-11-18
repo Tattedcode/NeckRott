@@ -1,6 +1,6 @@
 //
 //  AddGoalView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Sheet for creating a new custom goal.
 //

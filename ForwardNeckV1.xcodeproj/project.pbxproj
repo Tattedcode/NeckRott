@@ -48,7 +48,6 @@
 		0083D46C2E803DF0001F9784 /* Exceptions for "ForwardNeckWidget" folder in "ForwardNeckWidget" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Assets.xcassets,
 				Info.plist,
 			);
 			target = 008A7EDD2E803D8B004B7591 /* ForwardNeckWidget */;

@@ -1,6 +1,6 @@
 //
 //  ExerciseTimeSlot.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Time slot system for spreading exercises throughout the day.
 //

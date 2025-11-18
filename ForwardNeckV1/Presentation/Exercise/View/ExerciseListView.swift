@@ -1,6 +1,6 @@
 //
 //  ExerciseListView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Shows list of available exercises with navigation to detail screens.
 //
@@ -28,10 +28,17 @@ struct ExerciseListView: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(exercises) { exercise in
-                            NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
-                                ExerciseRowView(exercise: exercise)
+                            if exercise.title == "Connect 4" {
+                                NavigationLink(destination: Connect4MatchmakingView()) {
+                                    ExerciseRowView(exercise: exercise)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+                                    ExerciseRowView(exercise: exercise)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                     .padding(16)

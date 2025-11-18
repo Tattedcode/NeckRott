@@ -1,6 +1,6 @@
 //
 //  GamificationStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Central gamification data store.
 //

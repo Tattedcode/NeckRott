@@ -1,6 +1,6 @@
 //
 //  OnboardingSix.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Sixth onboarding screen for notifications permission
 //
@@ -14,22 +14,21 @@ struct OnboardingSix: View {
     let onPermissionGranted: (() -> Void)?
     let subtitle: String
     
-    @State private var showCards = Array(repeating: false, count: 4)
+    @State private var showCards = Array(repeating: false, count: 3)
     @State private var alertMessage = ""
     @State private var isPermissionGranted = false
     
     private let notificationFeatures = [
-        (icon: "bell.fill", title: "brain health insights", description: "get updates about your brain health and screen usage"),
-        (icon: "chart.bar.fill", title: "daily stats", description: "see how you're doing with your screen time goals"),
-        (icon: "exclamationmark.triangle.fill", title: "excessive use alerts", description: "be notified when you're spending too much time on certain apps"),
-        (icon: "hand.raised.fill", title: "intervention reminders", description: "gentle reminders to take breaks and stay mindful")
+        (icon: "bell.fill", title: "Neck health insights", description: "Get updates about your neck health and exercises"),
+        (icon: "chart.bar.fill", title: "Leaderboard stats", description: "See how you're doing against others around the world"),
+        (icon: "exclamationmark.triangle.fill", title: "Daily Exercises", description: "Be notified when the best time is to work out your neck")
     ]
     
     var body: some View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) { // Reduced spacing
-            // Mascot image - moved up to fill gap above
-            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
+            // Mascot image - always use mascot1 during onboarding (ignore user preference)
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1", ignorePreference: true))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 200, height: 200)
@@ -37,34 +36,28 @@ struct OnboardingSix: View {
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .padding(.top, -40) // Move image up to fill gap above
             
-            // Title
-            Text("Notifications")
-                .font(.title.bold())
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-            
-            // Subtitle
-            Text("Allow us to remind you of your neck")
-                .font(.subheadline)
-                .foregroundColor(.black.opacity(0.7))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            
-            // Notification feature cards in one container with rounded corners
-            VStack(spacing: 0) { // Changed spacing to 0
-                ForEach(Array(notificationFeatures.enumerated()), id: \.offset) { index, feature in
-                    NotificationFeatureCard(
-                        icon: feature.icon,
-                        title: feature.title,
-                        description: feature.description
-                    )
-                    .opacity(showCards[index] ? 1 : 0)
-                    .offset(y: showCards[index] ? 0 : 20)
-                    .animation(.easeOut(duration: 0.4).delay(Double(index) * 0.08), value: showCards[index])
+            // Title and cards grouped together with reduced spacing
+            VStack(spacing: 8) {
+                // Title
+                Text("Allow us to remind you of your neck")
+                    .font(.headline.bold())
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
+                
+                // Notification feature cards with individual styling matching "Did you know" cards
+                VStack(spacing: 12) {
+                    ForEach(Array(notificationFeatures.enumerated()), id: \.offset) { index, feature in
+                        NotificationFeatureCard(
+                            icon: feature.icon,
+                            title: feature.title,
+                            description: feature.description
+                        )
+                        .opacity(showCards[index] ? 1 : 0)
+                        .offset(y: showCards[index] ? 0 : 20)
+                        .animation(.easeOut(duration: 0.4), value: showCards[index])
+                    }
                 }
             }
-            .background(Color.black.opacity(0.15)) // Background for the single container
-            .clipShape(RoundedRectangle(cornerRadius: 12)) // Rounded corners for the single container
         }
         
         // Parent container that centers the grouped content vertically
@@ -76,12 +69,14 @@ struct OnboardingSix: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .onAppear {
-            // Trigger staggered animations for notification cards (4 cards * 0.08s = 0.32s + 0.4s duration = 0.72s total)
+            // Show cards with 0.5 second delay between each (matching "Did you know" view)
             for i in 0..<showCards.count {
-                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
-                    withAnimation {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.5) {
+                    withAnimation(.easeOut(duration: 0.4)) {
                         showCards[i] = true
                     }
+                    // Add haptic feedback for each card appearance
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             }
             
@@ -164,6 +159,12 @@ struct NotificationFeatureCard: View {
         }
         .frame(maxWidth: .infinity) // Make all cards the same width
         .padding(12) // Padding for individual card content
+        .background(Color(red: 0.99, green: 0.96, blue: 0.90).opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.gray.opacity(0.4), lineWidth: 1.5)
+        )
     }
 }
 

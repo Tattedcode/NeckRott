@@ -1,6 +1,6 @@
 //
 //  ExerciseStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Manages exercise data and completion tracking with local persistence.
 //
@@ -349,6 +349,19 @@ final class ExerciseStore: ObservableObject {
                 durationSeconds: 50,
                 iconSystemName: "figure.walk",
                 difficulty: .medium
+            ),
+            Exercise(
+                title: "Connect 4",
+                description: "Play Connect 4 against other players while maintaining good posture",
+                instructions: [
+                    "Sit up straight with a straight back.",
+                    "Find an opponent and play Connect 4.",
+                    "Maintain good posture throughout the game.",
+                    "Complete the game to finish the exercise."
+                ],
+                durationSeconds: 300, // 5 minutes estimated
+                iconSystemName: "gamecontroller.fill",
+                difficulty: .easy
             )
         ]
         completions = []

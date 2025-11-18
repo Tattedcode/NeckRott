@@ -1,6 +1,6 @@
 //
 //  HomeViewModel+Achievements.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Achievement tracking and persistence helpers.
 //

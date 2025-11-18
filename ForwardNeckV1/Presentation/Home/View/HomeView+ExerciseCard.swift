@@ -1,6 +1,6 @@
 //
 //  HomeView+ExerciseCard.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Exercise card rendering and helpers.
 //
@@ -23,23 +23,39 @@ extension HomeView {
                     statusIcon(for: status, slot: slot)
                 }
                 
-                if !subtitle.isEmpty {
+                // Quick Workout: Show description first, then cooldown (don't show subtitle for morning slot)
+                if slot == .morning {
+                    // Show description text for Quick Workout - FIRST (always show)
+                    Text("Complete a random workout for neck health")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.black)
+                        .lineLimit(1)
+                    
+                    if status == .available {
+                        // Show cooldown label when available - SECOND
+                        Text("30 minute cooldown")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.top, 4)
+                    } else if status == .locked {
+                        // Show time remaining when locked - SECOND
+                        let cooldownCheck = ExerciseStore.shared.canStartSlot(.morning, cooldownMinutes: 30)
+                        if let timeRemaining = cooldownCheck.timeRemaining {
+                            Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeRemaining))")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.red)
+                                .padding(.top, 4)
+                        }
+                    }
+                } else if !subtitle.isEmpty {
+                    // Show subtitle for other slots (Full Daily Workout)
                     Text(subtitle)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(statusTextColor(for: status).opacity(0.7))
                 }
                 
                 if status == .locked {
-                    if slot == .morning {
-                        // Show cooldown for Quick Workout (30 minutes)
-                        let cooldownCheck = ExerciseStore.shared.canStartSlot(.morning, cooldownMinutes: 30)
-                        if let timeRemaining = cooldownCheck.timeRemaining {
-                            Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeRemaining))")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.red)
-                                .padding(.top, 4)
-                        }
-                    } else if slot == .afternoon {
+                    if slot == .afternoon {
                         // Show countdown until 6am next day for Full Daily Workout
                         if let timeUntil = timeUntil6AMNextDay() {
                             Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
@@ -47,29 +63,18 @@ extension HomeView {
                                 .foregroundColor(.red)
                                 .padding(.top, 4)
                         }
-                    } else if let timeUntil = slot.timeUntilAvailable() {
-                        // Show time-based lock for other slots
-                        Text("Available in \(ExerciseTimeSlot.formatTimeInterval(timeUntil))")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.orange)
-                            .padding(.top, 4)
                     }
                 }
                 
                 if status != .locked {
-                    if slot == .morning {
-                        Text("Complete a random workout for neck health")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(statusTextColor(for: status).opacity(0.7))
-                            .lineLimit(1)
-                    } else if slot == .afternoon {
+                    if slot == .afternoon {
                         Text("Fully strengthen your neck")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(statusTextColor(for: status).opacity(0.7))
                             .lineLimit(1)
-                    } else if let exercise = exercise {
+                    } else if slot != .morning, let exercise = exercise {
                         Text(exercise.description)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(statusTextColor(for: status).opacity(0.7))
                             .lineLimit(1)
                     }

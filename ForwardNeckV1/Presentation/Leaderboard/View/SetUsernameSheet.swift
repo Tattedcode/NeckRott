@@ -1,6 +1,6 @@
 //
 //  SetUsernameSheet.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Sheet for setting up username and joining the leaderboard
 //

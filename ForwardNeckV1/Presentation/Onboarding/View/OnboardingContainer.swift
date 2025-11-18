@@ -1,6 +1,6 @@
 //
 //  OnboardingContainer.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Hosts the onboarding flow and delegates logic to the view model.
 //
@@ -13,7 +13,8 @@ struct OnboardingContainer: View {
     
     init(onComplete: @escaping () -> Void) {
         self.onComplete = onComplete
-        _viewModel = StateObject(wrappedValue: OnboardingFlowViewModel())
+        // Start from first onboarding screen (index 0)
+        _viewModel = StateObject(wrappedValue: OnboardingFlowViewModel(initialScreen: 0))
     }
     
     var body: some View {
@@ -23,8 +24,10 @@ struct OnboardingContainer: View {
             VStack(spacing: 0) {
                 headerBar
                 scrollableContent
-                footer
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            footer
         }
     }
 }

@@ -1,6 +1,6 @@
 //
 //  OnboardingContainer+Layout.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Layout building blocks for the onboarding container.
 //
@@ -63,7 +63,7 @@ extension OnboardingContainer {
 
     var scrollableContent: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: viewModel.currentScreen == 3 ? 0 : 24) {
                 if viewModel.currentScreen == 0 {
                     Spacer().frame(height: 80)
                 }
@@ -75,32 +75,36 @@ extension OnboardingContainer {
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
 
-                VStack(spacing: 8) {
-                    if viewModel.currentScreen == 0 {
-                        FirstScreenTypewriterView()
-                    } else if !viewModel.screens[viewModel.currentScreen].title.isEmpty {
-                        Text(viewModel.screens[viewModel.currentScreen].title)
-                            .font(viewModel.currentScreen == 6 ? .title.bold() : .largeTitle.bold()) // Updated index
-                            .foregroundColor(Theme.primaryText)
-                            .multilineTextAlignment(.center)
-                            .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                if viewModel.currentScreen != 3 {
+                    VStack(spacing: 8) {
+                        if viewModel.currentScreen == 0 {
+                            FirstScreenTypewriterView()
+                        } else if !viewModel.screens[viewModel.currentScreen].title.isEmpty {
+                            Text(viewModel.screens[viewModel.currentScreen].title)
+                                .font(viewModel.currentScreen == 1 ? .title.bold() : .largeTitle.bold()) // Screen time selection is now at index 1
+                                .foregroundColor(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                                .transition(.opacity.combined(with: .scale(scale: 0.9)))
 
-                        if shouldShowSubtitle {
-                            Text(viewModel.screens[viewModel.currentScreen].subtitle)
-                                .font(.title2)
-                                .foregroundColor(Theme.secondaryText)
-                                .transition(.opacity.combined(with: .offset(y: 10)))
+                            if shouldShowSubtitle {
+                                Text(viewModel.screens[viewModel.currentScreen].subtitle)
+                                    .font(.title2)
+                                    .foregroundColor(Theme.secondaryText)
+                                    .transition(.opacity.combined(with: .offset(y: 10)))
+                            }
                         }
                     }
                 }
 
-                if viewModel.currentScreen == 0 || viewModel.currentScreen == 1 || viewModel.currentScreen == 2 {
+                if viewModel.currentScreen == 0 || viewModel.currentScreen == 2 {
                     Spacer().frame(height: 80)
                 }
             }
             .padding(.horizontal, 24)
+            .padding(.bottom, viewModel.currentScreen == 3 ? 0 : 0)
         }
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: viewModel.currentScreen)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     var footer: some View {
@@ -112,13 +116,7 @@ extension OnboardingContainer {
         }
         .padding(.horizontal, 24)
         .padding(.bottom, 16)
-        .background(
-            LinearGradient(
-                colors: [Color.clear, Color.black.opacity(0.1)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background(Color.clear)
     }
 
     private var shouldShowSubtitle: Bool {

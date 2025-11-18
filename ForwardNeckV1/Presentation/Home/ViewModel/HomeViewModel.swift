@@ -1,6 +1,6 @@
 //
 //  HomeViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Central view model for the home dashboard.
 //
@@ -56,6 +56,10 @@ final class HomeViewModel: ObservableObject {
         Log.info("HomeViewModel hero mascot base=\(baseName) themed=\(themedName)")
         return themedName
     }
+    
+    var currentLevel: Int {
+        GamificationStore.shared.userProgress.level
+    }
 
     // MARK: - Dependencies
 
@@ -108,6 +112,18 @@ final class HomeViewModel: ObservableObject {
                 self?.handleAppDataReset()
             }
             .store(in: &cancellables)
+        
+        // Listen for exercise completions from anywhere in the app to update widget
+        NotificationCenter.default.publisher(for: .exerciseCompleted)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                // Update widget immediately when any exercise is completed
+                // This ensures widget updates even if completion happens outside HomeView
+                self.updateWidgetWithTodayData()
+                Log.info("HomeViewModel: Widget updated via exerciseCompleted notification")
+            }
+            .store(in: &cancellables)
 
         bindStreakStore()
         bindExerciseStore()
@@ -153,6 +169,11 @@ final class HomeViewModel: ObservableObject {
         updateNextExercise()
         updateNeckFixes(for: selectedNeckFixDate)
         updateTimeSlotStatuses()
+        
+        // Explicitly update widget immediately after completion to ensure it refreshes
+        // (The binding should also trigger, but this ensures it happens right away)
+        updateWidgetWithTodayData()
+        Log.info("HomeViewModel: Explicitly updated widget after exercise completion")
     }
 
     func selectNeckFixDate(_ date: Date) {

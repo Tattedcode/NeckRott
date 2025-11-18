@@ -1,6 +1,6 @@
 //
 //  OnboardingTwo.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Second onboarding screen for screen time selection
 //
@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct OnboardingTwo: View {
-    @Binding var selectedScreenTime: Int // 0-8 for 1-9+ hours
+    @Binding var selectedScreenTime: Int // 0-7 for 1-8 hours
     @State private var selectedOption: Int = 0 // Local state for UI
     
-    private let options = ["1 hour", "2 hours", "3 hours", "4 hours", "5 hours", "6 hours", "7 hours", "8 hours", "9+ hours"]
+    private let options = ["1 hour", "2 hours", "3 hours", "4 hours", "5 hours", "6 hours", "7 hours", "8 hours"]
     
-    private var screenTimeText: String {
-        return options[selectedOption]
+    private var screenTimeDisplayText: String {
+        return "\(options[selectedOption]) of phone use"
     }
     
     private var warningMessage: (text: String, color: Color)? {
@@ -23,7 +23,7 @@ struct OnboardingTwo: View {
             return ("This is normal for your neck", .green)
         case 2...5: // 3-6 hours
             return ("This could affect your neck later in life", .orange)
-        case 6...8: // 7-9+ hours
+        case 6...7: // 7-8 hours
             return ("Extremely dangerous and unhealthy for your neck", .red)
         default:
             return nil
@@ -31,35 +31,45 @@ struct OnboardingTwo: View {
     }
     
     private var mascotImage: String {
+        // Map screen time to mascot: 1 hour = mascot4, 8 hours = mascot1
+        // Inverse relationship: less time = higher mascot number (better health)
         switch selectedOption {
-        case 0, 1:
+        case 0: // 1 hour
             return "mascot4"
-        case 2, 3:
+        case 1: // 2 hours
+            return "mascot4"
+        case 2: // 3 hours
             return "mascot3"
-        case 4, 5:
+        case 3: // 4 hours
+            return "mascot3"
+        case 4: // 5 hours
             return "mascot2"
-        case 6, 7, 8:
+        case 5: // 6 hours
+            return "mascot2"
+        case 6: // 7 hours
+            return "mascot1"
+        case 7: // 8 hours
             return "mascot1"
         default:
-            return "mascot4"
+            return "mascot1"
         }
     }
     
     var body: some View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
-            // Mascot image
-            Image(MascotAssetProvider.resolvedMascotName(for: mascotImage))
+            // Mascot image - dynamically changes based on selected screen time (ignore user preference during onboarding)
+            Image(MascotAssetProvider.resolvedMascotName(for: mascotImage, ignorePreference: true))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 200, height: 200)
+                .frame(width: 280, height: 280)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .animation(.easeInOut(duration: 0.3), value: mascotImage)
             
             // Screen time display
-            Text(screenTimeText)
-                .font(.largeTitle)
+            Text(screenTimeDisplayText)
+                .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.black)
             
@@ -76,19 +86,19 @@ struct OnboardingTwo: View {
                         // Progress track
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color.blue)
-                            .frame(width: geometry.size.width * CGFloat(selectedOption) / 8.0, height: 8)
+                            .frame(width: geometry.size.width * CGFloat(selectedOption) / 7.0, height: 8)
                         
                         // Slider thumb
                         Circle()
                             .fill(Color.white)
                             .frame(width: 24, height: 24)
                             .shadow(radius: 2)
-                            .offset(x: (geometry.size.width - 24) * CGFloat(selectedOption) / 8.0)
+                            .offset(x: (geometry.size.width - 24) * CGFloat(selectedOption) / 7.0)
                             .gesture(
                                 DragGesture()
                                     .onChanged { value in
                                         let progress = max(0, min(1, value.location.x / geometry.size.width))
-                                        let newOption = Int(round(progress * 8))
+                                        let newOption = Int(round(progress * 7))
                                         
                                         if newOption != selectedOption {
                                             // Haptic feedback when slider position changes
@@ -129,7 +139,7 @@ struct OnboardingTwo: View {
             // Initialize local state from binding
             selectedOption = selectedScreenTime
         }
-        .onChange(of: selectedOption) { newValue in
+        .onChange(of: selectedOption) { oldValue, newValue in
             // Update binding when local state changes
             selectedScreenTime = newValue
         }

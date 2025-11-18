@@ -1,6 +1,6 @@
 //
 //  CompactCountdownTimer.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  A compact circular countdown timer for displaying next to exercise information.
 //  Shows time remaining in a small circle with progress indication.

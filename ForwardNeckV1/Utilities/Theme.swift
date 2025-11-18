@@ -1,6 +1,6 @@
 //
 //  Theme.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Central place for colors, spacing, and shared UI constants.
 //
@@ -8,14 +8,14 @@
 import SwiftUI
 
 enum Theme {
-    // Background gradient - Darker cream gradient ⭐ NEW
+    // Background gradient - Brighter cream gradient ⭐ UPDATED
     static var backgroundGradient: LinearGradient {
-        Log.info("Theme.backgroundGradient applied (darker cream gradient - NEW)")
+        Log.info("Theme.backgroundGradient applied (brighter cream gradient - UPDATED)")
         return LinearGradient(
             colors: [
-                Color(red: 0.95, green: 0.92, blue: 0.85),   // F2EBD9 - darker cream
-                Color(red: 0.92, green: 0.88, blue: 0.80),   // EBE0CC - medium cream
-                Color(red: 0.88, green: 0.84, blue: 0.75)    // E0D6BF - warm cream
+                Color(red: 0.99, green: 0.96, blue: 0.90),   // FFF5E6 - brighter cream
+                Color(red: 0.96, green: 0.93, blue: 0.85),   // F5EDD9 - brighter medium cream
+                Color(red: 0.93, green: 0.89, blue: 0.80)     // EDE3CC - brighter warm cream
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing

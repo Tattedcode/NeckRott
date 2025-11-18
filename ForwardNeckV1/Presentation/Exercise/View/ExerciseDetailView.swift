@@ -1,6 +1,6 @@
 //
 //  ExerciseDetailView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Shows exercise instructions with timer and completion tracking.
 //

@@ -1,6 +1,6 @@
 //
 //  WorkoutFlowViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Manages workout flow timing and state.
 //

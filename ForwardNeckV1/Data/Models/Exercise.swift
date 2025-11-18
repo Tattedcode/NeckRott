@@ -1,6 +1,6 @@
 //
 //  Exercise.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Data model for posture exercises with instructions and duration.
 //

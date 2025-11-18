@@ -1,6 +1,6 @@
 //
 //  ReminderSettingsView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Allows users to add/remove daily reminder times.
 //

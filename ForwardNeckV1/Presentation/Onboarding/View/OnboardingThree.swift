@@ -1,8 +1,8 @@
 //
 //  OnboardingThree.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
-//  Third onboarding screen for ForwardNeck info
+//  Third onboarding screen for NeckRot info
 //
 
 import SwiftUI
@@ -14,8 +14,8 @@ struct OnboardingThree: View {
     var body: some View {
         // Group the content into a single stack
         let content = VStack(spacing: 20) {
-            // Mascot image - moved up to fill gap above
-            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
+            // Mascot image - always use mascot1 during onboarding (ignore user preference)
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1", ignorePreference: true))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 200, height: 200)
@@ -32,7 +32,7 @@ struct OnboardingThree: View {
             // Information cards
             VStack(spacing: 12) {
                 InfoCard(
-                    icon: "mascot1",
+                    icon: "exclamationmark.circle",
                     text: "Forward neck syndrome (Neckrot) can affect the way you look when you're older"
                 )
                 .opacity(showCards[0] ? 1 : 0)
@@ -115,7 +115,8 @@ struct InfoCard: View {
         HStack(spacing: 12) {
             // Check if it's a system icon or asset image
             if icon.hasPrefix("mascot") {
-                Image(MascotAssetProvider.resolvedMascotName(for: icon))
+                // Always use mascot1 during onboarding (ignore user preference)
+                Image(MascotAssetProvider.resolvedMascotName(for: icon, ignorePreference: true))
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 24, height: 24)
@@ -136,8 +137,12 @@ struct InfoCard: View {
             Spacer()
         }
         .padding(12)
-        .background(Color.black.opacity(0.15))
+        .background(Color(red: 0.99, green: 0.96, blue: 0.90).opacity(0.6))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.gray.opacity(0.4), lineWidth: 1.5)
+        )
     }
 }
 

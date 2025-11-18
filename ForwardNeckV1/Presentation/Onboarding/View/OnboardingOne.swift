@@ -1,6 +1,6 @@
 //
 //  OnboardingOne.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  First onboarding screen with typewriter animation
 //
@@ -105,9 +105,9 @@ struct FirstScreenTypewriterView: View {
             
             // Subtitle that appears after title completes
             if showSubtitle {
-                // Updated subtitle copy and layout so the full sentence fits in one line
+                // Updated subtitle copy
                 TypewriterTextView(
-                    text: "Using your phone alot makes your neck rot.\nLet's save it",
+                    text: "Using your phone a lot makes your neck rot.\nLet's fix it.",
                     onComplete: {
                         // Animation complete
                     }
@@ -127,7 +127,8 @@ struct FirstScreenTypewriterView: View {
 
 struct PhoneMockupView: View {
     var body: some View {
-        Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
+        // Always use mascot1 during onboarding (ignore user preference)
+        Image(MascotAssetProvider.resolvedMascotName(for: "mascot1", ignorePreference: true))
             .resizable()
             .aspectRatio(contentMode: .fit)
                 .frame(width: 200, height: 200)

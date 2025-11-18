@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Redesigned settings screen inspired by the provided mockups.
 //
@@ -20,7 +20,6 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
                     header
-                    screenTimeSection
                     widgetSection
                     supportSection
                     legalSection

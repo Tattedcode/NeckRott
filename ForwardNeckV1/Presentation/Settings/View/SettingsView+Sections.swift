@@ -1,6 +1,6 @@
 //
 //  SettingsView+Sections.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Section builders and helpers for the settings screen.
 //
@@ -9,56 +9,14 @@ import SwiftUI
 
 extension SettingsView {
     var header: some View {
-        Text("settings")
+        Text("Settings")
             .font(.system(size: 34, weight: .bold))
             .foregroundColor(Theme.primaryText)
     }
 
-    var screenTimeSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("screen time goal")
-            settingsCard {
-                VStack(alignment: .leading, spacing: 20) {
-                    HStack(alignment: .top, spacing: 14) {
-                        iconBadge(systemImage: "clock.fill", foreground: .blue)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("daily screen time goal")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(Theme.primaryText)
-                            Text("set a daily limit for healthy screen usage")
-                                .font(.system(size: 13))
-                                .foregroundColor(Theme.secondaryText)
-                        }
-                    }
-
-                    Text(viewModel.screenTimeGoalLabel)
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundColor(Theme.primaryText)
-
-                    Slider(
-                        value: $viewModel.screenTimeGoalHours,
-                        in: viewModel.screenTimeRange,
-                        step: viewModel.sliderStep
-                    )
-                    .tint(.orange)
-
-                    HStack {
-                        Text("1h")
-                            .font(.system(size: 13))
-                            .foregroundColor(Theme.secondaryText)
-                        Spacer()
-                        Text("8h")
-                            .font(.system(size: 13))
-                            .foregroundColor(Theme.secondaryText)
-                    }
-                }
-            }
-        }
-    }
-
     var widgetSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("widget")
+            sectionTitle("Widget")
             settingsCard {
                 HStack(alignment: .center, spacing: 16) {
                     iconBadge(systemImage: "iphone.homebutton", foreground: .cyan)
@@ -97,21 +55,21 @@ extension SettingsView {
 
     var supportSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("support & feedback")
+            sectionTitle("Support & feedback")
             listCard(items: viewModel.supportItems)
         }
     }
 
     var legalSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("legal")
+            sectionTitle("Legal")
             listCard(items: viewModel.legalItems)
         }
     }
 
     var socialSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            sectionTitle("follow us")
+            sectionTitle("Follow us")
 
             HStack(spacing: 24) {
                 ForEach(viewModel.socialLinks) { social in
@@ -134,7 +92,7 @@ extension SettingsView {
 
     var resetSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sectionTitle("testing & reset")
+            sectionTitle("Testing & reset")
             settingsCard {
                 VStack(alignment: .leading, spacing: 16) {
                     // Test Level Up Button
@@ -217,7 +175,6 @@ extension SettingsView {
         Text(text)
             .font(.system(size: 16, weight: .bold))
             .foregroundColor(Theme.secondaryText)
-            .textCase(.lowercase)
     }
 
     func settingsCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {

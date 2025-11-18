@@ -1,6 +1,6 @@
 //
 //  ProgressTrackingView+Sections.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Layout sections and helpers for the progress view.
 //

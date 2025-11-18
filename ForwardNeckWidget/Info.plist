@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ForwardNeck Widget</string>
+	<string>NeckRot Widget</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -34,7 +34,7 @@
 						<key>ConfigurationName</key>
 						<string>Default Configuration</string>
 						<key>WidgetClass</key>
-						<string>$(PRODUCT_MODULE_NAME).ForwardNeckWidget</string>
+						<string>$(PRODUCT_MODULE_NAME).NeckRotWidget</string>
 					</dict>
 				</array>
 			</dict>

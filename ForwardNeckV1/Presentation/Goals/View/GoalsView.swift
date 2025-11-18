@@ -1,6 +1,6 @@
 //
 //  GoalsView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Goals overview screen.
 //

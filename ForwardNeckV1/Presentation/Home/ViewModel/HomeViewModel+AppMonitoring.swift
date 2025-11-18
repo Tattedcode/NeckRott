@@ -1,6 +1,6 @@
 //
 //  HomeViewModel+AppMonitoring.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Screen-time tracking helpers and DeviceActivity integration.
 //
@@ -48,7 +48,7 @@ extension HomeViewModel {
     @available(iOS 16.0, *)
     private func configureMonitoring(for selection: FamilyActivitySelection) async {
         let monitoredApps = selection.applications
-        let activityName = DeviceActivityName("ForwardNeckAppMonitoring")
+        let activityName = DeviceActivityName("NeckRotAppMonitoring")
         let center = DeviceActivityCenter()
 
         guard !monitoredApps.isEmpty else {

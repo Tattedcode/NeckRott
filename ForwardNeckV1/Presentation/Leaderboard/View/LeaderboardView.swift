@@ -1,6 +1,6 @@
 //
 //  LeaderboardView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Global monthly leaderboard showing user rankings with tabs for Leaderboard, Level, and Achievements
 //

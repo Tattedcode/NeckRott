@@ -1,6 +1,6 @@
 //
 //  SettingsViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Lightweight view model powering the redesigned Settings screen.
 //
@@ -59,30 +59,30 @@ final class SettingsViewModel: ObservableObject {
             LinkItem(
                 icon: "questionmark.circle.fill",
                 iconColor: Color(red: 0.31, green: 0.53, blue: 0.96),
-                title: "help & support",
+                title: "Help & support",
                 subtitle: nil,
-                url: URL(string: "https://forwardneck.app/support")
+                url: URL(string: "https://neckrot.app/support")
             ),
             LinkItem(
                 icon: "lightbulb.fill",
                 iconColor: Color(red: 0.43, green: 0.46, blue: 0.98),
-                title: "feature requests",
+                title: "Feature requests",
                 subtitle: nil,
-                url: URL(string: "https://forwardneck.app/feedback")
+                url: URL(string: "https://neckrot.app/feedback")
             ),
             LinkItem(
                 icon: "star.fill",
                 iconColor: Color(red: 0.98, green: 0.78, blue: 0.2),
-                title: "leave a review",
+                title: "Leave a review",
                 subtitle: nil,
                 url: URL(string: "https://apps.apple.com/app/id0000000000?action=write-review")
             ),
             LinkItem(
                 icon: "envelope.fill",
                 iconColor: Color(red: 0.24, green: 0.52, blue: 0.96),
-                title: "contact us",
+                title: "Contact us",
                 subtitle: nil,
-                url: URL(string: "mailto:support@forwardneck.app")
+                url: URL(string: "mailto:support@neckrot.app")
             )
         ]
 
@@ -90,23 +90,23 @@ final class SettingsViewModel: ObservableObject {
             LinkItem(
                 icon: "hand.raised.fill",
                 iconColor: Color(red: 0.47, green: 0.38, blue: 0.93),
-                title: "privacy policy",
+                title: "Privacy policy",
                 subtitle: nil,
-                url: URL(string: "https://forwardneck.app/privacy")
+                url: URL(string: "https://neckrot.app/privacy")
             ),
             LinkItem(
                 icon: "doc.text.fill",
                 iconColor: Color(red: 0.33, green: 0.52, blue: 0.94),
-                title: "terms of service",
+                title: "Terms of service",
                 subtitle: nil,
-                url: URL(string: "https://forwardneck.app/terms")
+                url: URL(string: "https://neckrot.app/terms")
             )
         ]
 
         socialLinks = [
-            SocialLink(label: "X", url: URL(string: "https://x.com/forwardneck")),
-            SocialLink(label: "Instagram", url: URL(string: "https://instagram.com/forwardneck")),
-            SocialLink(label: "TikTok", url: URL(string: "https://www.tiktok.com/@forwardneck"))
+            SocialLink(label: "X", url: URL(string: "https://x.com/neckrot")),
+            SocialLink(label: "Instagram", url: URL(string: "https://instagram.com/neckrot")),
+            SocialLink(label: "TikTok", url: URL(string: "https://www.tiktok.com/@neckrot"))
         ]
     }
 
@@ -116,17 +116,17 @@ final class SettingsViewModel: ObservableObject {
     }
 
     var widgetStatusHeadline: String {
-        widgetConfigured ? "widget ready" : "widget not set up"
+        widgetConfigured ? "Widget ready" : "Widget not set up"
     }
 
     var widgetStatusDescription: String {
         widgetConfigured
-            ? "keep the widget on your home screen for quick brain health checks"
-            : "add to home screen for quick brain health checks"
+            ? "Keep the widget on your home screen for quick neck health check"
+            : "Add to home screen for quick neck health check"
     }
 
     var widgetButtonTitle: String {
-        widgetConfigured ? "manage" : "set up"
+        widgetConfigured ? "Manage" : "Set up"
     }
 
     var widgetIndicatorColor: Color {
@@ -136,7 +136,7 @@ final class SettingsViewModel: ObservableObject {
     var versionLabel: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        return "forwardneck version \(version) (\(build))"
+        return "neckrot version \(version) (\(build))"
     }
 
     func markWidgetConfigured() {

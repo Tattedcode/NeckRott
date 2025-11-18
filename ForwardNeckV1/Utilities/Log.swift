@@ -1,6 +1,6 @@
 //
 //  Log.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Simple logging helper to unify debug prints.
 //

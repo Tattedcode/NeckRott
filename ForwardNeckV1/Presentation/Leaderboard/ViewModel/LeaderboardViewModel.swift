@@ -1,6 +1,6 @@
 //
 //  LeaderboardViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  ViewModel for managing leaderboard UI state and actions
 //

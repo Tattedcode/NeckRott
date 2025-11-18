@@ -1,6 +1,6 @@
 //
 //  OnboardingFeatures.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Feature highlights screen for onboarding
 //
@@ -14,14 +14,14 @@ struct OnboardingFeatures: View {
     private let features = [
         FeatureItem(
             icon: "timer",
-            title: "Quick Workouts",
-            description: "2-minute neck exercises designed by experts to strengthen your neck muscles",
+            title: "Neck Workouts",
+            description: "Quick workouts designed by experts to fix forward neck posture",
             color: .blue
         ),
         FeatureItem(
             icon: "chart.line.uptrend.xyaxis",
-            title: "Track Progress",
-            description: "Visual charts and statistics show your improvement over time",
+            title: "World Wide Leaderboard",
+            description: "Compete for 1st place world wide by completing neck exercises",
             color: .green
         ),
         FeatureItem(
@@ -39,38 +39,36 @@ struct OnboardingFeatures: View {
     ]
     
     var body: some View {
-        VStack(spacing: 30) {
-            // Header
-            VStack(spacing: 12) {
+        VStack {
+            Spacer()
+            
+            VStack(spacing: 16) {
+                // Header - Title only, no subtitle
                 Text("Why Choose Neckrot?")
                     .font(.title.bold())
                     .foregroundColor(Theme.primaryText)
                     .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                    .opacity(showFeatures ? 1 : 0)
+                    .offset(y: showFeatures ? 0 : -20)
+                    .animation(.easeOut(duration: 0.6).delay(0.2), value: showFeatures)
                 
-                Text("Everything you need to fix your neck")
-                    .font(.body)
-                    .foregroundColor(Theme.secondaryText)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal, 20)
-            .opacity(showFeatures ? 1 : 0)
-            .offset(y: showFeatures ? 0 : -20)
-            .animation(.easeOut(duration: 0.6).delay(0.2), value: showFeatures)
-            
-            // Features List
-            VStack(spacing: 20) {
-                ForEach(Array(features.enumerated()), id: \.offset) { index, feature in
-                    FeatureCard(
-                        feature: feature,
-                        isVisible: showFeatures,
-                        delay: Double(index) * 0.1
-                    )
+                // Features List
+                VStack(spacing: 20) {
+                    ForEach(Array(features.enumerated()), id: \.offset) { index, feature in
+                        FeatureCard(
+                            feature: feature,
+                            isVisible: showFeatures,
+                            delay: Double(index) * 0.1
+                        )
+                    }
                 }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
             
             Spacer()
         }
+        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.75, alignment: .center)
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
                 showFeatures = true

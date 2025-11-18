@@ -1,6 +1,6 @@
 //
 //  ExerciseCountdownTimer.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Reusable countdown timer component for exercises with circular progress.
 //

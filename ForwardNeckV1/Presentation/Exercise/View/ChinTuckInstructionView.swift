@@ -1,6 +1,6 @@
 //
 //  ChinTuckInstructionView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Detailed instruction view for Chin Tucks exercise with images.
 //

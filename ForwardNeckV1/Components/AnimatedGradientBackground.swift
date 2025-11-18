@@ -1,6 +1,6 @@
 //
 //  AnimatedGradientBackground.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  A lightweight, reusable animated gradient used for onboarding screens only.
 //

@@ -1,6 +1,6 @@
 //
 //  GamificationStore+Notifications.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Notification helpers for gamification updates.
 //

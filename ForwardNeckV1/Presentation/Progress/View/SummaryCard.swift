@@ -1,6 +1,6 @@
 //
 //  SummaryCard.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Compact stats card used on the progress screen.
 //

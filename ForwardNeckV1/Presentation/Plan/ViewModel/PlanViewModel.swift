@@ -1,6 +1,6 @@
 //
 //  PlanViewModel.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  View model for the daily neck workout circuit plan.
 //  Manages exercise data and workout state.

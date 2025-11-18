@@ -1,6 +1,6 @@
 //
 //  RootTabView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Bottom navigation with 5 tabs. Center tab opens ProgressTrackingView.
 //

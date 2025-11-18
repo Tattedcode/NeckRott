@@ -1,6 +1,6 @@
 //
 //  LeaderboardStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Manages leaderboard data persistence and synchronization
 //
@@ -49,6 +49,7 @@ final class LeaderboardStore: ObservableObject {
         
         // Load cached leaderboard
         loadCachedLeaderboard()
+        updateCurrentRankFromCache()
         
         // Listen for exercise completion notifications
         NotificationCenter.default.publisher(for: .exerciseCompleted)
@@ -59,6 +60,11 @@ final class LeaderboardStore: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        // Kick off an initial refresh so rank is available across the app (e.g., Home tab)
+        Task {
+            await self.refreshLeaderboard(force: true)
+        }
         
         Log.info("LeaderboardStore initialized with device ID: \(userProfile.deviceId)")
     }
@@ -184,6 +190,17 @@ final class LeaderboardStore: ObservableObject {
             leaderboardUsers = users
             lastRefreshDate = Date()
             
+            // If the user is present in the fetched leaderboard but local profile lacks opt-in,
+            // treat them as joined so UI shows their rank immediately.
+            if let _ = users.firstIndex(where: { $0.id == userProfile.deviceId }),
+               !userProfile.optedIntoLeaderboard {
+                var updatedProfile = userProfile
+                updatedProfile.optedIntoLeaderboard = true
+                userProfile = updatedProfile
+                Self.saveProfile(userProfile, to: profileFileURL)
+                Log.info("Detected existing user in leaderboard; marked as opted in locally")
+            }
+            
             // Save to cache
             saveCachedLeaderboard()
             
@@ -193,7 +210,9 @@ final class LeaderboardStore: ObservableObject {
                     currentUserRank = rankData.rank
                     Log.info("Current user rank: \(rankData.rank)")
                 } else {
-                    Log.info("Current user not found in leaderboard rankings")
+                    // Fallback to local position in case API didn't return
+                    currentUserRank = userPositionInLeaderboard
+                    Log.info("Current user not found in leaderboard rankings; fallback rank: \(currentUserRank ?? -1)")
                 }
             }
             
@@ -296,7 +315,8 @@ final class LeaderboardStore: ObservableObject {
     
     /// Check if user has joined the leaderboard
     var hasJoinedLeaderboard: Bool {
-        userProfile.optedIntoLeaderboard && userProfile.hasCompletedSetup
+        (userProfile.optedIntoLeaderboard && userProfile.hasCompletedSetup)
+        || leaderboardUsers.contains(where: { $0.id == userProfile.deviceId })
     }
     
     /// Get user's current position in loaded leaderboard
@@ -364,6 +384,21 @@ final class LeaderboardStore: ObservableObject {
         
         Log.info("Reset local profile - user can join again")
     }
+    
+    /// Update current user's rank using whatever data we already have in memory/cache
+    private func updateCurrentRankFromCache() {
+        guard hasJoinedLeaderboard else {
+            currentUserRank = nil
+            return
+        }
+        
+        currentUserRank = userPositionInLeaderboard
+        if let rank = currentUserRank {
+            Log.info("Set cached current user rank to \(rank)")
+        } else {
+            Log.info("No cached rank found for current user")
+        }
+    }
 }
 
 // MARK: - Notification Names
@@ -372,4 +407,3 @@ extension Notification.Name {
     /// Posted when an exercise is completed
     static let exerciseCompleted = Notification.Name("exerciseCompleted")
 }
-

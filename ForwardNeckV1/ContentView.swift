@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Created by Liam Brown on 10/9/2568 BE.
 //
@@ -25,8 +25,8 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: hasCompletedOnboarding)
-        .onAppear {
-            // Force start from home view
+        .task {
+            // TESTING: Skip onboarding - set to true to go straight to app
             hasCompletedOnboarding = true
         }
     }

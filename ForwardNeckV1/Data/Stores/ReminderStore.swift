@@ -1,6 +1,6 @@
 //
 //  ReminderStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Persists an array of daily reminder times to disk.
 //

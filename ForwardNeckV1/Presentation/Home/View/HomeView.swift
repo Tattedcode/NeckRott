@@ -1,6 +1,6 @@
 //
 //  HomeView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Entry point for the home dashboard.
 //
@@ -18,6 +18,7 @@ struct HomeView: View {
     @State var shouldCelebrate = false
     @State var lastPresentedAchievement: MonthlyAchievement?
     @State var flamePulse = false
+    @State var isShowingConnect4 = false
     
     // Timer to update countdown display every 10 seconds
     let timer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
@@ -32,10 +33,11 @@ struct HomeView: View {
                     VStack(spacing: 24) {
                         headerTitle
                             .padding(.horizontal, 20)
-                        mascotSection
-                            .padding(.horizontal, 20)
-                        statisticsSection
-                            .padding(.horizontal, 20)
+                        VStack(spacing: 0) {
+                            mascotSection
+                            statisticsSection
+                        }
+                        .padding(.horizontal, 20)
                         nextExerciseSection
                             .padding(.horizontal, 20)
                         previousDatesSection
@@ -54,6 +56,9 @@ struct HomeView: View {
         .task { await viewModel.onAppear() }
         .fullScreenCover(isPresented: $isShowingExerciseTimer) {
             exerciseTimerSheet
+        }
+        .fullScreenCover(isPresented: $isShowingConnect4) {
+            connect4Sheet
         }
         .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
         .onChange(of: viewModel.recentlyUnlockedAchievement) { _, achievement in
@@ -102,7 +107,9 @@ struct HomeView: View {
                     timeSlot: viewModel.currentTimeSlot, // Pass the current time slot to identify quick workout
                     onComplete: {
                         Task { @MainActor in
+                            Log.info("ExerciseTimerSheet onComplete called - completing exercise")
                             await viewModel.completeCurrentExercise()
+                            Log.info("Exercise completed - dismissing timer sheet")
                             isShowingExerciseTimer = false
                         }
                     },
@@ -116,6 +123,47 @@ struct HomeView: View {
                     Text("No exercise available")
                         .foregroundColor(.white)
                         .padding()
+                }
+            }
+        }
+    }
+    
+    private var connect4Sheet: some View {
+        Group {
+            // Check if match is ready (has opponent) to show game view
+            if let match = Connect4MatchStore.shared.currentMatch, match.isReady {
+                // Show game view when match is found
+                NavigationStack {
+                    Connect4GameView()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Close") {
+                                    Connect4MatchStore.shared.stopMatch()
+                                    isShowingConnect4 = false
+                                }
+                                .foregroundColor(.black)
+                            }
+                        }
+                }
+            } else {
+                // Show matchmaking view
+                NavigationStack {
+                    Connect4MatchmakingView()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Cancel") {
+                                    Connect4MatchStore.shared.stopMatch()
+                                    isShowingConnect4 = false
+                                }
+                                .foregroundColor(.black)
+                            }
+                        }
+                        .onChange(of: Connect4MatchStore.shared.currentMatch) { oldValue, newValue in
+                            // When match becomes ready, the view will automatically update
+                            if let match = newValue, match.isReady {
+                                // Match found - view will automatically switch to game view
+                            }
+                        }
                 }
             }
         }

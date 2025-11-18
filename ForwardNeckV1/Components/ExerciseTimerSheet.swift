@@ -1,6 +1,6 @@
 //
 //  ExerciseTimerSheet.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Extracted from HomeView.swift for better MVVM organization
 //
@@ -255,11 +255,18 @@ struct ExerciseTimerSheet: View {
         timerHelper.start(
             duration: exercise.durationSeconds,
             onTick: { remaining in
-                timeRemaining = remaining
+                Task { @MainActor in
+                    timeRemaining = remaining
+                    Log.debug("Timer tick: \(remaining) seconds remaining")
+                }
             },
             onComplete: {
-                onComplete()
-                Log.info("Exercise timer completed: \(exercise.title)")
+                // Timer reached 0 - automatically complete and return to home
+                Task { @MainActor in
+                    Log.info("Exercise timer reached 0 - calling completion handler")
+                    onComplete()
+                    Log.info("Exercise timer completed: \(exercise.title) - auto-returning to home")
+                }
             }
         )
         
@@ -346,10 +353,19 @@ class TimerHelper: ObservableObject {
                 if self.currentTime > 0 {
                     self.currentTime -= 1
                     self.onTick?(self.currentTime)
+                    
+                    // Check if timer reached 0 immediately after decrementing
+                    if self.currentTime == 0 {
+                        // Timer completed - store completion callback before stopping
+                        let completion = self.onComplete
+                        self.stop()
+                        completion?()
+                    }
                 } else {
-                    // Timer completed
+                    // Timer already completed (fallback)
+                    let completion = self.onComplete
                     self.stop()
-                    self.onComplete?()
+                    completion?()
                 }
             }
         }

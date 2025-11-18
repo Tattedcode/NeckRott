@@ -1,12 +1,13 @@
 //
 //  WidgetSetupSheet.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Guided walkthrough to help users add the app widget to their home screen.
 //
 
 import SwiftUI
 import UIKit
+import WidgetKit
 
 struct WidgetSetupSheet: View {
     let isConfigured: Bool
@@ -15,24 +16,24 @@ struct WidgetSetupSheet: View {
 
     private let steps: [(title: String, body: String)] = [
         (
-            "long press your home screen",
-            "tap and hold on an empty area of your home screen until apps start wiggling"
+            "Long press your home screen",
+            "Tap and hold on an empty area of your home screen until apps start wiggling"
         ),
         (
-            "tap the '+' button",
-            "look for the plus button in the top-left corner and tap it"
+            "Tap the '+' button",
+            "Look for the plus button in the top-left corner and tap it"
         ),
         (
-            "search for 'forwardneck'",
-            "use the search bar at the top to find the ForwardNeck widgets"
+            "Search for 'neckrot'",
+            "Use the search bar at the top to find the NeckRot widgets"
         ),
         (
-            "select brain health widget",
-            "choose the widget size you like and tap Add Widget"
+            "Select neck health widget",
+            "Choose the widget size you like and tap Add Widget"
         ),
         (
-            "place the widget",
-            "position it where you want it and tap Done"
+            "Place the widget",
+            "Position it where you want it and tap Done"
         )
     ]
 
@@ -56,10 +57,10 @@ struct WidgetSetupSheet: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
-                Text("widget setup")
+                Text("Widget Setup")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(Theme.primaryText)
-                Text("follow the quick guide to add the ForwardNeck widget")
+                Text("Follow the quick guide to add the NeckRot widget")
                     .font(.system(size: 14))
                     .foregroundColor(Theme.secondaryText)
             }
@@ -70,7 +71,7 @@ struct WidgetSetupSheet: View {
                 onToggleConfigured()
                 onDone()
             }) {
-                Text(isConfigured ? "done" : "mark done")
+                Text(isConfigured ? "Done" : "Mark Done")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.cyan)
             }
@@ -91,13 +92,14 @@ struct WidgetSetupSheet: View {
                 VStack(spacing: 16) {
                     WidgetPreviewImage()
 
-                    Text("add brain health widget")
+                    Text("Add Neck Health Widget")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Theme.primaryText)
                 }
                 .padding()
             )
     }
+
 
     private var stepList: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -134,10 +136,10 @@ struct WidgetSetupSheet: View {
                 .foregroundColor(.yellow)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("tip")
+                Text("Tip")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.yellow)
-                Text("the widget updates throughout the day to reflect your latest neck health progress")
+                Text("The widget updates throughout the day to reflect your latest neck health progress")
                     .font(.system(size: 13))
                     .foregroundColor(Theme.secondaryText)
             }
@@ -171,15 +173,65 @@ private struct WidgetPreviewImage: View {
                 .frame(maxWidth: 280)
                 .shadow(radius: 8)
         } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Theme.cardBackground.opacity(0.4))
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(.white.opacity(0.75))
-            }
-            .frame(width: 240, height: 160)
+            // Render a preview of the widget with progress bar
+            WidgetPreviewMockup()
         }
+    }
+}
+
+// Mockup widget preview matching the actual widget design
+// Shows mascot image with 100% progress bar, matching the real widget layout
+private struct WidgetPreviewMockup: View {
+    var body: some View {
+        ZStack {
+            // Widget background color matching NeckRotWidget
+            Color(red: 0.99, green: 0.96, blue: 0.90)
+            
+            VStack(spacing: 8) {
+                // Mascot image - use mascot4 for 100% progress (same as widget)
+                // Respect user preference for female mascot if selected
+                Image(MascotAssetProvider.resolvedMascotName(for: "mascot4"))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 120) // Similar to widget's small size
+                
+                // Progress bar section - matching widget layout exactly
+                VStack(spacing: 4) {
+                    // Progress bar with 100% filled gradient
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            // Grey background track
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 8)
+                            
+                            // Full gradient progress bar (100%)
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.red, .orange, .green],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: geometry.size.width, height: 8) // Full width for 100%
+                        }
+                    }
+                    .frame(height: 8)
+                    
+                    // "Neck health" text below progress bar - matching widget styling
+                    Text("Neck health")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(.black.opacity(0.75))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+        }
+        .frame(width: 200, height: 160)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)
     }
 }
 

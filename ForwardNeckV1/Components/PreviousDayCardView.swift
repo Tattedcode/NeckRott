@@ -1,6 +1,6 @@
 //
 //  PreviousDayCardView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Extracted from HomeView.swift for better MVVM organization
 //

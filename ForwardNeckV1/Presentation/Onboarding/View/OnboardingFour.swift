@@ -1,6 +1,6 @@
 //
 //  OnboardingFour.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Fourth onboarding screen for reason selection
 //
@@ -26,8 +26,8 @@ struct OnboardingFour: View {
     var body: some View {
         // Group the image, title, and options into a single content stack
         let content = VStack(spacing: 20) {
-            // Mascot image - moved up to fill gap above
-            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1"))
+            // Mascot image - always use mascot1 during onboarding (ignore user preference)
+            Image(MascotAssetProvider.resolvedMascotName(for: "mascot1", ignorePreference: true))
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 200, height: 200)
@@ -35,17 +35,20 @@ struct OnboardingFour: View {
                 .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
                 .padding(.top, -40) // Move image up to fill gap above
             
-            // Title underneath image
-            Text("You're here for a reason")
-                .font(.title.bold())
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-            
-            // Subtitle explaining the purpose
-            Text("How can we help you?")
-                .font(.caption)
-                .foregroundColor(.black.opacity(0.7))
-                .multilineTextAlignment(.center)
+            // Title and subtitle grouped together with reduced spacing
+            VStack(spacing: 4) {
+                // Title underneath image
+                Text("You're here for a reason")
+                    .font(.title.bold())
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
+                
+                // Subtitle explaining the purpose
+                Text("How can we help you?")
+                    .font(.caption)
+                    .foregroundColor(.black.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
             
             // Reason options with animation
             VStack(spacing: 8) {
@@ -137,11 +140,11 @@ struct ReasonOption: View {
                     .foregroundColor(isSelected ? .green : .blue)
             }
             .padding(12)
-            .background(isSelected ? Color.green.opacity(0.3) : Color.black.opacity(0.08))
+            .background(isSelected ? Color.green.opacity(0.15) : Color(red: 0.99, green: 0.96, blue: 0.90).opacity(0.6))
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.green : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.green : Color.gray.opacity(0.4), lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)

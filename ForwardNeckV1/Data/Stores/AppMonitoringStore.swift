@@ -1,6 +1,6 @@
 //
 //  AppMonitoringStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Store for managing selected apps to monitor and their usage data
 //
@@ -24,7 +24,7 @@ final class AppMonitoringStore {
 
     private let selectionKey = "monitoredAppSelection"
     private let appUsageDataKey = "appUsageData"
-    private let userDefaults = UserDefaults(suiteName: "group.forwardneck") ?? .standard
+    private let userDefaults = UserDefaults(suiteName: "group.neckrot") ?? .standard
 
     var storageDefaults: UserDefaults { userDefaults }
 

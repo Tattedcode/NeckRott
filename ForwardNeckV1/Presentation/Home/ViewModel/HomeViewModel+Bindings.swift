@@ -1,6 +1,6 @@
 //
 //  HomeViewModel+Bindings.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Store bindings and core refresh helpers.
 //

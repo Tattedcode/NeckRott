@@ -1,6 +1,6 @@
 //
 //  OnboardingContainer+Content.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Screen-specific content wiring.
 //
@@ -20,7 +20,7 @@ extension OnboardingContainer {
         case .featureHighlights:
             OnboardingFeatures()
 
-        case .forwardNeckInfo:
+        case .neckRotInfo:
             OnboardingThree()
 
         case .reasonSelection:
@@ -66,6 +66,9 @@ extension OnboardingContainer {
 
         case .reviews:
             OnboardingReviewsView()
+            
+        case .mascotSelection:
+            MascotSelectionView(selectedMascotType: viewModel.binding(\.selectedMascotType))
         }
     }
 

@@ -1,6 +1,6 @@
 //
 //  NextExerciseView.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Reusable component that displays the next exercise to do with a start button.
 //  Shows a random exercise and handles completion to move it from the home view.

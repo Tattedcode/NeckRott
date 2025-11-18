@@ -1,6 +1,6 @@
 //
 //  HomeViewModel+NeckFixes.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Neck-fix history, progress cards, and mascot helpers.
 //
@@ -34,11 +34,25 @@ extension HomeViewModel {
                 currentStreak: currentStreak
             )
         }
-
-        if #available(iOS 14.0, *) {
-            let mascot = WidgetSyncManager.mascot(for: healthPercentage)
-            WidgetSyncManager.updateWidget(percentage: healthPercentage, mascot: mascot)
-        }
+        
+        // Always update widget with today's data (widget should always show today's progress, not selected date)
+        updateWidgetWithTodayData()
+    }
+    
+    /// Updates the widget with today's health percentage and mascot
+    /// This ensures the widget always shows current progress, regardless of which date is selected in the UI
+    func updateWidgetWithTodayData() {
+        guard #available(iOS 14.0, *) else { return }
+        
+        let calendar = Calendar.current
+        // Calculate today's health percentage for widget (not the selected date)
+        let todayCompletions = exerciseStore.completions.filter { calendar.isDate($0.completedAt, inSameDayAs: Date()) }.count
+        let todayProgress = Double(todayCompletions) / 5.0
+        let todayHealthPercentage = Int((min(1.0, max(0.0, todayProgress))) * 100)
+        
+        let mascot = WidgetSyncManager.mascot(for: todayHealthPercentage)
+        Log.info("WidgetSyncManager: Updating widget with today's data - percentage: \(todayHealthPercentage)%, mascot: \(mascot), completions: \(todayCompletions)")
+        WidgetSyncManager.updateWidget(percentage: todayHealthPercentage, mascot: mascot)
     }
 
     func buildNeckFixHistory(endingOn referenceDate: Date, days: Int) -> [NeckFixDaySummary] {

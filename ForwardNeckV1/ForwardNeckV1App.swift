@@ -1,6 +1,6 @@
 //
-//  ForwardNeckV1App.swift
-//  ForwardNeckV1
+//  NeckRotV1App.swift
+//  NeckRotV1
 //
 //  Created by Liam Brown on 10/9/2568 BE.
 //
@@ -8,14 +8,14 @@
 import SwiftUI
 
 @main
-struct ForwardNeckV1App: App {
+struct NeckRotV1App: App {
     @Environment(\.scenePhase) private var scenePhase
     
     init() {
         // Initialize leaderboard store on app launch
         // This generates device ID and sets up local profile
         _ = LeaderboardStore.shared
-        Log.info("ForwardNeckV1 app initialized")
+        Log.info("NeckRotV1 app initialized")
     }
     
     var body: some Scene {

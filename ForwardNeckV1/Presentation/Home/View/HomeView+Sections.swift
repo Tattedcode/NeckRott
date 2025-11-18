@@ -1,6 +1,6 @@
 //
 //  HomeView+Sections.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Primary content sections for the home dashboard.
 //
@@ -23,7 +23,7 @@ extension HomeView {
                     Log.info("HomeView hero mascot displayed: \(mascotName) for health \(viewModel.healthPercentage)%")
                 }
 
-            Text("\(viewModel.healthPercentage)%")
+            Text("\(viewModel.healthPercentage)")
                 .font(.system(size: 48, weight: .bold))
                 .foregroundColor(.black)
 
@@ -47,16 +47,16 @@ extension HomeView {
                 }
                 .frame(height: 8)
 
-                HStack(spacing: 4) {
-                    Text("health")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.black.opacity(0.7))
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(.black.opacity(0.7))
-                }
+                Text("Neck health")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.black.opacity(0.7))
+                
+                Text("Level: \(viewModel.currentLevel)")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.black.opacity(0.7))
             }
         }
+        .padding(.bottom, 8)
         .debugOutline(.red, enabled: debugOutlines)
     }
 
@@ -170,11 +170,10 @@ extension HomeView {
 
     var nextExerciseSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Today's Exercises")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.black)
-            
             VStack(spacing: 12) {
+                // Connect 4 Card - always available
+                connect4Card()
+                
                 // Quick Workout Exercise Card
                 timeSlotExerciseCard(
                     slot: .morning,
@@ -191,6 +190,67 @@ extension HomeView {
             }
         }
         .debugOutline(.green, enabled: debugOutlines)
+    }
+    
+    // MARK: - Connect 4 Card
+    
+    @ViewBuilder
+    func connect4Card() -> some View {
+        Button(action: {
+            // Show Connect 4 matchmaking view (it will start matchmaking automatically)
+            isShowingConnect4 = true
+        }) {
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Text("Connect 4")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.black)
+                        
+                        Image(systemName: "gamecontroller.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                    
+                    Text("Play against other players while maintaining good posture")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.black)
+                        .lineLimit(2)
+                        .padding(.top, 4)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.2, green: 0.5, blue: 1.0),
+                                    Color(red: 0.1, green: 0.3, blue: 0.8)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+                    
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.white.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.black.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
     
     @ViewBuilder

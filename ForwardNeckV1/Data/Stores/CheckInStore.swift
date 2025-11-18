@@ -1,6 +1,6 @@
 //
 //  CheckInStore.swift
-//  ForwardNeckV1
+//  NeckRotV1
 //
 //  Simple on-device persistence for posture check-ins using JSON in Application Support.
 //  No internet required. Thread-safe via main-actor calls from ViewModels.

@@ -2,9 +2,9 @@ import WidgetKit
 import SwiftUI
 
 @main
-struct ForwardNeckWidgetBundle: WidgetBundle {
+struct NeckRotWidgetBundle: WidgetBundle {
     @WidgetBundleBuilder
     var body: some Widget {
-        ForwardNeckWidget()
+        NeckRotWidget()
     }
 }
