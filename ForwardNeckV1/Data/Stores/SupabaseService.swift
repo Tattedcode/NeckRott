@@ -359,6 +359,40 @@ final class SupabaseService {
         }
     }
     
+    /// Create a Connect 4 match that immediately pairs the user with the AI fallback.
+    func createConnect4MatchWithAI(deviceId: String) async throws -> Connect4Match {
+        Log.info("Creating Connect 4 match versus AI for device: \(deviceId)")
+        
+        struct MatchData: Codable {
+            let player1_device_id: String
+            let player2_device_id: String
+            let status: String
+            let current_turn_device_id: String
+        }
+        
+        let matchData = MatchData(
+            player1_device_id: deviceId,
+            player2_device_id: Connect4Match.aiDeviceId,
+            status: Connect4MatchStatus.inProgress.rawValue,
+            current_turn_device_id: deviceId
+        )
+        
+        do {
+            let response: Connect4Match = try await client
+                .from("connect4_matches")
+                .insert(matchData)
+                .select()
+                .single()
+                .execute()
+                .value
+            Log.info("Successfully created AI Connect 4 match: \(response.id)")
+            return response
+        } catch {
+            Log.error("Failed to create AI Connect 4 match: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
     /// Find a waiting match to join (random matchmaking)
     /// - Parameter excludingDeviceId: Device ID to exclude from search
     /// - Returns: A waiting match if found, nil otherwise
@@ -516,6 +550,41 @@ final class SupabaseService {
             return response
         } catch {
             Log.error("Failed to submit move: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Assign the fallback AI as the opponent when no human joins in time.
+    func assignAIOpponentToConnect4Match(matchId: UUID, humanDeviceId: String) async throws -> Connect4Match {
+        struct UpdateData: Codable {
+            let player2_device_id: String
+            let status: String
+            let current_turn_device_id: String
+            let updated_at: String
+        }
+        
+        let updateData = UpdateData(
+            player2_device_id: Connect4Match.aiDeviceId,
+            status: Connect4MatchStatus.inProgress.rawValue,
+            current_turn_device_id: humanDeviceId,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+        
+        do {
+            let response: Connect4Match = try await client
+                .from("connect4_matches")
+                .update(updateData)
+                .eq("id", value: matchId)
+                .eq("status", value: Connect4MatchStatus.waiting.rawValue)
+                .select()
+                .single()
+                .execute()
+                .value
+            
+            Log.info("Assigned AI opponent to match \(matchId)")
+            return response
+        } catch {
+            Log.error("Failed to assign AI opponent: \(error.localizedDescription)")
             throw error
         }
     }

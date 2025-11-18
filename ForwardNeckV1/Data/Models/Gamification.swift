@@ -58,7 +58,7 @@ struct Level: Codable, Identifiable {
     /// Title/name of the level
     let title: String
     
-    /// Description of the level achievement
+    /// Description of the level
     let description: String
     
     /// Icon system name for the level
@@ -85,62 +85,6 @@ struct Level: Codable, Identifiable {
         self.description = description
         self.iconSystemName = iconSystemName
         self.colorHex = colorHex
-    }
-    
-    /// Get the color from hex string
-    var color: Color {
-        return Color(hex: colorHex) ?? .blue
-    }
-}
-
-/// Model representing an achievement that can be unlocked
-/// Part of F-005: Gamification feature
-struct Achievement: Codable, Identifiable {
-    /// Unique identifier for the achievement
-    let id: UUID
-    
-    /// Title of the achievement
-    let title: String
-    
-    /// Description of what needs to be done
-    let description: String
-    
-    /// XP reward for unlocking this achievement
-    let xpReward: Int
-    
-    /// Icon system name for the achievement
-    let iconSystemName: String
-    
-    /// Color for the achievement (as hex string)
-    let colorHex: String
-    
-    /// Whether this achievement has been unlocked
-    var isUnlocked: Bool
-    
-    /// Date when achievement was unlocked (nil if not unlocked)
-    var unlockedAt: Date?
-    
-    /// Initialize an achievement
-    /// - Parameters:
-    ///   - id: Unique identifier (defaults to new UUID)
-    ///   - title: Title of the achievement
-    ///   - description: Description of the achievement
-    ///   - xpReward: XP reward for unlocking
-    ///   - iconSystemName: Icon system name
-    ///   - colorHex: Color as hex string
-    ///   - isUnlocked: Whether achievement is unlocked (defaults to false)
-    ///   - unlockedAt: Date when unlocked (defaults to nil)
-    init(id: UUID = UUID(), title: String, description: String, xpReward: Int,
-         iconSystemName: String, colorHex: String,
-         isUnlocked: Bool = false, unlockedAt: Date? = nil) {
-        self.id = id
-        self.title = title
-        self.description = description
-        self.xpReward = xpReward
-        self.iconSystemName = iconSystemName
-        self.colorHex = colorHex
-        self.isUnlocked = isUnlocked
-        self.unlockedAt = unlockedAt
     }
     
     /// Get the color from hex string

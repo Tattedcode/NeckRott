@@ -11,7 +11,6 @@ extension GamificationStore {
     func loadAllData() {
         loadUserProgress()
         loadLevels()
-        loadAchievements()
         loadRewards()
     }
 
@@ -37,18 +36,6 @@ extension GamificationStore {
             Log.error("Failed to load levels: \(error)")
             levels = createDefaultLevels()
             saveLevels()
-        }
-    }
-
-    func loadAchievements() {
-        do {
-            let data = try Data(contentsOf: achievementsFileURL)
-            achievements = try JSONDecoder().decode([Achievement].self, from: data)
-            Log.info("Loaded \(achievements.count) achievements")
-        } catch {
-            Log.error("Failed to load achievements: \(error)")
-            achievements = createDefaultAchievements()
-            saveAchievements()
         }
     }
 
@@ -81,16 +68,6 @@ extension GamificationStore {
             Log.info("Saved levels")
         } catch {
             Log.error("Failed to save levels: \(error)")
-        }
-    }
-
-    func saveAchievements() {
-        do {
-            let data = try JSONEncoder().encode(achievements)
-            try data.write(to: achievementsFileURL)
-            Log.info("Saved achievements")
-        } catch {
-            Log.error("Failed to save achievements: \(error)")
         }
     }
 
@@ -165,21 +142,6 @@ extension GamificationStore {
         }
 
         return levels
-    }
-
-    func createDefaultAchievements() -> [Achievement] {
-        [
-            Achievement(title: "First Check", description: "Complete your first posture check",
-                       xpReward: 0, iconSystemName: "checkmark.circle.fill", colorHex: "#34C759"),
-            Achievement(title: "Daily Streak", description: "Complete 7 days in a row",
-                       xpReward: 0, iconSystemName: "flame.fill", colorHex: "#FF9500"),
-            Achievement(title: "Exercise Enthusiast", description: "Complete 10 exercises",
-                       xpReward: 0, iconSystemName: "dumbbell.fill", colorHex: "#007AFF"),
-            Achievement(title: "Week Warrior", description: "Complete 50 posture checks in a week",
-                       xpReward: 0, iconSystemName: "calendar.badge.clock", colorHex: "#FF2D92"),
-            Achievement(title: "Posture Pro", description: "Reach level 5",
-                       xpReward: 0, iconSystemName: "star.fill", colorHex: "#FFD700")
-        ]
     }
 
     func createDefaultRewards() -> [Reward] {

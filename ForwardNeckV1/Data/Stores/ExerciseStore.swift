@@ -31,6 +31,20 @@ final class ExerciseStore: ObservableObject {
     }
     
     func allCompletions() -> [ExerciseCompletion] { completions }
+
+    /// Convenience helper to find the Connect 4 exercise ID if it exists
+    func connect4ExerciseId() -> UUID? {
+        exercises.first(where: { $0.title == "Connect 4" })?.id
+    }
+
+    /// Add an exercise if it doesn't already exist (matched by title or id)
+    func addExerciseIfMissing(_ exercise: Exercise) async {
+        let exists = exercises.contains { $0.id == exercise.id || $0.title == exercise.title }
+        guard !exists else { return }
+        exercises.append(exercise)
+        await save()
+        Log.info("Added missing exercise: \(exercise.title)")
+    }
     
     /// Update an exercise by title with new instructions and optional duration
     func updateExercise(title: String, instructions: [String], durationSeconds: Int? = nil) async {
@@ -109,25 +123,26 @@ final class ExerciseStore: ObservableObject {
     }
     
     /// Check if a specific time slot has been completed today
-    func isTimeSlotCompleted(_ slot: ExerciseTimeSlot, for date: Date = Date()) -> Bool {
+    func isTimeSlotCompleted(_ slot: ExerciseTimeSlot, for date: Date = Date(), excluding exerciseIds: Set<UUID> = []) -> Bool {
         let calendar = Calendar.current
         return completions.contains { completion in
-            calendar.isDate(completion.completedAt, inSameDayAs: date) && completion.timeSlot == slot
+            guard !exerciseIds.contains(completion.exerciseId) else { return false }
+            return calendar.isDate(completion.completedAt, inSameDayAs: date) && completion.timeSlot == slot
         }
     }
     
     /// Get the most recent completion time for a specific time slot today
-    func lastCompletionTime(for slot: ExerciseTimeSlot, on date: Date = Date()) -> Date? {
+    func lastCompletionTime(for slot: ExerciseTimeSlot, on date: Date = Date(), excluding exerciseIds: Set<UUID> = []) -> Date? {
         let calendar = Calendar.current
         return completions
-            .filter { calendar.isDate($0.completedAt, inSameDayAs: date) && $0.timeSlot == slot }
+            .filter { calendar.isDate($0.completedAt, inSameDayAs: date) && $0.timeSlot == slot && !exerciseIds.contains($0.exerciseId) }
             .map { $0.completedAt }
             .max()
     }
     
     /// Check if enough time has passed since last completion (for cooldown periods)
-    func canStartSlot(_ slot: ExerciseTimeSlot, cooldownMinutes: Int = 60, on date: Date = Date()) -> (canStart: Bool, timeRemaining: TimeInterval?) {
-        guard let lastCompletion = lastCompletionTime(for: slot, on: date) else {
+    func canStartSlot(_ slot: ExerciseTimeSlot, cooldownMinutes: Int = 60, on date: Date = Date(), excluding exerciseIds: Set<UUID> = []) -> (canStart: Bool, timeRemaining: TimeInterval?) {
+        guard let lastCompletion = lastCompletionTime(for: slot, on: date, excluding: exerciseIds) else {
             // No completion yet today, can start
             Log.info("No completion found for \(slot.rawValue) today, can start")
             return (true, nil)

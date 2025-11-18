@@ -17,7 +17,6 @@ final class RewardsViewModel: ObservableObject {
     /// Published properties for UI updates
     @Published var userProgress: UserProgress = UserProgress()
     @Published var levels: [Level] = []
-    @Published var achievements: [Achievement] = []
     @Published var rewards: [Reward] = []
     
     /// Computed properties for easy access
@@ -38,7 +37,6 @@ final class RewardsViewModel: ObservableObject {
     func loadData() {
         userProgress = gamificationStore.userProgress
         levels = gamificationStore.levels
-        achievements = gamificationStore.achievements
         rewards = gamificationStore.rewards
         
         Log.info("Loaded gamification data: Level \(userProgress.level), XP: \(userProgress.xp)")
@@ -81,23 +79,6 @@ final class RewardsViewModel: ObservableObject {
     func purchaseReward(_ rewardId: UUID) -> Bool {
         Log.info("Reward purchasing disabled during XP-only phase. Attempted rewardId=\(rewardId)")
         return false
-    }
-    
-    /// Unlock an achievement
-    /// - Parameter achievementId: ID of the achievement to unlock
-    /// - Returns: True if successful, false if already unlocked
-    func unlockAchievement(_ achievementId: UUID) -> Bool {
-        let success = gamificationStore.unlockAchievement(achievementId)
-        
-        if success {
-            // Refresh data after successful unlock
-            loadData()
-            Log.info("Successfully unlocked achievement")
-        } else {
-            Log.error("Failed to unlock achievement")
-        }
-        
-        return success
     }
     
     /// Add XP (called from other parts of the app)

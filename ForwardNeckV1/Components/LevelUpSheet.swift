@@ -33,7 +33,7 @@ struct LevelUpSheet: View {
                         .scaleEffect(showConfetti ? 1.1 : 1.0)
                         .animation(.spring(response: 0.6, dampingFraction: 0.6), value: showConfetti)
                     
-                    // Level achievement image
+                    // Level badge image
                     Image(levelImageName(for: level.number))
                         .resizable()
                         .scaledToFit()
@@ -82,7 +82,7 @@ struct LevelUpSheet: View {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.title2)
                             
-                            Text("Share Your Achievement")
+                            Text("Share Your Level")
                                 .font(.headline.bold())
                         }
                         .foregroundColor(.white)

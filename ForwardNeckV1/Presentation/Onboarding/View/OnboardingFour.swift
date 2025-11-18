@@ -73,7 +73,7 @@ struct OnboardingFour: View {
             .offset(x: shakeReasons ? -10 : 0)
             .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeReasons)
         }
-        .onChange(of: triggerValidation) { shouldValidate in
+        .onChange(of: triggerValidation) { _, shouldValidate in
             if shouldValidate {
                 Log.info("OnboardingFour validation triggered")
                 validateSelection()

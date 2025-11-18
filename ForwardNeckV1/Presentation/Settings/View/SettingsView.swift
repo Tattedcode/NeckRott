@@ -44,14 +44,14 @@ struct SettingsView: View {
             Button("Reset", role: .destructive) { viewModel.resetAppData() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This clears streaks, exercise history, goals, and achievements. This action cannot be undone.")
+            Text("This clears streaks, exercise history, and goals. This action cannot be undone.")
         }
         .alert("Data Reset", isPresented: $showResetSuccess) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("All stats and achievements have been reset.")
+            Text("All stats have been reset.")
         }
-        .onChange(of: viewModel.resetCompleted) { completed in
+        .onChange(of: viewModel.resetCompleted) { _, completed in
             guard completed else { return }
             showResetSuccess = true
             viewModel.acknowledgeResetCompletion()

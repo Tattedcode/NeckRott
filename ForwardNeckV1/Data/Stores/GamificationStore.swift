@@ -13,19 +13,16 @@ final class GamificationStore: ObservableObject {
 
     @Published var userProgress = UserProgress()
     @Published var levels: [Level] = []
-    @Published var achievements: [Achievement] = []
     @Published var rewards: [Reward] = []
 
     let progressFileURL: URL
     let levelsFileURL: URL
-    let achievementsFileURL: URL
     let rewardsFileURL: URL
 
     private init() {
         let supportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         progressFileURL = supportDirectory.appendingPathComponent("user_progress.json")
         levelsFileURL = supportDirectory.appendingPathComponent("levels.json")
-        achievementsFileURL = supportDirectory.appendingPathComponent("achievements.json")
         rewardsFileURL = supportDirectory.appendingPathComponent("rewards.json")
 
         loadAllData()
@@ -39,11 +36,6 @@ final class GamificationStore: ObservableObject {
         saveUserProgress()
         notifyProgressChange(reason: "addXP")
         Log.info("Added \(xp) XP from \(source). Total XP: \(userProgress.xp)")
-    }
-
-    func unlockAchievement(_ achievementId: UUID) -> Bool {
-        Log.info("Achievement unlocking is disabled while level-based rewards are in progress (id=\(achievementId))")
-        return false
     }
 
     func purchaseReward(_ rewardId: UUID) -> Bool {
@@ -69,10 +61,8 @@ final class GamificationStore: ObservableObject {
 
     func resetAll() {
         userProgress = UserProgress()
-        achievements = createDefaultAchievements()
         rewards = createDefaultRewards()
         saveUserProgress()
-        saveAchievements()
         saveRewards()
         notifyProgressChange(reason: "resetAll")
         Log.info("Reset all gamification data")

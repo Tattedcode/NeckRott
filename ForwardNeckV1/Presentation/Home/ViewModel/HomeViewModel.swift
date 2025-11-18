@@ -34,13 +34,8 @@ final class HomeViewModel: ObservableObject {
         }
     }
     @Published var trackedUsageMinutes: Int = 0
-    @Published var monthlyAchievements: [MonthlyAchievement] = MonthlyAchievementKind.allCases.map { MonthlyAchievement(kind: $0) }
-    @Published var recentlyUnlockedAchievement: MonthlyAchievement?
     @Published var neckFixHistory: [NeckFixDaySummary] = []
     @Published var previousDayCards: [PreviousDaySummary] = []
-    
-    // Queue for achievements that need to be shown (handles multiple achievements unlocking at once)
-    private var achievementQueue: [MonthlyAchievement] = []
     
     // MARK: - Time Slot State
     
@@ -79,20 +74,6 @@ final class HomeViewModel: ObservableObject {
         return formatter
     }()
 
-    let achievementsShownKey = "home.achievements.shown"
-    let achievementsUnlockedKey = "home.achievements.unlocked"
-    let achievementsMonthKey = "home.achievements.month"
-
-    var shownAchievementKinds: Set<MonthlyAchievementKind> {
-        didSet { saveShownAchievements() }
-    }
-
-    var unlockedAchievementKinds: Set<MonthlyAchievementKind> {
-        didSet { saveUnlockedAchievements() }
-    }
-
-    var celebrationsEnabled = false
-
     // MARK: - Init
 
     init(
@@ -103,8 +84,6 @@ final class HomeViewModel: ObservableObject {
         self.streakStore = streakStore ?? StreakStore.shared
         self.exerciseStore = exerciseStore ?? ExerciseStore.shared
         self.userStore = userStore ?? UserStore()
-        self.shownAchievementKinds = Self.loadShownAchievementsForCurrentMonth(key: achievementsShownKey, monthKey: achievementsMonthKey)
-        self.unlockedAchievementKinds = Self.loadUnlockedAchievementsForCurrentMonth(key: achievementsUnlockedKey, monthKey: achievementsMonthKey)
 
         NotificationCenter.default.publisher(for: .appDataDidReset)
             .receive(on: RunLoop.main)
@@ -118,10 +97,13 @@ final class HomeViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                // Update widget immediately when any exercise is completed
-                // This ensures widget updates even if completion happens outside HomeView
+                // Refresh stats and widget immediately when any exercise is completed (includes Connect 4)
+                self.updateStreaks()
+                self.updateNextExercise()
+                self.updateNeckFixes(for: self.selectedNeckFixDate)
+                self.updateTimeSlotStatuses()
                 self.updateWidgetWithTodayData()
-                Log.info("HomeViewModel: Widget updated via exerciseCompleted notification")
+                Log.info("HomeViewModel: Stats and widget updated via exerciseCompleted notification")
             }
             .store(in: &cancellables)
 
@@ -143,7 +125,16 @@ final class HomeViewModel: ObservableObject {
         updateNeckFixes(for: selectedNeckFixDate)
         updateTimeSlotStatuses()
         refreshTrackedAppUsage()
-        celebrationsEnabled = true
+    }
+
+    func handleAppDataReset() {
+        userStore.loadUserData()
+        levelProgressManager.resetTracking()
+        updateStreaks()
+        updateNextExercise()
+        selectedNeckFixDate = Calendar.current.startOfDay(for: Date())
+        updateNeckFixes(for: selectedNeckFixDate)
+        updateTimeSlotStatuses()
     }
 
     // MARK: - Public API
@@ -180,49 +171,6 @@ final class HomeViewModel: ObservableObject {
         let normalizedDate = Calendar.current.startOfDay(for: date)
         selectedNeckFixDate = normalizedDate
         updateNeckFixes(for: normalizedDate)
-    }
-
-    func markAchievementCelebrated(_ achievement: MonthlyAchievement) {
-        guard achievement.isUnlocked else { return }
-        if !shownAchievementKinds.contains(achievement.kind) {
-            shownAchievementKinds.insert(achievement.kind)
-        }
-    }
-
-    func clearRecentlyUnlockedAchievement() {
-        recentlyUnlockedAchievement = nil
-        
-        // Show next achievement from queue if available
-        showNextAchievementFromQueue()
-    }
-    
-    /// Add achievement to queue and show it if no other achievement is currently showing
-    func enqueueAchievement(_ achievement: MonthlyAchievement) {
-        achievementQueue.append(achievement)
-        Log.info("Enqueued achievement: \(achievement.title). Queue size: \(achievementQueue.count)")
-        
-        // If no achievement is currently showing, show the first one from queue
-        if recentlyUnlockedAchievement == nil {
-            showNextAchievementFromQueue()
-        }
-    }
-    
-    /// Show the next achievement from the queue
-    private func showNextAchievementFromQueue() {
-        guard recentlyUnlockedAchievement == nil, !achievementQueue.isEmpty else {
-            return
-        }
-        
-        // Remove and show the first achievement in queue
-        let nextAchievement = achievementQueue.removeFirst()
-        recentlyUnlockedAchievement = nextAchievement
-        Log.info("Showing next achievement from queue: \(nextAchievement.title). Remaining in queue: \(achievementQueue.count)")
-    }
-    
-    /// Clear the achievement queue (used during app reset)
-    func clearAchievementQueue() {
-        achievementQueue = []
-        Log.info("Cleared achievement queue")
     }
     
     // MARK: - Time Slot Methods
@@ -286,16 +234,24 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func resolveStatus(for slot: ExerciseTimeSlot, at date: Date) -> SlotStatus {
+        // Ignore Connect 4 completions when evaluating time-slot locks
+        let excludedExerciseIds: Set<UUID> = {
+            if let id = exerciseStore.connect4ExerciseId() {
+                return [id]
+            }
+            return []
+        }()
+        
         // Special handling for Quick Workout cooldown
         if slot == .morning {
-            let cooldownCheck = exerciseStore.canStartSlot(.morning, cooldownMinutes: 30, on: date)
+            let cooldownCheck = exerciseStore.canStartSlot(.morning, cooldownMinutes: 30, on: date, excluding: excludedExerciseIds)
             Log.info("Quick Workout cooldown check: canStart=\(cooldownCheck.canStart), timeRemaining=\(cooldownCheck.timeRemaining ?? 0)")
             if !cooldownCheck.canStart {
                 Log.info("Quick Workout is in cooldown, returning .locked")
                 return .locked // Show as locked during cooldown
             }
             // If cooldown passed but there was a completion today, show as available (not completed)
-            if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+            if exerciseStore.isTimeSlotCompleted(slot, for: date, excluding: excludedExerciseIds) {
                 Log.info("Quick Workout cooldown passed, returning .available")
                 return .available
             }
@@ -303,11 +259,11 @@ final class HomeViewModel: ObservableObject {
         
         // Special handling for Full Daily Workout - lock until 6am next day after completion
         if slot == .afternoon {
-            if exerciseStore.isTimeSlotCompleted(slot, for: date) {
+            if exerciseStore.isTimeSlotCompleted(slot, for: date, excluding: excludedExerciseIds) {
                 let calendar = Calendar.current
                 let now = date
                 let hour = calendar.component(.hour, from: now)
-                let lastCompletion = exerciseStore.lastCompletionTime(for: slot, on: date)
+                let lastCompletion = exerciseStore.lastCompletionTime(for: slot, on: date, excluding: excludedExerciseIds)
                 
                 if let lastCompletion = lastCompletion {
                     let completionDay = calendar.startOfDay(for: lastCompletion)

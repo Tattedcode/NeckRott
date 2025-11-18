@@ -2,24 +2,21 @@
 //  LeaderboardView.swift
 //  NeckRotV1
 //
-//  Global monthly leaderboard showing user rankings with tabs for Leaderboard, Level, and Achievements
+//  Global monthly leaderboard showing user rankings with tabs for Leaderboard and Level
 //
 
 import SwiftUI
 
-/// Main leaderboard view showing global rankings with tabs for Leaderboard, Level, and Achievements
+/// Main leaderboard view showing global rankings with tabs for Leaderboard and Level
 struct LeaderboardView: View {
     @State private var viewModel = LeaderboardViewModel()
-    @StateObject private var homeViewModel = HomeViewModel()
     @StateObject private var rewardsViewModel: RewardsViewModel = RewardsViewModel()
     @State private var showingLevelSheet = false
     @State private var showingUsernameSheet = false
-    @State private var selectedAchievement: MonthlyAchievement?
     
     enum LeaderboardTab: String, CaseIterable {
         case leaderboard = "Ranking"
         case level = "Level"
-        case achievements = "Achievements"
     }
     
     @State private var selectedTab: LeaderboardTab = .leaderboard
@@ -89,8 +86,6 @@ struct LeaderboardView: View {
                             leaderboardContent
                         } else if selectedTab == .level {
                             levelContent
-                        } else {
-                            achievementsContent
                         }
                     }
                     .padding(.horizontal, 16)
@@ -107,7 +102,6 @@ struct LeaderboardView: View {
         }
         .onAppear {
             rewardsViewModel.loadData()
-            Task { await homeViewModel.onAppear() }
             rewardsViewModel.startObserving()
         }
         .sheet(isPresented: $showingUsernameSheet) {
@@ -122,13 +116,10 @@ struct LeaderboardView: View {
         .sheet(isPresented: $showingLevelSheet) {
             LevelDetailSheet(
                 currentLevel: rewardsViewModel.currentLevel,
+                nextLevel: rewardsViewModel.nextLevel,
+                progressToNextLevel: rewardsViewModel.progressToNextLevel,
                 userProgress: rewardsViewModel.userProgress
             )
-        }
-        .sheet(item: $selectedAchievement) { achievement in
-            AchievementDetailSheet(achievement: achievement)
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
         }
         .alert("Error", isPresented: $viewModel.showingError) {
             Button("OK", role: .cancel) { }
@@ -192,62 +183,6 @@ struct LeaderboardView: View {
     private var levelContent: some View {
         VStack(spacing: 16) {
             levelSection
-        }
-        .padding(.top, 8)
-    }
-    
-    private var achievementsContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Monthly Achievements")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.black)
-
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 14) {
-                ForEach(homeViewModel.monthlyAchievements) { achievement in
-                    let imageName = achievement.isUnlocked ? achievement.kind.unlockedImageName : achievement.kind.lockedImageName
-
-                    Button(action: {
-                        Log.info("Achievement tapped: \(achievement.kind.title)")
-                        selectedAchievement = achievement
-                    }) {
-                        VStack {
-                            Group {
-                                if achievement.kind.usesSystemImage {
-                                    Image(systemName: imageName)
-                                        .resizable()
-                                } else {
-                                    Image(imageName)
-                                        .resizable()
-                                }
-                            }
-                            .scaledToFit()
-                            .frame(width: 96, height: 96)
-                            .padding(4)
-                            .opacity(achievement.isUnlocked ? 1 : 0.3)
-                            .grayscale(achievement.isUnlocked ? 0 : 1)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            
-            // TESTING: Button to unlock next achievement
-            Button(action: {
-                homeViewModel.unlockNextAchievement()
-            }) {
-                HStack {
-                    Image(systemName: "star.fill")
-                    Text("Unlock Next Achievement (Test)")
-                }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange.opacity(0.8))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .padding(.top, 8)
         }
         .padding(.top, 8)
     }

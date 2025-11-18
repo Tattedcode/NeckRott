@@ -13,8 +13,6 @@ final class AppResetService {
         GamificationStore.shared.resetAll()
         UserStore().clearUserData()
 
-        UserDefaults.standard.removeObject(forKey: "home.achievements.shown")
-
         NotificationCenter.default.post(name: .appDataDidReset, object: nil)
     }
 }

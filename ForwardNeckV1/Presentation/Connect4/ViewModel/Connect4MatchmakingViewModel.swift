@@ -16,6 +16,7 @@ final class Connect4MatchmakingViewModel {
     var isMatchmaking: Bool = false
     var matchFound: Bool = false
     var errorMessage: String?
+    var elapsedTime: TimeInterval = 0 // Track elapsed time for UI updates
     
     // MARK: - Dependencies
     
@@ -29,9 +30,10 @@ final class Connect4MatchmakingViewModel {
         isMatchmaking = true
         matchFound = false
         errorMessage = nil
+        elapsedTime = 0 // Reset elapsed time
         
         do {
-            let match = try await matchStore.startMatchmaking()
+            let match = try await self.matchStore.startMatchmaking()
             
             // Check if match is ready (has opponent)
             if match.isReady {
@@ -49,8 +51,8 @@ final class Connect4MatchmakingViewModel {
     }
     
     func waitForOpponent(matchId: UUID) async {
-        // Poll until opponent joins (max 60 seconds)
-        let maxWaitTime: TimeInterval = 60
+        // Poll until opponent joins (max 7 seconds before falling back to AI)
+        let maxWaitTime: TimeInterval = 7
         let pollInterval: TimeInterval = 2
         let startTime = Date()
         
@@ -62,23 +64,29 @@ final class Connect4MatchmakingViewModel {
             }
             
             // Check if match still exists
-            guard let match = matchStore.currentMatch, match.id == matchId else {
+            guard let match = self.matchStore.currentMatch, match.id == matchId else {
                 Log.info("Match was cancelled - stopping waitForOpponent")
                 return
             }
             
+            // Update elapsed time for UI
+            elapsedTime = Date().timeIntervalSince(startTime)
+            
             try? await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
             
             // Check again after sleep
-            guard isMatchmaking, let existingMatch = matchStore.currentMatch, existingMatch.id == matchId else {
+            guard isMatchmaking, let existingMatch = self.matchStore.currentMatch, existingMatch.id == matchId else {
                 Log.info("Matchmaking cancelled during wait")
                 return
             }
             
-            // Check match status
-            await matchStore.loadGameState(matchId: matchId)
+            // Update elapsed time again
+            elapsedTime = Date().timeIntervalSince(startTime)
             
-            if let match = matchStore.currentMatch, match.isReady {
+            // Check match status
+            await self.matchStore.loadGameState(matchId: matchId)
+            
+            if let match = self.matchStore.currentMatch, match.isReady {
                 // Match is ready - update state
                 matchFound = true
                 Log.info("Opponent joined match: \(matchId)")
@@ -86,16 +94,69 @@ final class Connect4MatchmakingViewModel {
             }
         }
         
-        // Timeout - no opponent found (only if still matchmaking)
+        // Timeout after 7 seconds - create AI match (only if still matchmaking)
         if isMatchmaking {
-            errorMessage = "No opponent found. Please try again."
-            isMatchmaking = false
-            Log.info("Matchmaking timeout for match: \(matchId)")
+            elapsedTime = maxWaitTime // Ensure elapsed time shows we've reached the timeout
+            Log.info("No human opponent found after 7 seconds - creating AI match")
+            
+            // Check if task was cancelled before proceeding
+            guard !Task.isCancelled else {
+                Log.info("Task was cancelled before creating AI match")
+                return
+            }
+            
+            do {
+                // Stop the current match
+                self.matchStore.stopMatch()
+                
+                // Small delay to ensure cleanup completes
+                // Check cancellation during delay
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                guard !Task.isCancelled else {
+                    Log.info("Task was cancelled during cleanup delay")
+                    return
+                }
+                
+                // Create AI match
+                // Call directly - cancellation will be handled by checking isMatchmaking flag
+                // The view's .task modifier cancellation won't affect this since we check isMatchmaking
+                let aiMatch = try await self.matchStore.createAIMatch()
+                
+                // Check cancellation after creating match
+                guard !Task.isCancelled else {
+                    Log.info("Task was cancelled after creating AI match")
+                    return
+                }
+                
+                // Small delay to ensure match is set in store
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                
+                // Verify match was created and set
+                guard self.matchStore.currentMatch?.id == aiMatch.id else {
+                    Log.error("AI match was created but not set in store")
+                    errorMessage = "Failed to create AI match"
+                    isMatchmaking = false
+                    return
+                }
+                
+                matchFound = true
+                isMatchmaking = false // Stop matchmaking since we found AI opponent
+                Log.info("AI match created successfully: \(aiMatch.id), isReady: \(aiMatch.isReady), isAIMatch: \(aiMatch.isAIMatch)")
+            } catch {
+                // Check if it's a cancellation error
+                if error is CancellationError {
+                    Log.info("AI match creation was cancelled (expected if user navigates away)")
+                    return
+                }
+                errorMessage = "Failed to create AI match: \(error.localizedDescription)"
+                isMatchmaking = false
+                Log.error("Failed to create AI match: \(error.localizedDescription)")
+            }
         }
     }
     
     func cancelMatchmaking() {
-        matchStore.stopMatch()
+        self.matchStore.stopMatch()
         isMatchmaking = false
         matchFound = false
         errorMessage = nil

@@ -63,13 +63,13 @@ struct OnboardingSeven: View {
             .offset(x: shakeAgeField ? -10 : 0)
             .animation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true), value: shakeAgeField)
         }
-        .onChange(of: triggerValidation) { shouldValidate in
+        .onChange(of: triggerValidation) { _, shouldValidate in
             if shouldValidate {
                 validateInput()
                 triggerValidation = false
             }
         }
-        .onChange(of: selectedAge) { _ in
+        .onChange(of: selectedAge) { _, _ in
             // Just update the UI state, don't automatically proceed
             // The continue button will handle the navigation
         }

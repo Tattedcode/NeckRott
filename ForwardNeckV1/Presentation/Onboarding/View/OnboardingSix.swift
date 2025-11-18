@@ -82,7 +82,7 @@ struct OnboardingSix: View {
             
             // Wait for the user to tap continue before requesting permission
         }
-        .onChange(of: triggerPermissionRequest) { shouldTrigger in
+        .onChange(of: triggerPermissionRequest) { _, shouldTrigger in
             if shouldTrigger {
                 triggerPermissionRequest = false
                 requestNotificationPermission()

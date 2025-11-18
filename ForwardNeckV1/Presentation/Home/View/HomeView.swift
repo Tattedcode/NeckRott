@@ -14,9 +14,6 @@ struct HomeView: View {
     @State var isShowingExerciseTimer = false
     @State var isInstructionsExpanded = false
     @State var isAppPickerPresented = false
-    @State var presentedAchievement: MonthlyAchievement?
-    @State var shouldCelebrate = false
-    @State var lastPresentedAchievement: MonthlyAchievement?
     @State var flamePulse = false
     @State var isShowingConnect4 = false
     
@@ -47,11 +44,6 @@ struct HomeView: View {
                 }
             }
 
-            if presentedAchievement != nil {
-                Color.black.opacity(0.22)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-            }
         }
         .task { await viewModel.onAppear() }
         .fullScreenCover(isPresented: $isShowingExerciseTimer) {
@@ -61,30 +53,20 @@ struct HomeView: View {
             connect4Sheet
         }
         .familyActivityPicker(isPresented: $isAppPickerPresented, selection: $viewModel.activitySelection)
-        .onChange(of: viewModel.recentlyUnlockedAchievement) { _, achievement in
-            guard let achievement else { return }
-            // Show the achievement sheet when a new achievement is set
-            presentedAchievement = achievement
-            lastPresentedAchievement = achievement
-            shouldCelebrate = true
-            // Don't clear here - wait until sheet is dismissed
-        }
-        .sheet(item: $presentedAchievement, onDismiss: handleAchievementDismissal) { achievement in
-            AchievementUnlockedSheet(
-                achievement: achievement,
-                isCelebrating: shouldCelebrate
-            ) {
-                presentedAchievement = nil
-            }
-            .presentationDetents([.fraction(0.5)])
-            .presentationDragIndicator(.hidden)
-        }
         .alert("Exercise Locked", isPresented: $viewModel.showTimeSlotLockedAlert) {
             Button("OK", role: .cancel) {
                 viewModel.showTimeSlotLockedAlert = false
             }
         } message: {
             Text(viewModel.lockedAlertMessage)
+        }
+        .onChange(of: isShowingConnect4) { _, newValue in
+            if newValue == false {
+                viewModel.updateStreaks()
+                viewModel.updateNeckFixes(for: viewModel.selectedNeckFixDate)
+                viewModel.updateTimeSlotStatuses()
+                viewModel.updateNextExercise()
+            }
         }
         .onReceive(timer) { _ in
             // Update time slot statuses to refresh countdown timer display
@@ -130,11 +112,15 @@ struct HomeView: View {
     
     private var connect4Sheet: some View {
         Group {
-            // Check if match is ready (has opponent) to show game view
-            if let match = Connect4MatchStore.shared.currentMatch, match.isReady {
-                // Show game view when match is found
+            // Prefer showing the active/finished game if it exists, even after completion,
+            // so the completion sheet can be shown before leaving.
+            if Connect4MatchStore.shared.currentGame != nil ||
+                (Connect4MatchStore.shared.currentMatch?.isReady ?? false) {
                 NavigationStack {
-                    Connect4GameView()
+                    Connect4GameView(onExit: {
+                        Connect4MatchStore.shared.stopMatch()
+                        isShowingConnect4 = false
+                    })
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button("Close") {
@@ -167,23 +153,6 @@ struct HomeView: View {
                 }
             }
         }
-    }
-
-    private func handleAchievementDismissal() {
-        // Mark the achievement as celebrated
-        if shouldCelebrate, let last = lastPresentedAchievement {
-            viewModel.markAchievementCelebrated(last)
-        }
-        shouldCelebrate = false
-        lastPresentedAchievement = nil
-        
-        // Clear the presented achievement first so the sheet closes
-        presentedAchievement = nil
-        
-        // Clear the current achievement and show the next one from queue (if any)
-        // This will automatically trigger showing the next achievement if one is queued
-        // The onChange handler will set presentedAchievement again if there's a next achievement
-        viewModel.clearRecentlyUnlockedAchievement()
     }
 }
 

@@ -17,6 +17,8 @@ enum Connect4MatchStatus: String, Codable, Equatable {
 
 /// Represents a Connect 4 match
 struct Connect4Match: Codable, Identifiable, Equatable {
+    static let aiDeviceId = "AI_PLAYER"
+    
     let id: UUID
     let player1DeviceId: String
     var player2DeviceId: String?
@@ -51,6 +53,11 @@ struct Connect4Match: Codable, Identifiable, Equatable {
     
     /// Check if match is ready to start (has both players)
     var isReady: Bool {
+        // AI matches are ready immediately (status is inProgress)
+        if isAIMatch {
+            return player2DeviceId != nil && status == .inProgress
+        }
+        // Regular matches need to be waiting with player2
         return player2DeviceId != nil && status == .waiting
     }
     
@@ -62,6 +69,11 @@ struct Connect4Match: Codable, Identifiable, Equatable {
     /// Check if match is finished
     var isFinished: Bool {
         return status == .completed || status == .abandoned
+    }
+    
+    /// Check if current opponent is the AI fallback
+    var isAIMatch: Bool {
+        return player2DeviceId == Connect4Match.aiDeviceId
     }
     
     /// Get opponent device ID for a given device ID

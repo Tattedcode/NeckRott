@@ -26,8 +26,8 @@ struct OnboardingFeatures: View {
         ),
         FeatureItem(
             icon: "star.fill",
-            title: "Earn Rewards",
-            description: "Unlock achievements and level up as you build healthy habits",
+            title: "Level Up",
+            description: "Gain XP and climb levels as you build healthy habits",
             color: .orange
         ),
         FeatureItem(

@@ -26,23 +26,26 @@ struct Connect4BoardView: View {
             // Column headers (for tapping)
             HStack(spacing: spacing) {
                 ForEach(0..<columns, id: \.self) { column in
+                    // Keep the indicators visible during brief loading states to avoid flashing
+                    let isEnabled = isMyTurn && !isLoading && engine.isValidMove(column: column)
+                    let shouldShow = isMyTurn && engine.isValidMove(column: column)
+                    
                     Button(action: {
-                        if isMyTurn && !isLoading && engine.isValidMove(column: column) {
+                        if isEnabled {
                             onColumnTapped(column)
                         }
                     }) {
                         Circle()
-                            .fill(isMyTurn && !isLoading && engine.isValidMove(column: column) ?
-                                  Color.blue.opacity(0.3) : Color.clear)
+                            .fill(shouldShow ? Color.blue.opacity(0.3) : Color.clear)
                             .frame(width: cellSize, height: cellSize)
                             .overlay(
                                 Image(systemName: "arrow.down")
                                     .font(.system(size: 16))
-                                    .foregroundColor(isMyTurn && !isLoading && engine.isValidMove(column: column) ?
-                                                     .blue : .clear)
+                                    .foregroundColor(shouldShow ? .blue : .clear)
                             )
                     }
-                    .disabled(!isMyTurn || isLoading || !engine.isValidMove(column: column))
+                    .disabled(!isEnabled)
+                    .allowsHitTesting(isEnabled)
                 }
             }
             .padding(.bottom, 8)
@@ -105,4 +108,3 @@ struct Connect4BoardView: View {
     .padding()
     .background(Theme.backgroundGradient)
 }
-

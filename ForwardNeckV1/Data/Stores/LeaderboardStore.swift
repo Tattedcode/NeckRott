@@ -286,6 +286,16 @@ final class LeaderboardStore: ObservableObject {
             return
         }
         
+        // Prevent duplicate syncs if we just synced recently (within last 5 seconds)
+        // This prevents cascading refreshes when multiple notifications fire
+        if let lastRefresh = lastRefreshDate {
+            let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
+            if timeSinceRefresh < 5.0 {
+                Log.info("Skipping sync - just synced \(Int(timeSinceRefresh))s ago (preventing duplicate)")
+                return
+            }
+        }
+        
         Log.info("Exercise completed, triggering sync for device \(userProfile.deviceId)")
         await syncToSupabase()
         

@@ -32,8 +32,8 @@ struct Connect4MatchmakingView: View {
                         .padding(.horizontal, 40)
                 }
                 
-                // Check if match already exists and is ready
-                if let match = Connect4MatchStore.shared.currentMatch, match.isReady {
+                // Check if match already exists and is ready (including AI matches)
+                if let match = Connect4MatchStore.shared.currentMatch, (match.isReady || match.isAIMatch) {
                     matchFoundView
                 } else if viewModel.isMatchmaking {
                     matchmakingInProgressView
@@ -77,14 +77,16 @@ struct Connect4MatchmakingView: View {
         }
         .task {
             // Check if matchmaking is already in progress from HomeView
-            if Connect4MatchStore.shared.currentMatch != nil {
+            if let existingMatch = Connect4MatchStore.shared.currentMatch {
                 // Matchmaking was already started - update viewModel state
                 viewModel.isMatchmaking = true
-                // Wait for opponent if match exists but isn't ready
-                if let match = Connect4MatchStore.shared.currentMatch, !match.isReady {
-                    await viewModel.waitForOpponent(matchId: match.id)
-                } else if let match = Connect4MatchStore.shared.currentMatch, match.isReady {
+                // Check if it's an AI match or ready match
+                if existingMatch.isAIMatch || existingMatch.isReady {
                     viewModel.matchFound = true
+                    viewModel.isMatchmaking = false
+                } else {
+                    // Wait for opponent if match exists but isn't ready
+                    await viewModel.waitForOpponent(matchId: existingMatch.id)
                 }
             } else {
                 // No match exists - automatically start matchmaking when view appears
@@ -92,8 +94,22 @@ struct Connect4MatchmakingView: View {
             }
         }
         .onChange(of: Connect4MatchStore.shared.currentMatch) { oldValue, newValue in
-            if let match = newValue, match.isReady {
-                viewModel.matchFound = true
+            if let match = newValue {
+                // Check if match is ready (has opponent) or is an AI match
+                if match.isReady || match.isAIMatch {
+                    viewModel.matchFound = true
+                    viewModel.isMatchmaking = false
+                    Log.info("Match found via onChange - isReady: \(match.isReady), isAIMatch: \(match.isAIMatch)")
+                }
+            } else {
+                // Match was cleared
+                viewModel.matchFound = false
+            }
+        }
+        .onChange(of: viewModel.matchFound) { oldValue, newValue in
+            // Force view update when matchFound changes
+            if newValue {
+                Log.info("Match found flag set to true - should show match found view")
             }
         }
     }
@@ -148,11 +164,20 @@ struct Connect4MatchmakingView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.black)
             
+            // Show different message after 7 seconds
+            if viewModel.elapsedTime >= 7 {
+                Text("No players found. Matching with opponent...")
+                    .font(.system(size: 14))
+                    .foregroundColor(.black.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            } else {
             Text("Please wait while we match you with another player")
                 .font(.system(size: 14))
                 .foregroundColor(.black.opacity(0.6))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+            }
         }
     }
     

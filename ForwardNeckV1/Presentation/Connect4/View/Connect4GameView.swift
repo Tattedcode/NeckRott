@@ -11,6 +11,8 @@ struct Connect4GameView: View {
     @State private var viewModel = Connect4GameViewModel()
     @Environment(\.dismiss) private var dismiss
     
+    var onExit: (() -> Void)?
+    
     var body: some View {
         ZStack {
             Theme.backgroundGradient
@@ -32,21 +34,41 @@ struct Connect4GameView: View {
                 .foregroundColor(.black)
             }
         }
-        .sheet(isPresented: $viewModel.showingCompletion) {
+        .sheet(isPresented: Binding(
+            get: { viewModel.showingCompletion },
+            set: { viewModel.showingCompletion = $0 }
+        )) {
             completionSheet
+                .presentationDetents([.medium]) // Small sheet similar to achievements
+                .interactiveDismissDisabled(true) // User closes via button to avoid auto-dismiss
         }
         .task {
             await viewModel.loadGame()
-            // Poll for game state updates
-            while Connect4MatchStore.shared.currentMatch != nil {
+            // Poll for game state updates - stop when game completes
+            // Check showingCompletion at the start of each iteration to exit immediately
+            while Connect4MatchStore.shared.currentMatch != nil && !viewModel.showingCompletion {
                 try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
-                // Check if match still exists before loading
-                guard Connect4MatchStore.shared.currentMatch != nil else {
+                // Double-check conditions before loading (prevents unnecessary loads after completion)
+                guard Connect4MatchStore.shared.currentMatch != nil,
+                      !viewModel.showingCompletion else {
+                    break
+                }
+                // Only load if game hasn't been completed yet
+                guard viewModel.game?.isFinished != true else {
+                    Log.info("Game already finished, stopping poll")
                     break
                 }
                 await viewModel.loadGame()
             }
+            Log.info("Stopped polling - game completed or match ended")
         }
+    }
+    
+    private func handleCompletionDismissed() {
+        viewModel.dismissCompletion()
+        viewModel.resetGame()
+        onExit?()
+        dismiss()
     }
     
     @ViewBuilder
@@ -174,25 +196,26 @@ struct Connect4GameView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                     
-                    // Exercise completion badge
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Exercise Completed")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.black)
+                    // Exercise completion badge - only show on wins
+                    if result == .win {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Exercise Completed")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.green.opacity(0.1))
+                        )
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.green.opacity(0.1))
-                    )
                 }
                 
                 Button(action: {
-                    viewModel.resetGame()
-                    dismiss()
+                    handleCompletionDismissed()
                 }) {
                     Text("Done")
                         .font(.system(size: 18, weight: .semibold))
@@ -221,4 +244,3 @@ struct Connect4GameView: View {
         Connect4GameView()
     }
 }
-

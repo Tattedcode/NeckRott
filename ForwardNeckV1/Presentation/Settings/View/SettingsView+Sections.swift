@@ -129,11 +129,11 @@ extension SettingsView {
                     
                     // Reset Data Section
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Reset stats & achievements")
+                        Text("Reset stats")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(Theme.primaryText)
 
-                        Text("Start fresh by clearing your streaks, exercise history, goals, and achievements.")
+                        Text("Start fresh by clearing your streaks, exercise history, and goals.")
                             .font(.system(size: 13))
                             .foregroundColor(Theme.secondaryText)
 

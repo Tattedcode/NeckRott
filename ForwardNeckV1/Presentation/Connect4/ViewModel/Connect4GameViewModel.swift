@@ -18,12 +18,19 @@ final class Connect4GameViewModel {
     var errorMessage: String?
     var showingCompletion: Bool = false
     var gameResult: GameResult?
+    private var completionRecorded: Bool = false
+    private var recordedMatchId: UUID?
+    private var statsUpdated: Bool = false
+    private var leaderboardRefreshed: Bool = false
     
     // MARK: - Dependencies
     
     private let matchStore = Connect4MatchStore.shared
     private let exerciseStore = ExerciseStore.shared
     private let leaderboardStore = LeaderboardStore.shared
+    private let streakStore = StreakStore.shared
+    private let goalsStore = GoalsStore.shared
+    private let checkInStore = CheckInStore.shared
     
     // MARK: - Computed Properties
     
@@ -83,6 +90,12 @@ final class Connect4GameViewModel {
             return
         }
         
+        // Don't reload if we've already completed this match
+        // This prevents repeated calls to handleGameCompletion() and cascading updates
+        if let recordedMatchId, recordedMatchId == match.id {
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
@@ -112,8 +125,25 @@ final class Connect4GameViewModel {
         do {
             try await matchStore.submitMove(column: column)
             
-            // Reload game state
+            // Update local game state immediately to show player's move
+            game = matchStore.currentGame
+            
+            // Delay to ensure player's move is visible before AI responds
+            // This gives time for the UI to update and show the player's move
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+            
+            // Reload game state to sync with server
             await loadGame()
+            
+            // If it's an AI match and it's now the AI's turn, trigger AI move
+            // performAIMoveIfNeeded() already has its own delay (1-2 seconds) and reloads
+            if let match = matchStore.currentMatch,
+               match.isAIMatch,
+               match.currentTurnDeviceId == Connect4Match.aiDeviceId {
+                await matchStore.performAIMoveIfNeeded()
+                // Reload after AI move completes (performAIMoveIfNeeded already reloads, but ensure UI updates)
+                await loadGame()
+            }
             
             // Check if game is finished
             if isGameFinished {
@@ -130,23 +160,51 @@ final class Connect4GameViewModel {
     func handleGameCompletion() async {
         guard let game = game, game.isFinished else { return }
         
+        // If we've already handled this match, keep sheet visible and skip side effects
+        if let recordedMatchId, recordedMatchId == game.match.id {
+            showingCompletion = true
+            return
+        }
+        
+        // Mark this match as handled immediately to prevent duplicate recording
+        recordedMatchId = game.match.id
+        completionRecorded = true
+        
         // Determine result
         if didIWin {
             gameResult = .win
+            
+            // Only record exercise completion on wins (1 win = 1 exercise)
+            await recordExerciseCompletion()
+            
+            // Update streaks and goals after recording completion
+            await updateStreaksAndGoals()
+            
+            // Refresh leaderboard and related stats so UI reflects the win immediately
+            await refreshLeaderboardStats()
         } else if isDraw {
             gameResult = .draw
         } else {
             gameResult = .loss
         }
         
-        // Record exercise completion
-        await recordExerciseCompletion()
-        
-        // Show completion screen
+        // Show completion screen (for win, loss, or draw)
         showingCompletion = true
     }
     
     private func recordExerciseCompletion() async {
+        // Need current match to ensure we only count once
+        guard let matchId = matchStore.currentMatch?.id else {
+            Log.error("No active match when attempting to record completion")
+            return
+        }
+        
+        // Prevent duplicate completions for the same match
+        guard !matchStore.hasRecordedExercise(for: matchId) else {
+            Log.info("Exercise already recorded for match \(matchId)")
+            return
+        }
+        
         // Find Connect 4 exercise
         guard let connect4Exercise = exerciseStore.allExercises().first(where: { $0.title == "Connect 4" }) else {
             Log.error("Connect 4 exercise not found")
@@ -159,14 +217,44 @@ final class Connect4GameViewModel {
         // Determine time slot
         let timeSlot = ExerciseTimeSlot.currentTimeSlot() ?? .morning
         
-        // Record completion
+        // Mark as recorded up front to prevent any re-entry during async work
+        matchStore.markRecordedExercise(for: matchId)
+        
+        // Record completion (1 Connect 4 win = 1 exercise completion)
         await exerciseStore.recordCompletion(
             exerciseId: connect4Exercise.id,
             durationSeconds: gameDuration,
             timeSlot: timeSlot
         )
         
-        Log.info("Recorded Connect 4 exercise completion")
+        Log.info("Recorded Connect 4 exercise completion (win = 1 exercise)")
+    }
+    
+    /// Update streaks and goals after exercise completion
+    /// This ensures today stats, leaderboard, streak, and progress bar are updated
+    private func updateStreaksAndGoals() async {
+        if statsUpdated { return }
+        statsUpdated = true
+        
+        // Update streaks based on check-ins and exercise completions
+        let allCheckIns = checkInStore.all()
+        let allExercises = exerciseStore.completions
+        
+        let checkInDates = allCheckIns.map { $0.timestamp }
+        let exerciseDates = allExercises.map { $0.completedAt }
+        
+        streakStore.updateDailyStreaks(checkIns: checkInDates, exerciseCompletions: exerciseDates)
+        
+        // Update custom goals progress so everything stays in sync
+        goalsStore.updateAllGoalProgress()
+        
+        Log.info("Updated streaks and goals after Connect 4 win")
+    }
+    
+    private func refreshLeaderboardStats() async {
+        guard statsUpdated, !leaderboardRefreshed else { return }
+        leaderboardRefreshed = true
+        await leaderboardStore.refreshLeaderboard(force: true)
     }
     
     private func calculateGameDuration() -> Int {
@@ -181,12 +269,21 @@ final class Connect4GameViewModel {
         return max(120, min(900, estimatedSeconds))
     }
     
+    /// Dismiss the completion sheet (called when user taps "Done")
+    func dismissCompletion() {
+        showingCompletion = false
+    }
+    
     func resetGame() {
         matchStore.stopMatch()
         game = nil
         gameResult = nil
         showingCompletion = false
         errorMessage = nil
+        completionRecorded = false
+        recordedMatchId = nil
+        statsUpdated = false
+        leaderboardRefreshed = false
     }
 }
 
@@ -213,4 +310,3 @@ enum GameResult {
         }
     }
 }
-

@@ -23,7 +23,6 @@ extension HomeViewModel {
         let referenceDate = max(date, Date())
         neckFixHistory = buildNeckFixHistory(endingOn: referenceDate, days: 7)
         updatePreviousDayCards(goal: neckFixesTarget)
-        updateMonthlyAchievements(skipCelebration: !celebrationsEnabled)
         updateDailyStreakIfNeeded(for: date, goal: neckFixesTarget)
 
         if Calendar.current.isDateInToday(date) {
